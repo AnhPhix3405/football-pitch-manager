@@ -1,0 +1,8 @@
+import { EnvironmentOutlined, SearchOutlined } from '@ant-design/icons'
+import { Checkbox, Input, Select, Slider } from 'antd'
+import type { FieldFilters } from '../../features/fields/field.types'
+
+export function FieldFilter({ filters, onChange }: { filters: FieldFilters; onChange: (next: FieldFilters) => void }) {
+  const patch = <K extends keyof FieldFilters>(key: K, value: FieldFilters[K]) => onChange({ ...filters, [key]: value })
+  return <aside className="field-filters"><span className="eyebrow">SEARCH PARAMETERS</span><h2>Bộ lọc sân</h2><label>TỪ KHÓA<Input prefix={<SearchOutlined />} value={filters.query} onChange={(event) => patch('query', event.target.value)} placeholder="Tên sân, khu vực..." /></label><label>KHU VỰC<Select value={filters.district} onChange={(value) => patch('district', value)} options={[{ value: 'all', label: 'Tất cả khu vực' }, ...['Quận 7', 'Bình Thạnh', 'Thủ Đức', 'Quận 2', 'Quận 9', 'Hoàn Kiếm'].map((value) => ({ value, label: value }))]} suffixIcon={<EnvironmentOutlined />} /></label><label>LOẠI SÂN<Select value={filters.format} onChange={(value) => patch('format', value)} options={[{ value: 'all', label: 'Tất cả loại sân' }, { value: '5v5', label: 'Sân 5 người' }, { value: '7v7', label: 'Sân 7 người' }, { value: '11v11', label: 'Sân 11 người' }]} /></label><label>GIÁ TỐI ĐA <b>{Math.round(filters.maxPrice / 1000)}K/giờ</b><Slider min={300000} max={1300000} step={50000} value={filters.maxPrice} onChange={(value) => patch('maxPrice', value)} /></label><Checkbox checked={filters.availableOnly} onChange={(event) => patch('availableOnly', event.target.checked)}>Chỉ sân còn lịch hôm nay</Checkbox></aside>
+}

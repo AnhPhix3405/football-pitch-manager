@@ -1,0 +1,15 @@
+import { EnvironmentOutlined, LeftOutlined, SafetyCertificateFilled, StarFilled } from '@ant-design/icons'
+import { Button, Empty, Tag } from 'antd'
+import { useState } from 'react'
+import { Link, useParams } from 'react-router-dom'
+import { BookingFlow } from '../bookings/BookingFlow'
+import { formatPrice, getFieldById } from './field.data'
+
+export function FieldDetailPage() {
+  const { fieldId = '' } = useParams()
+  const field = getFieldById(fieldId)
+  const [bookingOpen, setBookingOpen] = useState(false)
+  const [activeImage, setActiveImage] = useState(0)
+  if (!field) return <main className="detail-page"><Empty description="Không tìm thấy sân bóng này." /><Link to="/fields"><Button>Quay lại danh sách</Button></Link></main>
+  return <main className="detail-page"><Link className="back-link" to="/fields"><LeftOutlined /> Trở lại kết quả tìm kiếm</Link><div className="detail-grid"><section><div className="field-gallery"><img className="field-gallery__main" src={field.gallery[activeImage]} alt={`${field.name}, ảnh ${activeImage + 1}`} /><div>{field.gallery.slice(1).map((image, index) => <button type="button" key={image} onClick={() => setActiveImage(index + 1)}><img src={image} alt={`Xem ảnh ${index + 2} của ${field.name}`} /></button>)}</div></div><div className="field-title"><div><h1>{field.name}</h1><p><EnvironmentOutlined /> {field.address}, {field.district}</p><div><Tag>{field.format}</Tag><Tag>{field.surface}</Tag><Tag color="green">INSTANT BOOK</Tag></div></div><strong><StarFilled /> {field.rating}<small>{field.reviewCount} đánh giá</small></strong></div><article className="field-specs"><span className="eyebrow">FIELD SPECIFICATIONS</span><h2>Thông tin sân</h2><p>{field.description}</p><h3>Tiện ích</h3><ul>{field.amenities.map((item) => <li key={item}><SafetyCertificateFilled /> {item}</li>)}</ul></article><section className="review-preview"><span className="eyebrow">PLAYER FEEDBACK</span><h2>Đánh giá gần đây</h2><blockquote>“Mặt sân tốt, ánh sáng đều và nhân viên hỗ trợ rất nhanh. Quy trình đặt sân cực kỳ rõ ràng.”<footer>— Minh Hoàng · Đội trưởng Neon Strikers</footer></blockquote></section></section><aside className="quick-book"><span className="eyebrow">RESERVATION TERMINAL</span><div className="quick-book__price"><strong>{formatPrice(field.pricePerHour)}</strong><span>/ giờ</span></div><dl><div><dt>LỊCH GẦN NHẤT</dt><dd>Hôm nay · 20:00</dd></div><div><dt>TRẠNG THÁI</dt><dd className={field.availableToday ? 'available' : ''}>{field.availableToday ? 'Còn lịch' : 'Hết lịch hôm nay'}</dd></div></dl><div className="slot-preview"><span>17:00 - 18:00</span><span>19:00 - 20:00</span><span className="selected">20:00 - 21:00</span><span className="disabled">21:00 - 22:00</span></div><div className="quick-book__total"><span>Ước tính (1 giờ)</span><strong>{formatPrice(field.pricePerHour)}</strong></div><Button type="primary" size="large" block onClick={() => setBookingOpen(true)}>TIẾN HÀNH ĐẶT SÂN →</Button><small>Bạn chưa bị tính phí.</small></aside></div><BookingFlow field={field} open={bookingOpen} onClose={() => setBookingOpen(false)} /></main>
+}

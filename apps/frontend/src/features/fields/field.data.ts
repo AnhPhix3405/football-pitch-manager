@@ -1,0 +1,19 @@
+import type { FootballField } from './field.types'
+
+const photos = [
+  'https://images.unsplash.com/photo-1575361204480-aadea25e6e68?auto=format&fit=crop&w=1400&q=80',
+  'https://images.unsplash.com/photo-1553778263-73a83bab9b0c?auto=format&fit=crop&w=1400&q=80',
+  'https://images.unsplash.com/photo-1526232761682-d26e03ac148e?auto=format&fit=crop&w=1400&q=80',
+]
+
+export const footballFields: FootballField[] = [
+  { id: 'terminal-alpha', name: 'Terminal Alpha Pitch', district: 'Quận 7', city: 'TP. Hồ Chí Minh', address: '18 Nguyễn Lương Bằng, Tân Phú', format: '7v7', surface: 'Cỏ nhân tạo', pricePerHour: 450000, rating: 4.9, reviewCount: 128, distanceKm: 1.2, imageUrl: photos[0], gallery: photos, amenities: ['Đèn LED', 'Phòng thay đồ', 'Bãi đỗ xe', 'Nước uống', 'Wi-Fi'], description: 'Hệ thống sân cỏ tổng hợp hiệu suất cao, được thiết kế cho độ lăn bóng ổn định và an toàn tối ưu. Mặt sân có lớp thoát nước chuyên dụng, lớp đệm giảm chấn và ánh sáng đạt chuẩn thi đấu ban đêm.', coordinates: { x: 67, y: 43 }, featured: true, availableToday: true },
+  { id: 'emerald-five', name: 'Emeralds 5-a-Side', district: 'Hoàn Kiếm', city: 'Hà Nội', address: '42 Trần Hưng Đạo', format: '5v5', surface: 'Cỏ nhân tạo', pricePerHour: 665000, rating: 4.8, reviewCount: 94, distanceKm: 2.4, imageUrl: photos[1], gallery: [photos[1], photos[0], photos[2]], amenities: ['Mái che', 'Tủ đồ', 'Bãi đỗ xe'], description: 'Sân bóng trung tâm với mặt cỏ thế hệ mới, hệ thống chiếu sáng không gây chói và khu vực chờ thoải mái.', coordinates: { x: 42, y: 28 }, featured: true, availableToday: true },
+  { id: 'hackney-masters', name: 'Hackney Masters', district: 'Bình Thạnh', city: 'TP. Hồ Chí Minh', address: '105 Điện Biên Phủ', format: '5v5', surface: 'Cỏ nhân tạo', pricePerHour: 425000, rating: 4.5, reviewCount: 61, distanceKm: 3.8, imageUrl: photos[2], gallery: [photos[2], photos[1], photos[0]], amenities: ['Phòng tắm', 'Giữ xe'], description: 'Không gian thi đấu gọn gàng, phù hợp các trận giao hữu và luyện tập theo nhóm nhỏ.', coordinates: { x: 31, y: 62 }, featured: false, availableToday: true },
+  { id: 'north-grid', name: 'North Grid Arena', district: 'Thủ Đức', city: 'TP. Hồ Chí Minh', address: '12 Võ Văn Ngân', format: '7v7', surface: 'Cỏ nhân tạo', pricePerHour: 520000, rating: 4.7, reviewCount: 76, distanceKm: 5.1, imageUrl: photos[0], gallery: photos, amenities: ['Đèn LED', 'Căng tin', 'Bãi đỗ xe'], description: 'Cụm sân hiện đại tại khu Đông với lịch thi đấu linh hoạt và tiện ích đầy đủ.', coordinates: { x: 78, y: 70 }, featured: true, availableToday: false },
+  { id: 'river-eleven', name: 'River Eleven Park', district: 'Quận 2', city: 'TP. Hồ Chí Minh', address: '8 Mai Chí Thọ', format: '11v11', surface: 'Cỏ tự nhiên', pricePerHour: 1200000, rating: 4.9, reviewCount: 203, distanceKm: 7.4, imageUrl: photos[1], gallery: photos, amenities: ['Khán đài', 'Trọng tài', 'Phòng thay đồ', 'Bãi đỗ xe'], description: 'Sân 11 người tiêu chuẩn dành cho giải đấu và sự kiện bóng đá quy mô lớn.', coordinates: { x: 84, y: 35 }, featured: true, availableToday: true },
+  { id: 'district-nine', name: 'District Nine Club', district: 'Quận 9', city: 'TP. Hồ Chí Minh', address: '90 Lê Văn Việt', format: '5v5', surface: 'Cỏ nhân tạo', pricePerHour: 350000, rating: 4.3, reviewCount: 38, distanceKm: 9.2, imageUrl: photos[2], gallery: photos, amenities: ['Giữ xe', 'Nước uống'], description: 'Lựa chọn tiết kiệm cho các đội bóng phong trào với nhiều khung giờ trống.', coordinates: { x: 19, y: 46 }, featured: false, availableToday: true },
+]
+
+export const getFieldById = (id: string) => footballFields.find((field) => field.id === id)
+export const formatPrice = (price: number) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(price)
