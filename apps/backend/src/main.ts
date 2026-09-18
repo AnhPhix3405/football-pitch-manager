@@ -5,12 +5,15 @@ import {
   NestFastifyApplication,
 } from '@nestjs/platform-fastify';
 import { AppModule } from './app.module';
+import { configureApplication } from './common/configure-application';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
     new FastifyAdapter(),
   );
+  configureApplication(app);
+
   const configService = app.get(ConfigService);
   const host = configService.getOrThrow<string>('app.host');
   const port = configService.getOrThrow<number>('app.port');
