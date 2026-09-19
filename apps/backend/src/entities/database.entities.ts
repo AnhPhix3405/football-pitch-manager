@@ -1,4 +1,3 @@
-import { EntityTarget } from 'typeorm';
 import { AiUsageLogEntity } from './ai-usage-log.entity';
 import { ApprovalRequestEntity } from './approval-request.entity';
 import { BookingServiceEntity } from './booking-service.entity';
@@ -28,7 +27,7 @@ import { UserRatingSummaryEntity } from './user-rating-summary.entity';
 import { UserReviewEntity } from './user-review.entity';
 import { UserEntity } from './user.entity';
 
-export const DATABASE_ENTITIES: EntityTarget<unknown>[] = [
+export const DATABASE_ENTITIES: Array<new () => object> = [
   UserEntity,
   UserProfileEntity,
   OwnerProfileEntity,
