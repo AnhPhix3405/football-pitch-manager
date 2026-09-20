@@ -1,3 +1,12 @@
+jest.mock('../src/components/auth/auth.module', () => ({
+  AuthModule: class AuthModule {},
+}));
+jest.mock('@nestjs/typeorm', () => ({
+  TypeOrmModule: {
+    forRootAsync: () => class TypeOrmRootModule {},
+  },
+}));
+
 import { Test, TestingModule } from '@nestjs/testing';
 import {
   FastifyAdapter,
