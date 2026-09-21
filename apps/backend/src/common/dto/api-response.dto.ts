@@ -1,5 +1,12 @@
 export interface ApiSuccessResponse<T> {
   success: true;
+  message?: string;
+  data: T;
+}
+
+export interface TranslatableResponse<T> {
+  messageKey: string;
+  messageArgs?: Record<string, unknown>;
   data: T;
 }
 

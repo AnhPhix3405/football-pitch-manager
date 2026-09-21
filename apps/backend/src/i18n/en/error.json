@@ -1,0 +1,7 @@
+{
+  "internalServerError": "Internal server error",
+  "validationFailed": "Validation failed",
+  "requestFailed": "Request failed",
+  "emailAlreadyExists": "Email already exists",
+  "phoneAlreadyExists": "Phone number already exists"
+}

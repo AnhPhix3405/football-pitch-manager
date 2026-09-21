@@ -15,7 +15,7 @@ export class RegisteredAccountResponseDto {
 }
 
 export class RegisterResponseDto {
-  message!: string;
+  messageKey!: string;
 
   data!: RegisteredAccountResponseDto;
 }

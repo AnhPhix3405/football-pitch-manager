@@ -1,0 +1,7 @@
+{
+  "internalServerError": "Đã xảy ra lỗi hệ thống",
+  "validationFailed": "Dữ liệu không hợp lệ",
+  "requestFailed": "Yêu cầu không thể xử lý",
+  "emailAlreadyExists": "Email đã tồn tại",
+  "phoneAlreadyExists": "Số điện thoại đã tồn tại"
+}

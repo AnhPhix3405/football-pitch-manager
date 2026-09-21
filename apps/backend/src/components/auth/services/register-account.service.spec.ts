@@ -62,7 +62,7 @@ describe('RegisterAccountService', () => {
       repository.createLocalAccount.mock.calls[0]?.[0].passwordHash;
     expect(passwordHash).not.toBe('Password@123');
     expect(result).toEqual({
-      message: 'Account registered successfully',
+      messageKey: 'success.accountRegistered',
       data: {
         id: '9175df40-fc7c-4d50-b07e-a35417a2eef2',
         email: 'user@example.com',

@@ -37,7 +37,7 @@ export class RegisterAccountService {
       });
 
       return {
-        message: 'Account registered successfully',
+        messageKey: 'success.accountRegistered',
         data: {
           id: user.id,
           email: user.email,
@@ -60,7 +60,7 @@ export class RegisterAccountService {
   ): ApplicationException {
     return new ApplicationException({
       code: `${field.toUpperCase()}_ALREADY_EXISTS`,
-      message: `${field === 'email' ? 'Email' : 'Phone'} already exists`,
+      messageKey: `error.${field}AlreadyExists`,
       status: HttpStatus.CONFLICT,
     });
   }
