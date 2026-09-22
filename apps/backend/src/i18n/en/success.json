@@ -1,3 +1,4 @@
 {
-  "accountRegistered": "Account registered successfully"
+  "accountRegistered": "Account registered successfully",
+  "loginSuccess": "Logged in successfully"
 }

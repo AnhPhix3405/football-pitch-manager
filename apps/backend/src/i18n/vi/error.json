@@ -3,5 +3,7 @@
   "validationFailed": "Dữ liệu không hợp lệ",
   "requestFailed": "Yêu cầu không thể xử lý",
   "emailAlreadyExists": "Email đã tồn tại",
-  "phoneAlreadyExists": "Số điện thoại đã tồn tại"
+  "phoneAlreadyExists": "Số điện thoại đã tồn tại",
+  "invalidCredentials": "Thông tin đăng nhập không chính xác",
+  "accountBanned": "Tài khoản đã bị khóa"
 }

@@ -34,6 +34,14 @@ export class UserRepository extends BaseRepository<UserEntity> {
     return this.repository.findOneBy({ email });
   }
 
+  findByEmailWithPasswordHash(email: string): Promise<UserEntity | null> {
+    return this.repository
+      .createQueryBuilder('user')
+      .addSelect('user.passwordHash')
+      .where('user.email = :email', { email })
+      .getOne();
+  }
+
   findByPhone(phone: string): Promise<UserEntity | null> {
     return this.repository.findOneBy({ phone });
   }
