@@ -1,4 +1,5 @@
 {
   "accountRegistered": "Account registered successfully",
-  "loginSuccess": "Logged in successfully"
+  "loginSuccess": "Logged in successfully",
+  "loginGoogleSuccess": "Logged in with Google successfully"
 }

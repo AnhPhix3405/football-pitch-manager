@@ -3,10 +3,12 @@ jest.mock('@nestjs/typeorm', () => ({
 }));
 
 import { Test, TestingModule } from '@nestjs/testing';
+import { GoogleLoginRequestDto } from '../dto/google-login-request.dto';
 import { LoginRequestDto } from '../dto/login-request.dto';
 import { RegisterRequestDto } from '../dto/register-request.dto';
 import { RegisterResponseDto } from '../dto/register-response.dto';
 import { AuthController } from './auth.controller';
+import { LoginGoogleService } from '../services/login-google.service';
 import { LoginService } from '../services/login.service';
 import { RegisterAccountService } from '../services/register-account.service';
 
@@ -16,6 +18,9 @@ describe('AuthController', () => {
     execute: jest.fn(),
   };
   const mockLoginService = {
+    execute: jest.fn(),
+  };
+  const mockLoginGoogleService = {
     execute: jest.fn(),
   };
 
@@ -30,6 +35,10 @@ describe('AuthController', () => {
         {
           provide: LoginService,
           useValue: mockLoginService,
+        },
+        {
+          provide: LoginGoogleService,
+          useValue: mockLoginGoogleService,
         },
       ],
     }).compile();
@@ -84,6 +93,32 @@ describe('AuthController', () => {
       expect(result).toEqual({
         messageKey: 'success.loginSuccess',
         data: authenticatedUser,
+      });
+    });
+  });
+
+  describe('loginGoogle', () => {
+    it('calls loginGoogleService.execute and wraps user data in GoogleLoginResponseDto', async () => {
+      const googleLoginDto: GoogleLoginRequestDto = {
+        idToken: 'sample-google-id-token',
+      };
+      const googleUser = {
+        id: 'google-user-id',
+        email: 'google@example.com',
+        role: 'user',
+        status: 'active',
+        authProvider: 'google',
+        providerId: 'sub-12345',
+      };
+      mockLoginGoogleService.execute.mockResolvedValue(googleUser);
+
+      const result = await controller.loginGoogle(googleLoginDto);
+      expect(mockLoginGoogleService.execute).toHaveBeenCalledWith(
+        googleLoginDto,
+      );
+      expect(result).toEqual({
+        messageKey: 'success.loginGoogleSuccess',
+        data: googleUser,
       });
     });
   });

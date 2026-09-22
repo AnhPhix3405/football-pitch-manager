@@ -10,5 +10,6 @@ export const appConfig = registerAs('app', () => ({
   port: Number(process.env.PORT ?? 3000),
   apiPrefix: normalizeApiPrefix(process.env.API_PREFIX ?? ''),
   corsOrigin: process.env.CORS_ORIGIN ?? '',
+  googleClientId: process.env.GOOGLE_CLIENT_ID ?? '',
   logLevel: process.env.LOG_LEVEL ?? 'log',
 }));
