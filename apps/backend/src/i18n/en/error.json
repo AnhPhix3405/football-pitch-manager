@@ -3,5 +3,8 @@
   "validationFailed": "Validation failed",
   "requestFailed": "Request failed",
   "emailAlreadyExists": "Email already exists",
-  "phoneAlreadyExists": "Phone number already exists"
+  "phoneAlreadyExists": "Phone number already exists",
+  "invalidCredentials": "Invalid email or password",
+  "accountBanned": "Account has been banned",
+  "googleTokenInvalid": "Invalid or expired Google token"
 }

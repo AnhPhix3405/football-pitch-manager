@@ -1,3 +1,5 @@
 {
-  "accountRegistered": "Đăng ký tài khoản thành công"
+  "accountRegistered": "Đăng ký tài khoản thành công",
+  "loginSuccess": "Đăng nhập thành công",
+  "loginGoogleSuccess": "Đăng nhập Google thành công"
 }

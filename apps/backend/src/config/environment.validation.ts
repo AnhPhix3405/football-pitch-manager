@@ -9,6 +9,7 @@ export const environmentValidationSchema = Joi.object({
   APP_NAME: Joi.string().trim().min(1).default('football-pitch-manager'),
   API_PREFIX: Joi.string().allow('').default(''),
   CORS_ORIGIN: Joi.string().allow('').default(''),
+  GOOGLE_CLIENT_ID: Joi.string().allow('').default(''),
   LOG_LEVEL: Joi.string()
     .valid('fatal', 'error', 'warn', 'log', 'debug', 'verbose')
     .default('log'),

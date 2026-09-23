@@ -9,6 +9,7 @@ describe('validateEnvironment', () => {
       APP_NAME: 'football-pitch-manager',
       API_PREFIX: '',
       CORS_ORIGIN: '',
+      GOOGLE_CLIENT_ID: '',
       LOG_LEVEL: 'log',
     });
   });

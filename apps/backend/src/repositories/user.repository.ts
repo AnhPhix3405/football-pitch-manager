@@ -21,6 +21,14 @@ export interface CreateLocalAccountData {
   fullName: string | null;
 }
 
+export interface CreateOAuthAccountData {
+  email: string;
+  authProvider: string;
+  providerId: string;
+  fullName: string | null;
+  avatarUrl: string | null;
+}
+
 @Injectable()
 export class UserRepository extends BaseRepository<UserEntity> {
   constructor(
@@ -32,6 +40,21 @@ export class UserRepository extends BaseRepository<UserEntity> {
 
   findByEmail(email: string): Promise<UserEntity | null> {
     return this.repository.findOneBy({ email });
+  }
+
+  findByEmailWithPasswordHash(email: string): Promise<UserEntity | null> {
+    return this.repository
+      .createQueryBuilder('user')
+      .addSelect('user.passwordHash')
+      .where('user.email = :email', { email })
+      .getOne();
+  }
+
+  findByProvider(
+    authProvider: string,
+    providerId: string,
+  ): Promise<UserEntity | null> {
+    return this.repository.findOneBy({ authProvider, providerId });
   }
 
   findByPhone(phone: string): Promise<UserEntity | null> {
@@ -82,6 +105,59 @@ export class UserRepository extends BaseRepository<UserEntity> {
 
       throw error;
     }
+  }
+
+  async createOAuthAccount(
+    data: CreateOAuthAccountData,
+  ): Promise<{ user: UserEntity; profile: UserProfileEntity }> {
+    return this.dataSource.transaction(async (manager) => {
+      const userRepository = manager.getRepository(UserEntity);
+      const profileRepository = manager.getRepository(UserProfileEntity);
+      const user = await userRepository.save(
+        userRepository.create({
+          id: randomUUID(),
+          email: data.email,
+          phone: null,
+          passwordHash: null,
+          authProvider: data.authProvider,
+          providerId: data.providerId,
+          role: 'user',
+          status: 'active',
+          lat: null,
+          lng: null,
+        }),
+      );
+      const profile = await profileRepository.save(
+        profileRepository.create({
+          id: randomUUID(),
+          userId: user.id,
+          fullName: data.fullName,
+          avatarUrl: data.avatarUrl,
+          bio: null,
+          skillLevel: null,
+          birthday: null,
+          gender: null,
+        }),
+      );
+
+      return { user, profile };
+    });
+  }
+
+  async linkOAuthProvider(
+    userId: string,
+    authProvider: string,
+    providerId: string,
+  ): Promise<UserEntity> {
+    await this.repository.update(userId, {
+      authProvider,
+      providerId,
+    });
+    const updated = await this.repository.findOneBy({ id: userId });
+    if (!updated) {
+      throw new Error(`User not found after update: ${userId}`);
+    }
+    return updated;
   }
 
   private getDuplicateField(error: unknown): DuplicateRegistrationField | null {
