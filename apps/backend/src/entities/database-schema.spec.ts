@@ -4,6 +4,7 @@ import { DATABASE_ENTITIES } from './database.entities';
 const EXPECTED_TABLES = [
   'users',
   'user_profiles',
+  'auth_sessions',
   'owner_profiles',
   'fields',
   'field_courts',
@@ -40,7 +41,7 @@ describe('database schema metadata', () => {
       .map((table) => table.name)
       .sort();
 
-    expect(DATABASE_ENTITIES).toHaveLength(28);
+    expect(DATABASE_ENTITIES).toHaveLength(29);
     expect(tables).toEqual(EXPECTED_TABLES);
   });
 

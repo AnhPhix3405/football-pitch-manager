@@ -8,5 +8,8 @@
   "accountBanned": "Tài khoản đã bị khóa",
   "googleTokenInvalid": "Mã xác thực Google không hợp lệ hoặc đã hết hạn",
   "tokenExpired": "Mã phiên đã hết hạn. Vui lòng đăng nhập lại",
-  "tokenInvalid": "Mã phiên không hợp lệ"
+  "tokenInvalid": "Mã phiên không hợp lệ",
+  "sessionExpired": "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại",
+  "sessionRevoked": "Phiên đăng nhập đã bị thu hồi",
+  "tokenReused": "Phát hiện truy cập bất thường. Tất cả phiên đăng nhập đã bị hủy vì lý do an toàn"
 }

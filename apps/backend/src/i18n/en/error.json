@@ -8,5 +8,8 @@
   "accountBanned": "Account has been banned",
   "googleTokenInvalid": "Invalid or expired Google token",
   "tokenExpired": "Token has expired. Please sign in again",
-  "tokenInvalid": "Invalid token"
+  "tokenInvalid": "Invalid token",
+  "sessionExpired": "Session has expired. Please sign in again",
+  "sessionRevoked": "Session has been revoked",
+  "tokenReused": "Security alert: token reuse detected. All sessions have been revoked"
 }
