@@ -3,14 +3,19 @@ jest.mock('@nestjs/typeorm', () => ({
 }));
 
 import { Test, TestingModule } from '@nestjs/testing';
+import { FastifyReply, FastifyRequest } from 'fastify';
 import { GoogleLoginRequestDto } from '../dto/google-login-request.dto';
 import { LoginRequestDto } from '../dto/login-request.dto';
+import { RefreshTokenRequestDto } from '../dto/refresh-token-request.dto';
 import { RegisterRequestDto } from '../dto/register-request.dto';
 import { RegisterResponseDto } from '../dto/register-response.dto';
-import { AuthController } from './auth.controller';
 import { LoginGoogleService } from '../services/login-google.service';
 import { LoginService } from '../services/login.service';
+import { LogoutService } from '../services/logout.service';
+import { RefreshTokenService } from '../services/refresh-token.service';
 import { RegisterAccountService } from '../services/register-account.service';
+import { TokenService } from '../services/token.service';
+import { AuthController } from './auth.controller';
 
 describe('AuthController', () => {
   let controller: AuthController;
@@ -22,6 +27,22 @@ describe('AuthController', () => {
   };
   const mockLoginGoogleService = {
     execute: jest.fn(),
+  };
+  const mockRefreshTokenService = {
+    execute: jest.fn(),
+  };
+  const mockLogoutService = {
+    execute: jest.fn(),
+  };
+  const mockTokenService = {
+    getRefreshCookieName: jest.fn(() => 'refresh_token'),
+    getRefreshTokenCookieOptions: jest.fn(() => ({
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax',
+      path: '/api/auth',
+      maxAge: 604800,
+    })),
   };
 
   beforeEach(async () => {
@@ -39,6 +60,18 @@ describe('AuthController', () => {
         {
           provide: LoginGoogleService,
           useValue: mockLoginGoogleService,
+        },
+        {
+          provide: RefreshTokenService,
+          useValue: mockRefreshTokenService,
+        },
+        {
+          provide: LogoutService,
+          useValue: mockLogoutService,
+        },
+        {
+          provide: TokenService,
+          useValue: mockTokenService,
         },
       ],
     }).compile();
@@ -119,6 +152,82 @@ describe('AuthController', () => {
       expect(result).toEqual({
         messageKey: 'success.loginGoogleSuccess',
         data: googleUser,
+      });
+    });
+  });
+
+  describe('refresh', () => {
+    it('extracts token from cookie/body, refreshes session and sets cookie', async () => {
+      const req = {
+        headers: { cookie: 'refresh_token=sample.refresh.token' },
+      } as unknown as FastifyRequest;
+      const reply = {
+        header: jest.fn(),
+      } as unknown as FastifyReply;
+
+      const refreshDto: RefreshTokenRequestDto = {};
+      const refreshResult = {
+        tokens: {
+          accessToken: 'new.access.token',
+          refreshToken: 'new.refresh.token',
+          tokenType: 'Bearer' as const,
+          expiresIn: 900,
+        },
+        user: {
+          id: 'user-id',
+          email: 'user@example.com',
+          role: 'user',
+          status: 'active',
+          authProvider: 'local',
+        },
+      };
+      mockRefreshTokenService.execute.mockResolvedValue(refreshResult);
+
+      const result = await controller.refresh(refreshDto, req, reply);
+
+      expect(mockRefreshTokenService.execute).toHaveBeenCalledWith(
+        'sample.refresh.token',
+      );
+      expect(reply.header).toHaveBeenCalledWith(
+        'Set-Cookie',
+        expect.stringContaining('refresh_token=new.refresh.token'),
+      );
+      expect(result).toEqual({
+        messageKey: 'success.refreshSuccess',
+        data: {
+          accessToken: 'new.access.token',
+          tokenType: 'Bearer',
+          expiresIn: 900,
+          user: refreshResult.user,
+        },
+      });
+    });
+  });
+
+  describe('logout', () => {
+    it('extracts token, revokes session and clears cookie', async () => {
+      const req = {
+        headers: { cookie: 'refresh_token=sample.refresh.token' },
+      } as unknown as FastifyRequest;
+      const reply = {
+        header: jest.fn(),
+      } as unknown as FastifyReply;
+
+      const logoutDto: RefreshTokenRequestDto = {};
+      mockLogoutService.execute.mockResolvedValue({ success: true });
+
+      const result = await controller.logout(logoutDto, req, reply);
+
+      expect(mockLogoutService.execute).toHaveBeenCalledWith(
+        'sample.refresh.token',
+      );
+      expect(reply.header).toHaveBeenCalledWith(
+        'Set-Cookie',
+        expect.stringContaining('Max-Age=0'),
+      );
+      expect(result).toEqual({
+        messageKey: 'success.logoutSuccess',
+        data: null,
       });
     });
   });

@@ -10,6 +10,8 @@ import { AuthSessionService } from './services/auth-session.service';
 import { GoogleAuthService } from './services/google-auth.service';
 import { LoginGoogleService } from './services/login-google.service';
 import { LoginService } from './services/login.service';
+import { LogoutService } from './services/logout.service';
+import { RefreshTokenService } from './services/refresh-token.service';
 import { RegisterAccountService } from './services/register-account.service';
 import { TokenService } from './services/token.service';
 
@@ -31,7 +33,15 @@ import { TokenService } from './services/token.service';
     LoginGoogleService,
     TokenService,
     AuthSessionService,
+    RefreshTokenService,
+    LogoutService,
   ],
-  exports: [TokenService, AuthSessionService, AuthSessionRepository],
+  exports: [
+    TokenService,
+    AuthSessionService,
+    AuthSessionRepository,
+    RefreshTokenService,
+    LogoutService,
+  ],
 })
 export class AuthModule {}
