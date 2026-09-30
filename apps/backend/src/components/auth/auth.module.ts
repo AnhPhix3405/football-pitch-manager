@@ -8,6 +8,7 @@ import { GoogleAuthService } from './services/google-auth.service';
 import { LoginGoogleService } from './services/login-google.service';
 import { LoginService } from './services/login.service';
 import { RegisterAccountService } from './services/register-account.service';
+import { TokenService } from './services/token.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([UserEntity, UserProfileEntity])],
@@ -18,6 +19,8 @@ import { RegisterAccountService } from './services/register-account.service';
     LoginService,
     GoogleAuthService,
     LoginGoogleService,
+    TokenService,
   ],
+  exports: [TokenService],
 })
 export class AuthModule {}

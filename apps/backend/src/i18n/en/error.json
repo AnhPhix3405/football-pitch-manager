@@ -6,5 +6,7 @@
   "phoneAlreadyExists": "Phone number already exists",
   "invalidCredentials": "Invalid email or password",
   "accountBanned": "Account has been banned",
-  "googleTokenInvalid": "Invalid or expired Google token"
+  "googleTokenInvalid": "Invalid or expired Google token",
+  "tokenExpired": "Token has expired. Please sign in again",
+  "tokenInvalid": "Invalid token"
 }

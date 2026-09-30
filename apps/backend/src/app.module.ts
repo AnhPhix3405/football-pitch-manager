@@ -7,13 +7,14 @@ import { HealthModule } from './components/health/health.module';
 import { appConfig } from './config/app.config';
 import { validateEnvironment } from './config/environment.validation';
 import { i18nConfig } from './config/i18n.config';
+import { jwtConfig } from './config/jwt.config';
 import { typeOrmDataSourceOptions } from './database/config/typeorm.options';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [appConfig],
+      load: [appConfig, jwtConfig],
       validate: validateEnvironment,
     }),
     I18nModule.forRoot(i18nConfig),

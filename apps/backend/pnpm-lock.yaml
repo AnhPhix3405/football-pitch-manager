@@ -92,6 +92,9 @@ importers:
       joi:
         specifier: ^18.2.9
         version: 18.2.9
+      jsonwebtoken:
+        specifier: ^9.0.2
+        version: 9.0.3
       lodash:
         specifier: ^4.18.1
         version: 4.18.1
@@ -147,6 +150,9 @@ importers:
       '@types/jest':
         specifier: ^30.0.0
         version: 30.0.0
+      '@types/jsonwebtoken':
+        specifier: ^9.0.8
+        version: 9.0.10
       '@types/node':
         specifier: ^22.10.7
         version: 22.20.3
