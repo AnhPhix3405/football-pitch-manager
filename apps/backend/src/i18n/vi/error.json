@@ -11,5 +11,6 @@
   "tokenInvalid": "Mã phiên không hợp lệ",
   "sessionExpired": "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại",
   "sessionRevoked": "Phiên đăng nhập đã bị thu hồi",
-  "tokenReused": "Phát hiện truy cập bất thường. Tất cả phiên đăng nhập đã bị hủy vì lý do an toàn"
+  "tokenReused": "Phát hiện truy cập bất thường. Tất cả phiên đăng nhập đã bị hủy vì lý do an toàn",
+  "refreshTokenMissing": "Thiếu mã làm mới phiên"
 }
