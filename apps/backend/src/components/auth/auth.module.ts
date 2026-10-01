@@ -6,6 +6,10 @@ import { UserEntity } from '~/entities/user.entity';
 import { AuthSessionRepository } from '~/repositories/auth-session.repository';
 import { UserRepository } from '~/repositories/user.repository';
 import { AuthController } from './controllers/auth.controller';
+import { GuardTestController } from './controllers/guard-test.controller';
+import { AccountStatusGuard } from './guards/account-status.guard';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { RolesGuard } from './guards/roles.guard';
 import { AuthSessionService } from './services/auth-session.service';
 import { GoogleAuthService } from './services/google-auth.service';
 import { LoginGoogleService } from './services/login-google.service';
@@ -23,7 +27,7 @@ import { TokenService } from './services/token.service';
       AuthSessionEntity,
     ]),
   ],
-  controllers: [AuthController],
+  controllers: [AuthController, GuardTestController],
   providers: [
     UserRepository,
     AuthSessionRepository,
@@ -35,6 +39,9 @@ import { TokenService } from './services/token.service';
     AuthSessionService,
     RefreshTokenService,
     LogoutService,
+    JwtAuthGuard,
+    AccountStatusGuard,
+    RolesGuard,
   ],
   exports: [
     TokenService,
@@ -42,6 +49,9 @@ import { TokenService } from './services/token.service';
     AuthSessionRepository,
     RefreshTokenService,
     LogoutService,
+    JwtAuthGuard,
+    AccountStatusGuard,
+    RolesGuard,
   ],
 })
 export class AuthModule {}
