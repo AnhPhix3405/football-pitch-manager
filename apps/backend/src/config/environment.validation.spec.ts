@@ -10,6 +10,11 @@ describe('validateEnvironment', () => {
       API_PREFIX: '',
       CORS_ORIGIN: '',
       GOOGLE_CLIENT_ID: '',
+      JWT_ACCESS_SECRET: 'default-jwt-access-secret-key-change-in-prod',
+      JWT_ACCESS_EXPIRES_IN: '15m',
+      JWT_REFRESH_SECRET: 'default-jwt-refresh-secret-key-change-in-prod',
+      JWT_REFRESH_EXPIRES_IN: '7d',
+      JWT_REFRESH_COOKIE_NAME: 'refresh_token',
       LOG_LEVEL: 'log',
     });
   });

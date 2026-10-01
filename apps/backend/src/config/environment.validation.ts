@@ -10,6 +10,11 @@ export const environmentValidationSchema = Joi.object({
   API_PREFIX: Joi.string().allow('').default(''),
   CORS_ORIGIN: Joi.string().allow('').default(''),
   GOOGLE_CLIENT_ID: Joi.string().allow('').default(''),
+  JWT_ACCESS_SECRET: Joi.string().default('default-jwt-access-secret-key-change-in-prod'),
+  JWT_ACCESS_EXPIRES_IN: Joi.string().default('15m'),
+  JWT_REFRESH_SECRET: Joi.string().default('default-jwt-refresh-secret-key-change-in-prod'),
+  JWT_REFRESH_EXPIRES_IN: Joi.string().default('7d'),
+  JWT_REFRESH_COOKIE_NAME: Joi.string().default('refresh_token'),
   LOG_LEVEL: Joi.string()
     .valid('fatal', 'error', 'warn', 'log', 'debug', 'verbose')
     .default('log'),
