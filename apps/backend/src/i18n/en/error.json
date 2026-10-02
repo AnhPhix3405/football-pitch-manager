@@ -15,5 +15,6 @@
   "refreshTokenMissing": "Refresh token is missing",
   "unauthorizedAccess": "Authentication required to access this resource",
   "forbiddenRole": "You do not have permission to access this resource",
-  "accountStatusInvalid": "Account status is invalid for this operation"
+  "accountStatusInvalid": "Account status is invalid for this operation",
+  "ownerProfileNotFound": "Owner profile not found"
 }

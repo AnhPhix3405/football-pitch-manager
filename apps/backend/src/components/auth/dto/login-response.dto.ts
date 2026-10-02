@@ -10,8 +10,18 @@ export class AuthenticatedUserDto {
   authProvider!: string;
 }
 
+export class LoginSuccessDataDto {
+  accessToken!: string;
+
+  tokenType!: string;
+
+  expiresIn!: number;
+
+  user!: AuthenticatedUserDto;
+}
+
 export class LoginResponseDto {
   messageKey!: string;
 
-  data!: AuthenticatedUserDto;
+  data!: LoginSuccessDataDto;
 }
