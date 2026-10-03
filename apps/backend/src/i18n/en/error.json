@@ -16,5 +16,8 @@
   "unauthorizedAccess": "Authentication required to access this resource",
   "forbiddenRole": "You do not have permission to access this resource",
   "accountStatusInvalid": "Account status is invalid for this operation",
-  "ownerProfileNotFound": "Owner profile not found"
+  "ownerProfileNotFound": "Owner profile not found",
+  "alreadyOwner": "Your account is already an owner or administrator",
+  "registrationRequestPending": "You already have a pending owner registration request",
+  "userNotFound": "User not found"
 }

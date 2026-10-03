@@ -3,5 +3,6 @@
   "loginSuccess": "Logged in successfully",
   "loginGoogleSuccess": "Logged in with Google successfully",
   "refreshSuccess": "Session refreshed successfully",
-  "logoutSuccess": "Logged out successfully"
+  "logoutSuccess": "Logged out successfully",
+  "ownerRegistrationSubmitted": "Owner registration submitted successfully. Please wait for administrator approval"
 }
