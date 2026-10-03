@@ -15,5 +15,6 @@
   "refreshTokenMissing": "Thiếu mã làm mới phiên",
   "unauthorizedAccess": "Yêu cầu đăng nhập để truy cập tài nguyên",
   "forbiddenRole": "Bạn không có quyền truy cập chức năng này",
-  "accountStatusInvalid": "Trạng thái tài khoản không hợp lệ để thực hiện thao tác"
+  "accountStatusInvalid": "Trạng thái tài khoản không hợp lệ để thực hiện thao tác",
+  "ownerProfileNotFound": "Không tìm thấy hồ sơ chủ sân"
 }

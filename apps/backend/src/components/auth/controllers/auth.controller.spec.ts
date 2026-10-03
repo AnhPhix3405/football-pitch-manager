@@ -9,6 +9,7 @@ import { LoginRequestDto } from '../dto/login-request.dto';
 import { RefreshTokenRequestDto } from '../dto/refresh-token-request.dto';
 import { RegisterRequestDto } from '../dto/register-request.dto';
 import { RegisterResponseDto } from '../dto/register-response.dto';
+import { AuthSessionService } from '../services/auth-session.service';
 import { LoginGoogleService } from '../services/login-google.service';
 import { LoginService } from '../services/login.service';
 import { LogoutService } from '../services/logout.service';
@@ -34,6 +35,9 @@ describe('AuthController', () => {
   const mockLogoutService = {
     execute: jest.fn(),
   };
+  const mockAuthSessionService = {
+    createSession: jest.fn(),
+  };
   const mockTokenService = {
     getRefreshCookieName: jest.fn(() => 'refresh_token'),
     getRefreshTokenCookieOptions: jest.fn(() => ({
@@ -43,6 +47,14 @@ describe('AuthController', () => {
       path: '/api/auth',
       maxAge: 604800,
     })),
+    generateTokenPair: jest.fn(() =>
+      Promise.resolve({
+        accessToken: 'mock.access.token',
+        refreshToken: 'mock.refresh.token',
+        tokenType: 'Bearer' as const,
+        expiresIn: 900,
+      }),
+    ),
   };
 
   beforeEach(async () => {
@@ -72,6 +84,10 @@ describe('AuthController', () => {
         {
           provide: TokenService,
           useValue: mockTokenService,
+        },
+        {
+          provide: AuthSessionService,
+          useValue: mockAuthSessionService,
         },
       ],
     }).compile();
@@ -107,7 +123,7 @@ describe('AuthController', () => {
   });
 
   describe('login', () => {
-    it('calls loginService.execute and wraps user data in LoginResponseDto', async () => {
+    it('calls loginService.execute, creates session, issues tokens and wraps in LoginResponseDto', async () => {
       const loginDto: LoginRequestDto = {
         email: 'user@example.com',
         password: 'Password@123',
@@ -119,19 +135,40 @@ describe('AuthController', () => {
         status: 'active',
         authProvider: 'local',
       };
-      mockLoginService.execute.mockResolvedValue(authenticatedUser);
+      const req = {
+        headers: { 'user-agent': 'Jest-Agent' },
+        ip: '127.0.0.1',
+      } as unknown as FastifyRequest;
+      const reply = {
+        header: jest.fn(),
+      } as unknown as FastifyReply;
 
-      const result = await controller.login(loginDto);
+      mockLoginService.execute.mockResolvedValue(authenticatedUser);
+      mockAuthSessionService.createSession.mockResolvedValue({ id: 'session-id' });
+
+      const result = await controller.login(loginDto, req, reply);
+
       expect(mockLoginService.execute).toHaveBeenCalledWith(loginDto);
+      expect(mockTokenService.generateTokenPair).toHaveBeenCalled();
+      expect(mockAuthSessionService.createSession).toHaveBeenCalled();
+      expect(reply.header).toHaveBeenCalledWith(
+        'Set-Cookie',
+        expect.stringContaining('refresh_token=mock.refresh.token'),
+      );
       expect(result).toEqual({
         messageKey: 'success.loginSuccess',
-        data: authenticatedUser,
+        data: {
+          accessToken: 'mock.access.token',
+          tokenType: 'Bearer',
+          expiresIn: 900,
+          user: authenticatedUser,
+        },
       });
     });
   });
 
   describe('loginGoogle', () => {
-    it('calls loginGoogleService.execute and wraps user data in GoogleLoginResponseDto', async () => {
+    it('calls loginGoogleService.execute, creates session, issues tokens and wraps in GoogleLoginResponseDto', async () => {
       const googleLoginDto: GoogleLoginRequestDto = {
         idToken: 'sample-google-id-token',
       };
@@ -143,15 +180,36 @@ describe('AuthController', () => {
         authProvider: 'google',
         providerId: 'sub-12345',
       };
-      mockLoginGoogleService.execute.mockResolvedValue(googleUser);
+      const req = {
+        headers: { 'user-agent': 'Jest-Agent' },
+        ip: '127.0.0.1',
+      } as unknown as FastifyRequest;
+      const reply = {
+        header: jest.fn(),
+      } as unknown as FastifyReply;
 
-      const result = await controller.loginGoogle(googleLoginDto);
+      mockLoginGoogleService.execute.mockResolvedValue(googleUser);
+      mockAuthSessionService.createSession.mockResolvedValue({ id: 'session-id' });
+
+      const result = await controller.loginGoogle(googleLoginDto, req, reply);
+
       expect(mockLoginGoogleService.execute).toHaveBeenCalledWith(
         googleLoginDto,
       );
+      expect(mockTokenService.generateTokenPair).toHaveBeenCalled();
+      expect(mockAuthSessionService.createSession).toHaveBeenCalled();
+      expect(reply.header).toHaveBeenCalledWith(
+        'Set-Cookie',
+        expect.stringContaining('refresh_token=mock.refresh.token'),
+      );
       expect(result).toEqual({
         messageKey: 'success.loginGoogleSuccess',
-        data: googleUser,
+        data: {
+          accessToken: 'mock.access.token',
+          tokenType: 'Bearer',
+          expiresIn: 900,
+          user: googleUser,
+        },
       });
     });
   });
