@@ -4,5 +4,7 @@
   "loginGoogleSuccess": "Logged in with Google successfully",
   "refreshSuccess": "Session refreshed successfully",
   "logoutSuccess": "Logged out successfully",
-  "ownerRegistrationSubmitted": "Owner registration submitted successfully. Please wait for administrator approval"
+  "ownerRegistrationSubmitted": "Owner registration submitted successfully. Please wait for administrator approval",
+  "ownerApprovalApproved": "Owner registration approved successfully",
+  "ownerApprovalRejected": "Owner registration rejected successfully"
 }

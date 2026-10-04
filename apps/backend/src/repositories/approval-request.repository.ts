@@ -13,6 +13,20 @@ export interface CreateApprovalRequestData {
   note?: string | null;
 }
 
+export interface FindOwnerApprovalsOptions {
+  status?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface PaginatedApprovalRequests {
+  items: ApprovalRequestEntity[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
 @Injectable()
 export class ApprovalRequestRepository extends BaseRepository<ApprovalRequestEntity> {
   constructor(
@@ -62,5 +76,46 @@ export class ApprovalRequestRepository extends BaseRepository<ApprovalRequestEnt
     });
 
     return repo.save(request);
+  }
+
+  async findOwnerRegistrations(
+    options: FindOwnerApprovalsOptions,
+  ): Promise<PaginatedApprovalRequests> {
+    const page = Math.max(1, options.page ?? 1);
+    const limit = Math.min(100, Math.max(1, options.limit ?? 10));
+    const skip = (page - 1) * limit;
+
+    const qb = this.repository
+      .createQueryBuilder('request')
+      .leftJoinAndSelect('request.requester', 'requester')
+      .leftJoinAndSelect('request.reviewer', 'reviewer')
+      .where('request.type = :type', { type: 'owner_register' });
+
+    if (options.status && options.status !== 'all') {
+      qb.andWhere('request.status = :status', { status: options.status });
+    }
+
+    qb.orderBy('request.createdAt', 'DESC').skip(skip).take(limit);
+
+    const [items, total] = await qb.getManyAndCount();
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      items,
+      total,
+      page,
+      limit,
+      totalPages,
+    };
+  }
+
+  findOwnerRegistrationById(id: string): Promise<ApprovalRequestEntity | null> {
+    return this.repository
+      .createQueryBuilder('request')
+      .leftJoinAndSelect('request.requester', 'requester')
+      .leftJoinAndSelect('request.reviewer', 'reviewer')
+      .where('request.id = :id', { id })
+      .andWhere('request.type = :type', { type: 'owner_register' })
+      .getOne();
   }
 }

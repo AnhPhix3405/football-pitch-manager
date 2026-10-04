@@ -19,5 +19,8 @@
   "ownerProfileNotFound": "Không tìm thấy hồ sơ chủ sân",
   "alreadyOwner": "Tài khoản của bạn đã là chủ sân hoặc quản trị viên",
   "registrationRequestPending": "Bạn đang có một yêu cầu đăng ký chủ sân đang chờ xét duyệt",
-  "userNotFound": "Không tìm thấy thông tin người dùng"
+  "userNotFound": "Không tìm thấy thông tin người dùng",
+  "approvalRequestNotFound": "Không tìm thấy yêu cầu phê duyệt",
+  "approvalRequestAlreadyProcessed": "Yêu cầu phê duyệt này đã được xử lý trước đó",
+  "rejectionReasonRequired": "Vui lòng nhập lý do từ chối yêu cầu"
 }
