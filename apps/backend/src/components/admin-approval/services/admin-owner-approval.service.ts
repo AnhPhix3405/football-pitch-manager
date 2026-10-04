@@ -92,7 +92,6 @@ export class AdminOwnerApprovalService {
 
       const request = await approvalRepo.findOne({
         where: { id: requestId, type: 'owner_register' },
-        relations: { requester: true },
         lock: { mode: 'pessimistic_write' },
       });
 
@@ -154,10 +153,10 @@ export class AdminOwnerApprovalService {
     return this.dataSource.transaction(async (manager) => {
       const approvalRepo = manager.getRepository(ApprovalRequestEntity);
       const ownerRepo = manager.getRepository(OwnerProfileEntity);
+      const userRepo = manager.getRepository(UserEntity);
 
       const request = await approvalRepo.findOne({
         where: { id: requestId, type: 'owner_register' },
-        relations: { requester: true },
         lock: { mode: 'pessimistic_write' },
       });
 
@@ -181,6 +180,10 @@ export class AdminOwnerApprovalService {
         where: { id: request.targetId },
       });
 
+      const user = await userRepo.findOne({
+        where: { id: request.requestedBy },
+      });
+
       request.status = 'rejected';
       request.reviewedBy = adminUserId;
       request.reviewedAt = new Date();
@@ -188,6 +191,9 @@ export class AdminOwnerApprovalService {
 
       const savedRequest = await approvalRepo.save(request);
       savedRequest.reviewer = adminUser;
+      if (user) {
+        savedRequest.requester = user;
+      }
 
       return this.mapToDetailDto(savedRequest, profile);
     });

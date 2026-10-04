@@ -276,7 +276,6 @@ describe('AdminOwnerApprovalService', () => {
 
       expect(mockApprovalRepo.findOne).toHaveBeenCalledWith({
         where: { id: 'req-1', type: 'owner_register' },
-        relations: { requester: true },
         lock: { mode: 'pessimistic_write' },
       });
       expect(dataSource.transaction).toHaveBeenCalled();
@@ -386,7 +385,6 @@ describe('AdminOwnerApprovalService', () => {
 
       expect(mockApprovalRepo.findOne).toHaveBeenCalledWith({
         where: { id: 'req-1', type: 'owner_register' },
-        relations: { requester: true },
         lock: { mode: 'pessimistic_write' },
       });
       expect(dataSource.transaction).toHaveBeenCalled();
