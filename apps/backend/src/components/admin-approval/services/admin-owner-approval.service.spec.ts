@@ -369,10 +369,15 @@ describe('AdminOwnerApprovalService', () => {
         findOne: jest.fn().mockResolvedValue(mockProfile),
       };
 
+      const mockUserRepo = {
+        findOne: jest.fn().mockResolvedValue(mockRequesterUser),
+      };
+
       const mockManager = {
         getRepository: jest.fn((entity) => {
           if (entity === ApprovalRequestEntity) return mockApprovalRepo;
           if (entity === OwnerProfileEntity) return mockOwnerRepo;
+          if (entity === UserEntity) return mockUserRepo;
           return {};
         }),
       } as unknown as EntityManager;

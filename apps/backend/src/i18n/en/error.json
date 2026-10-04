@@ -22,5 +22,7 @@
   "userNotFound": "User not found",
   "approvalRequestNotFound": "Approval request not found",
   "approvalRequestAlreadyProcessed": "This approval request has already been processed",
-  "rejectionReasonRequired": "Rejection reason is required"
+  "rejectionReasonRequired": "Rejection reason is required",
+  "fieldNotFound": "Field complex not found",
+  "invalidDepositConfig": "Invalid deposit configuration"
 }

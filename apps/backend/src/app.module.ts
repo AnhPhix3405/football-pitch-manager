@@ -4,6 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { I18nModule } from 'nestjs-i18n';
 import { AdminApprovalModule } from './components/admin-approval/admin-approval.module';
 import { AuthModule } from './components/auth/auth.module';
+import { FieldModule } from './components/field/field.module';
 import { HealthModule } from './components/health/health.module';
 import { OwnerProfileModule } from './components/owner-profile/owner-profile.module';
 import { appConfig } from './config/app.config';
@@ -27,6 +28,7 @@ import { typeOrmDataSourceOptions } from './database/config/typeorm.options';
     HealthModule,
     OwnerProfileModule,
     AdminApprovalModule,
+    FieldModule,
   ],
 })
 export class AppModule {}
