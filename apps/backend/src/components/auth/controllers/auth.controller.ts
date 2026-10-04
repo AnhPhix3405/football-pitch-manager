@@ -9,6 +9,14 @@ import {
   Res,
 } from '@nestjs/common';
 import type { FastifyReply, FastifyRequest } from 'fastify';
+import {
+  ApiAuthControllerDoc,
+  ApiGoogleLoginDoc,
+  ApiLoginDoc,
+  ApiLogoutDoc,
+  ApiRefreshTokenDoc,
+  ApiRegisterDoc,
+} from '../docs/auth.doc';
 import { GoogleLoginRequestDto } from '../dto/google-login-request.dto';
 import { GoogleLoginResponseDto } from '../dto/google-login-response.dto';
 import { LoginRequestDto } from '../dto/login-request.dto';
@@ -31,6 +39,7 @@ import {
   setRefreshTokenCookie,
 } from '../utils/auth-cookie.util';
 
+@ApiAuthControllerDoc()
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -45,12 +54,14 @@ export class AuthController {
 
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
+  @ApiRegisterDoc()
   register(@Body() input: RegisterRequestDto): Promise<RegisterResponseDto> {
     return this.registerAccountService.execute(input);
   }
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
+  @ApiLoginDoc()
   async login(
     @Body() input: LoginRequestDto,
     @Req() req: FastifyRequest,
@@ -92,6 +103,7 @@ export class AuthController {
 
   @Post('google')
   @HttpCode(HttpStatus.OK)
+  @ApiGoogleLoginDoc()
   async loginGoogle(
     @Body() input: GoogleLoginRequestDto,
     @Req() req: FastifyRequest,
@@ -133,6 +145,7 @@ export class AuthController {
 
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
+  @ApiRefreshTokenDoc()
   async refresh(
     @Body() body: RefreshTokenRequestDto,
     @Req() req: FastifyRequest,
@@ -163,6 +176,7 @@ export class AuthController {
 
   @Post('logout')
   @HttpCode(HttpStatus.OK)
+  @ApiLogoutDoc()
   async logout(
     @Body() body: RefreshTokenRequestDto,
     @Req() req: FastifyRequest,
