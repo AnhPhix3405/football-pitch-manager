@@ -22,5 +22,7 @@
   "userNotFound": "Không tìm thấy thông tin người dùng",
   "approvalRequestNotFound": "Không tìm thấy yêu cầu phê duyệt",
   "approvalRequestAlreadyProcessed": "Yêu cầu phê duyệt này đã được xử lý trước đó",
-  "rejectionReasonRequired": "Vui lòng nhập lý do từ chối yêu cầu"
+  "rejectionReasonRequired": "Vui lòng nhập lý do từ chối yêu cầu",
+  "fieldNotFound": "Không tìm thấy thông tin cụm sân",
+  "invalidDepositConfig": "Cấu hình đặt cọc không hợp lệ"
 }
