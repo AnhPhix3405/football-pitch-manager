@@ -33,13 +33,22 @@ export class AdminOwnerApprovalService {
     const paginated =
       await this.approvalRequestRepository.findOwnerRegistrations(query);
 
-    const items: AdminOwnerApprovalDetailResponseDto[] = [];
-    for (const request of paginated.items) {
-      const ownerProfile = await this.ownerProfileRepository.findById(
-        request.targetId,
-      );
-      items.push(this.mapToDetailDto(request, ownerProfile));
-    }
+    const targetIds = [
+      ...new Set(paginated.items.map((item) => item.targetId).filter(Boolean)),
+    ];
+
+    const ownerProfiles =
+      await this.ownerProfileRepository.findByIds(targetIds);
+    const profileMap = new Map<string, OwnerProfileEntity>(
+      ownerProfiles.map((p) => [p.id, p]),
+    );
+
+    const items: AdminOwnerApprovalDetailResponseDto[] = paginated.items.map(
+      (request) => {
+        const profile = profileMap.get(request.targetId) ?? null;
+        return this.mapToDetailDto(request, profile);
+      },
+    );
 
     return {
       items,
@@ -74,30 +83,34 @@ export class AdminOwnerApprovalService {
     adminUserId: string,
     dto: AdminApproveOwnerDto,
   ): Promise<AdminOwnerApprovalDetailResponseDto> {
-    const request =
-      await this.approvalRequestRepository.findOwnerRegistrationById(requestId);
-    if (!request) {
-      throw new ApplicationException({
-        code: 'APPROVAL_REQUEST_NOT_FOUND',
-        messageKey: 'error.approvalRequestNotFound',
-        status: HttpStatus.NOT_FOUND,
-      });
-    }
-
-    if (request.status !== 'pending') {
-      throw new ApplicationException({
-        code: 'APPROVAL_REQUEST_ALREADY_PROCESSED',
-        messageKey: 'error.approvalRequestAlreadyProcessed',
-        status: HttpStatus.BAD_REQUEST,
-      });
-    }
-
     const adminUser = await this.userRepository.findById(adminUserId);
 
     return this.dataSource.transaction(async (manager) => {
       const approvalRepo = manager.getRepository(ApprovalRequestEntity);
       const ownerRepo = manager.getRepository(OwnerProfileEntity);
       const userRepo = manager.getRepository(UserEntity);
+
+      const request = await approvalRepo.findOne({
+        where: { id: requestId, type: 'owner_register' },
+        relations: { requester: true },
+        lock: { mode: 'pessimistic_write' },
+      });
+
+      if (!request) {
+        throw new ApplicationException({
+          code: 'APPROVAL_REQUEST_NOT_FOUND',
+          messageKey: 'error.approvalRequestNotFound',
+          status: HttpStatus.NOT_FOUND,
+        });
+      }
+
+      if (request.status !== 'pending') {
+        throw new ApplicationException({
+          code: 'APPROVAL_REQUEST_ALREADY_PROCESSED',
+          messageKey: 'error.approvalRequestAlreadyProcessed',
+          status: HttpStatus.BAD_REQUEST,
+        });
+      }
 
       const profile = await ownerRepo.findOne({
         where: { id: request.targetId },
@@ -136,31 +149,37 @@ export class AdminOwnerApprovalService {
     adminUserId: string,
     dto: AdminRejectOwnerDto,
   ): Promise<AdminOwnerApprovalDetailResponseDto> {
-    const request =
-      await this.approvalRequestRepository.findOwnerRegistrationById(requestId);
-    if (!request) {
-      throw new ApplicationException({
-        code: 'APPROVAL_REQUEST_NOT_FOUND',
-        messageKey: 'error.approvalRequestNotFound',
-        status: HttpStatus.NOT_FOUND,
-      });
-    }
-
-    if (request.status !== 'pending') {
-      throw new ApplicationException({
-        code: 'APPROVAL_REQUEST_ALREADY_PROCESSED',
-        messageKey: 'error.approvalRequestAlreadyProcessed',
-        status: HttpStatus.BAD_REQUEST,
-      });
-    }
-
     const adminUser = await this.userRepository.findById(adminUserId);
-    const profile = await this.ownerProfileRepository.findById(
-      request.targetId,
-    );
 
     return this.dataSource.transaction(async (manager) => {
       const approvalRepo = manager.getRepository(ApprovalRequestEntity);
+      const ownerRepo = manager.getRepository(OwnerProfileEntity);
+
+      const request = await approvalRepo.findOne({
+        where: { id: requestId, type: 'owner_register' },
+        relations: { requester: true },
+        lock: { mode: 'pessimistic_write' },
+      });
+
+      if (!request) {
+        throw new ApplicationException({
+          code: 'APPROVAL_REQUEST_NOT_FOUND',
+          messageKey: 'error.approvalRequestNotFound',
+          status: HttpStatus.NOT_FOUND,
+        });
+      }
+
+      if (request.status !== 'pending') {
+        throw new ApplicationException({
+          code: 'APPROVAL_REQUEST_ALREADY_PROCESSED',
+          messageKey: 'error.approvalRequestAlreadyProcessed',
+          status: HttpStatus.BAD_REQUEST,
+        });
+      }
+
+      const profile = await ownerRepo.findOne({
+        where: { id: request.targetId },
+      });
 
       request.status = 'rejected';
       request.reviewedBy = adminUserId;

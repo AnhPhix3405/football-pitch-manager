@@ -74,6 +74,7 @@ describe('AdminOwnerApprovalService', () => {
 
     ownerProfileRepository = {
       findById: jest.fn(),
+      findByIds: jest.fn(),
     } as unknown as jest.Mocked<OwnerProfileRepository>;
 
     userRepository = {
@@ -93,7 +94,7 @@ describe('AdminOwnerApprovalService', () => {
   });
 
   describe('getOwnerApprovals', () => {
-    it('returns paginated list of owner approval requests with target owner profiles', async () => {
+    it('returns paginated list of owner approval requests with bulk fetched target owner profiles', async () => {
       const query: AdminOwnerApprovalQueryDto = {
         status: 'pending',
         page: 1,
@@ -108,12 +109,12 @@ describe('AdminOwnerApprovalService', () => {
         totalPages: 1,
       });
 
-      ownerProfileRepository.findById.mockResolvedValue(mockProfile);
+      ownerProfileRepository.findByIds.mockResolvedValue([mockProfile]);
 
       const result = await service.getOwnerApprovals(query);
 
       expect(approvalRequestRepository.findOwnerRegistrations).toHaveBeenCalledWith(query);
-      expect(ownerProfileRepository.findById).toHaveBeenCalledWith('profile-1');
+      expect(ownerProfileRepository.findByIds).toHaveBeenCalledWith(['profile-1']);
       expect(result.total).toBe(1);
       expect(result.page).toBe(1);
       expect(result.limit).toBe(10);
@@ -163,8 +164,20 @@ describe('AdminOwnerApprovalService', () => {
       note: 'Ho so hop le. Da phe duyet.',
     };
 
-    it('throws 404 APPROVAL_REQUEST_NOT_FOUND when request does not exist', async () => {
-      approvalRequestRepository.findOwnerRegistrationById.mockResolvedValue(null);
+    it('throws 404 APPROVAL_REQUEST_NOT_FOUND when request does not exist inside transaction', async () => {
+      const mockApprovalRepo = {
+        findOne: jest.fn().mockResolvedValue(null),
+      };
+      const mockManager = {
+        getRepository: jest.fn((entity) => {
+          if (entity === ApprovalRequestEntity) return mockApprovalRepo;
+          return {};
+        }),
+      } as unknown as EntityManager;
+
+      dataSource.transaction.mockImplementation(async (callback: any) => {
+        return callback(mockManager);
+      });
 
       try {
         await service.approveOwnerRegistration('non-existent', 'admin-1', approveDto);
@@ -181,11 +194,23 @@ describe('AdminOwnerApprovalService', () => {
       }
     });
 
-    it('throws 400 APPROVAL_REQUEST_ALREADY_PROCESSED when request is not pending', async () => {
-      approvalRequestRepository.findOwnerRegistrationById.mockResolvedValue({
-        ...mockPendingRequest,
-        status: 'approved',
-      } as ApprovalRequestEntity);
+    it('throws 400 APPROVAL_REQUEST_ALREADY_PROCESSED when locked request is not pending', async () => {
+      const mockApprovalRepo = {
+        findOne: jest.fn().mockResolvedValue({
+          ...mockPendingRequest,
+          status: 'approved',
+        }),
+      };
+      const mockManager = {
+        getRepository: jest.fn((entity) => {
+          if (entity === ApprovalRequestEntity) return mockApprovalRepo;
+          return {};
+        }),
+      } as unknown as EntityManager;
+
+      dataSource.transaction.mockImplementation(async (callback: any) => {
+        return callback(mockManager);
+      });
 
       try {
         await service.approveOwnerRegistration('req-1', 'admin-1', approveDto);
@@ -202,10 +227,8 @@ describe('AdminOwnerApprovalService', () => {
       }
     });
 
-    it('successfully approves request, updates profile and promotes user to owner in transaction', async () => {
-      approvalRequestRepository.findOwnerRegistrationById.mockResolvedValue(mockPendingRequest);
+    it('successfully approves request, updates profile and promotes user to owner in transaction with lock', async () => {
       userRepository.findById.mockResolvedValue(mockAdminUser);
-      ownerProfileRepository.findById.mockResolvedValue(mockProfile);
 
       const updatedRequest = {
         ...mockPendingRequest,
@@ -232,6 +255,7 @@ describe('AdminOwnerApprovalService', () => {
       };
 
       const mockApprovalRepo = {
+        findOne: jest.fn().mockResolvedValue({ ...mockPendingRequest }),
         save: jest.fn().mockResolvedValue(updatedRequest),
       };
 
@@ -250,7 +274,11 @@ describe('AdminOwnerApprovalService', () => {
 
       const result = await service.approveOwnerRegistration('req-1', 'admin-1', approveDto);
 
-      expect(approvalRequestRepository.findOwnerRegistrationById).toHaveBeenCalledWith('req-1');
+      expect(mockApprovalRepo.findOne).toHaveBeenCalledWith({
+        where: { id: 'req-1', type: 'owner_register' },
+        relations: { requester: true },
+        lock: { mode: 'pessimistic_write' },
+      });
       expect(dataSource.transaction).toHaveBeenCalled();
       expect(result.status).toBe('approved');
       expect(result.note).toBe('Ho so hop le. Da phe duyet.');
@@ -263,8 +291,20 @@ describe('AdminOwnerApprovalService', () => {
       reason: 'Giay phep kinh doanh khong hop le',
     };
 
-    it('throws 404 APPROVAL_REQUEST_NOT_FOUND when request does not exist', async () => {
-      approvalRequestRepository.findOwnerRegistrationById.mockResolvedValue(null);
+    it('throws 404 APPROVAL_REQUEST_NOT_FOUND when request does not exist inside transaction', async () => {
+      const mockApprovalRepo = {
+        findOne: jest.fn().mockResolvedValue(null),
+      };
+      const mockManager = {
+        getRepository: jest.fn((entity) => {
+          if (entity === ApprovalRequestEntity) return mockApprovalRepo;
+          return {};
+        }),
+      } as unknown as EntityManager;
+
+      dataSource.transaction.mockImplementation(async (callback: any) => {
+        return callback(mockManager);
+      });
 
       try {
         await service.rejectOwnerRegistration('non-existent', 'admin-1', rejectDto);
@@ -276,11 +316,23 @@ describe('AdminOwnerApprovalService', () => {
       }
     });
 
-    it('throws 400 APPROVAL_REQUEST_ALREADY_PROCESSED when request is already rejected', async () => {
-      approvalRequestRepository.findOwnerRegistrationById.mockResolvedValue({
-        ...mockPendingRequest,
-        status: 'rejected',
-      } as ApprovalRequestEntity);
+    it('throws 400 APPROVAL_REQUEST_ALREADY_PROCESSED when request is already rejected inside transaction', async () => {
+      const mockApprovalRepo = {
+        findOne: jest.fn().mockResolvedValue({
+          ...mockPendingRequest,
+          status: 'rejected',
+        }),
+      };
+      const mockManager = {
+        getRepository: jest.fn((entity) => {
+          if (entity === ApprovalRequestEntity) return mockApprovalRepo;
+          return {};
+        }),
+      } as unknown as EntityManager;
+
+      dataSource.transaction.mockImplementation(async (callback: any) => {
+        return callback(mockManager);
+      });
 
       try {
         await service.rejectOwnerRegistration('req-1', 'admin-1', rejectDto);
@@ -298,9 +350,7 @@ describe('AdminOwnerApprovalService', () => {
     });
 
     it('successfully rejects request in transaction without changing user role', async () => {
-      approvalRequestRepository.findOwnerRegistrationById.mockResolvedValue(mockPendingRequest);
       userRepository.findById.mockResolvedValue(mockAdminUser);
-      ownerProfileRepository.findById.mockResolvedValue(mockProfile);
 
       const updatedRequest = {
         ...mockPendingRequest,
@@ -312,12 +362,18 @@ describe('AdminOwnerApprovalService', () => {
       } as ApprovalRequestEntity;
 
       const mockApprovalRepo = {
+        findOne: jest.fn().mockResolvedValue({ ...mockPendingRequest }),
         save: jest.fn().mockResolvedValue(updatedRequest),
+      };
+
+      const mockOwnerRepo = {
+        findOne: jest.fn().mockResolvedValue(mockProfile),
       };
 
       const mockManager = {
         getRepository: jest.fn((entity) => {
           if (entity === ApprovalRequestEntity) return mockApprovalRepo;
+          if (entity === OwnerProfileEntity) return mockOwnerRepo;
           return {};
         }),
       } as unknown as EntityManager;
@@ -328,7 +384,11 @@ describe('AdminOwnerApprovalService', () => {
 
       const result = await service.rejectOwnerRegistration('req-1', 'admin-1', rejectDto);
 
-      expect(approvalRequestRepository.findOwnerRegistrationById).toHaveBeenCalledWith('req-1');
+      expect(mockApprovalRepo.findOne).toHaveBeenCalledWith({
+        where: { id: 'req-1', type: 'owner_register' },
+        relations: { requester: true },
+        lock: { mode: 'pessimistic_write' },
+      });
       expect(dataSource.transaction).toHaveBeenCalled();
       expect(result.status).toBe('rejected');
       expect(result.note).toBe('Giay phep kinh doanh khong hop le');
