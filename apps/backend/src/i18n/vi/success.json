@@ -4,5 +4,7 @@
   "loginGoogleSuccess": "Đăng nhập Google thành công",
   "refreshSuccess": "Làm mới phiên đăng nhập thành công",
   "logoutSuccess": "Đăng xuất thành công",
-  "ownerRegistrationSubmitted": "Gửi hồ sơ đăng ký chủ sân thành công. Vui lòng chờ quản trị viên phê duyệt"
+  "ownerRegistrationSubmitted": "Gửi hồ sơ đăng ký chủ sân thành công. Vui lòng chờ quản trị viên phê duyệt",
+  "ownerApprovalApproved": "Phê duyệt hồ sơ chủ sân thành công",
+  "ownerApprovalRejected": "Từ chối hồ sơ chủ sân thành công"
 }

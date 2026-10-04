@@ -20,7 +20,8 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "migration:run": "typeorm-ts-node-commonjs migration:run -d src/database/config/typeorm.datasource.ts",
     "migration:revert": "typeorm-ts-node-commonjs migration:revert -d src/database/config/typeorm.datasource.ts",
-    "migration:show": "typeorm-ts-node-commonjs migration:show -d src/database/config/typeorm.datasource.ts"
+    "migration:show": "typeorm-ts-node-commonjs migration:show -d src/database/config/typeorm.datasource.ts",
+    "seed:admin": "ts-node -r tsconfig-paths/register src/scripts/seed-admin.ts"
   },
   "dependencies": {
     "@fastify/static": "^10.1.5",

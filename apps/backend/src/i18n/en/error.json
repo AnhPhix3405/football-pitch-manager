@@ -19,5 +19,8 @@
   "ownerProfileNotFound": "Owner profile not found",
   "alreadyOwner": "Your account is already an owner or administrator",
   "registrationRequestPending": "You already have a pending owner registration request",
-  "userNotFound": "User not found"
+  "userNotFound": "User not found",
+  "approvalRequestNotFound": "Approval request not found",
+  "approvalRequestAlreadyProcessed": "This approval request has already been processed",
+  "rejectionReasonRequired": "Rejection reason is required"
 }

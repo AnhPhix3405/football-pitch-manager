@@ -1,2 +1,4 @@
 .pnpm-store/v10/
 apps/backend/.pnpm-store/v10/
+meta/
+docs/
