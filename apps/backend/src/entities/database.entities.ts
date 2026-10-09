@@ -1,5 +1,6 @@
 import { AiUsageLogEntity } from './ai-usage-log.entity';
 import { ApprovalRequestEntity } from './approval-request.entity';
+import { AuthSessionEntity } from './auth-session.entity';
 import { BookingServiceEntity } from './booking-service.entity';
 import { BookingEntity } from './booking.entity';
 import { ConversationMemberEntity } from './conversation-member.entity';
@@ -30,6 +31,7 @@ import { UserEntity } from './user.entity';
 export const DATABASE_ENTITIES: Array<new () => object> = [
   UserEntity,
   UserProfileEntity,
+  AuthSessionEntity,
   OwnerProfileEntity,
   FieldEntity,
   FieldCourtEntity,

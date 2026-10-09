@@ -12,8 +12,18 @@ export class GoogleAuthenticatedUserDto {
   providerId!: string | null;
 }
 
+export class GoogleLoginSuccessDataDto {
+  accessToken!: string;
+
+  tokenType!: string;
+
+  expiresIn!: number;
+
+  user!: GoogleAuthenticatedUserDto;
+}
+
 export class GoogleLoginResponseDto {
   messageKey!: string;
 
-  data!: GoogleAuthenticatedUserDto;
+  data!: GoogleLoginSuccessDataDto;
 }

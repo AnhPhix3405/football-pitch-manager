@@ -1,5 +1,13 @@
 {
   "accountRegistered": "Account registered successfully",
   "loginSuccess": "Logged in successfully",
-  "loginGoogleSuccess": "Logged in with Google successfully"
+  "loginGoogleSuccess": "Logged in with Google successfully",
+  "refreshSuccess": "Session refreshed successfully",
+  "logoutSuccess": "Logged out successfully",
+  "ownerRegistrationSubmitted": "Owner registration submitted successfully. Please wait for administrator approval",
+  "ownerApprovalApproved": "Owner registration approved successfully",
+  "ownerApprovalRejected": "Owner registration rejected successfully",
+  "createFieldSuccess": "Field complex created successfully",
+  "updateFieldSuccess": "Field complex updated successfully",
+  "deactivateFieldSuccess": "Field complex deactivated successfully"
 }
