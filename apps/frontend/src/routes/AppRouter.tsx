@@ -28,12 +28,52 @@ import { PublicLayout } from './layouts/PublicLayout'
 import { ProtectedRoute, RoleRoute } from './guards'
 
 export function AppRouter() {
-  return <BrowserRouter><Routes>
-    <Route path="/auth/:mode" element={<AuthPage />} />
-    <Route element={<PublicLayout />}><Route index element={<HomePage />} /><Route path="fields" element={<FieldDiscoveryPage />} /><Route path="fields/:fieldId" element={<FieldDetailPage />} /><Route path="opponents" element={<OpponentDiscoveryPage />} /></Route>
-    <Route element={<ProtectedRoute />}><Route path="app" element={<DashboardLayout />}><Route index element={<Navigate to="bookings" replace />} /><Route path="fields" element={<Navigate to="/fields" replace />} /><Route path="bookings" element={<MyBookingsPage />} /><Route path="opponents" element={<OpponentDiscoveryPage />} /><Route path="posts" element={<MyPostsPage />} /><Route path="posts/:postId" element={<PostDetailPage />} /><Route path="messages" element={<MessagesPage />} /><Route path="settings" element={<ProfileSettingsPage />} /><Route path="profile" element={<ProfileSettingsPage />} /></Route></Route>
-    <Route element={<RoleRoute allowedRoles={['owner']} />}><Route path="owner" element={<OwnerLayout />}><Route index element={<OwnerDashboardPage />} /><Route path="fields" element={<OwnerFieldsPage />} /><Route path="fields/new" element={<OwnerFieldFormPage />} /><Route path="fields/:fieldId/edit" element={<OwnerFieldFormPage />} /><Route path="services" element={<OwnerServicesPage />} /><Route path="bookings" element={<OwnerBookingsPage />} /><Route path="bookings/:bookingId" element={<OwnerBookingDetailPage />} /><Route path="subscription" element={<OwnerSubscriptionPage />} /></Route></Route>
-    <Route element={<RoleRoute allowedRoles={['admin']} />}><Route path="admin" element={<AdminLayout />}><Route index element={<AdminDashboardPage />} /><Route path="approvals" element={<AdminApprovalsPage />} /><Route path="management" element={<AdminManagementPage />} /><Route path="reports" element={<AdminReportsPage />} /></Route></Route>
-    <Route path="owner/register" element={<OwnerRegistrationPage />} /><Route path="*" element={<Navigate to="/auth/login" replace />} />
-  </Routes></BrowserRouter>
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/auth/:mode" element={<AuthPage />} />
+        <Route element={<PublicLayout />}>
+          <Route index element={<HomePage />} />
+          <Route path="fields" element={<Navigate to="/app/fields" replace />} />
+          <Route path="opponents" element={<Navigate to="/app/opponents" replace />} />
+        </Route>
+        <Route element={<ProtectedRoute />}>
+          <Route path="app" element={<DashboardLayout />}>
+            <Route index element={<Navigate to="fields" replace />} />
+            <Route path="fields" element={<FieldDiscoveryPage />} />
+            <Route path="fields/:fieldId" element={<FieldDetailPage />} />
+            <Route path="bookings" element={<MyBookingsPage />} />
+            <Route path="opponents" element={<OpponentDiscoveryPage />} />
+            <Route path="posts" element={<MyPostsPage />} />
+            <Route path="posts/:postId" element={<PostDetailPage />} />
+            <Route path="messages" element={<MessagesPage />} />
+            <Route path="settings" element={<ProfileSettingsPage />} />
+            <Route path="profile" element={<ProfileSettingsPage />} />
+          </Route>
+        </Route>
+        <Route element={<RoleRoute allowedRoles={['owner']} />}>
+          <Route path="owner" element={<OwnerLayout />}>
+            <Route index element={<OwnerDashboardPage />} />
+            <Route path="fields" element={<OwnerFieldsPage />} />
+            <Route path="fields/new" element={<OwnerFieldFormPage />} />
+            <Route path="fields/:fieldId/edit" element={<OwnerFieldFormPage />} />
+            <Route path="services" element={<OwnerServicesPage />} />
+            <Route path="bookings" element={<OwnerBookingsPage />} />
+            <Route path="bookings/:bookingId" element={<OwnerBookingDetailPage />} />
+            <Route path="subscription" element={<OwnerSubscriptionPage />} />
+          </Route>
+        </Route>
+        <Route element={<RoleRoute allowedRoles={['admin']} />}>
+          <Route path="admin" element={<AdminLayout />}>
+            <Route index element={<AdminDashboardPage />} />
+            <Route path="approvals" element={<AdminApprovalsPage />} />
+            <Route path="management" element={<AdminManagementPage />} />
+            <Route path="reports" element={<AdminReportsPage />} />
+          </Route>
+        </Route>
+        <Route path="owner/register" element={<OwnerRegistrationPage />} />
+        <Route path="*" element={<Navigate to="/auth/login" replace />} />
+      </Routes>
+    </BrowserRouter>
+  )
 }

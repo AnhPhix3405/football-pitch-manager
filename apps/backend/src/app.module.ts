@@ -5,8 +5,10 @@ import { I18nModule } from 'nestjs-i18n';
 import { AdminApprovalModule } from './components/admin-approval/admin-approval.module';
 import { AuthModule } from './components/auth/auth.module';
 import { FieldModule } from './components/field/field.module';
+import { ChatModule } from './components/chat/chat.module';
 import { HealthModule } from './components/health/health.module';
 import { OwnerProfileModule } from './components/owner-profile/owner-profile.module';
+import { PostModule } from './components/post/post.module';
 import { appConfig } from './config/app.config';
 import { validateEnvironment } from './config/environment.validation';
 import { i18nConfig } from './config/i18n.config';
@@ -29,6 +31,8 @@ import { typeOrmDataSourceOptions } from './database/config/typeorm.options';
     OwnerProfileModule,
     AdminApprovalModule,
     FieldModule,
+    ChatModule,
+    PostModule,
   ],
 })
 export class AppModule {}

@@ -1,8 +1,9 @@
+import type { Conversation, ChatMessage } from '../chat/interface/chat.types'
+
 export type BookingStatus = 'confirmed' | 'pending' | 'completed' | 'cancelled'
 export interface UserBooking { id: string; field: string; location: string; date: string; time: string; price: number; status: BookingStatus; image: string }
 export interface MatchPost { id: string; title: string; team: string; location: string; date: string; time: string; format: '5v5' | '7v7' | '11v11'; level: string; needed: number; applicants: number; status: 'open' | 'matched' | 'closed'; description: string }
-export interface Conversation { id: string; name: string; preview: string; online: boolean; unread: number; kind: 'field' | 'team' }
-export interface ChatMessage { id: string; conversationId: string; body: string; sentAt: string; sender: 'me' | 'them' }
+export type { Conversation, ChatMessage }
 
 const pitchImage = 'https://images.unsplash.com/photo-1575361204480-aadea25e6e68?auto=format&fit=crop&w=900&q=80'
 export const userBookings: UserBooking[] = [

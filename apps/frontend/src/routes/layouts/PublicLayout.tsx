@@ -1,6 +1,6 @@
-import { Button } from 'antd'
 import { NavLink, Outlet } from 'react-router-dom'
-import { BrandMark } from '../../common/BrandMark'
+import { AccountDropdown } from '../../components/AccountDropdown'
+import { BrandMark } from '../../components/BrandMark'
 
 export function PublicLayout() {
   return (
@@ -8,13 +8,14 @@ export function PublicLayout() {
       <header className="public-header">
         <BrandMark />
         <nav aria-label="Public navigation">
-          <NavLink to="/fields">Tìm sân</NavLink>
-          <NavLink to="/opponents">Tìm đối</NavLink>
+          <NavLink to="/app/fields">Tìm sân</NavLink>
+          <NavLink to="/app/opponents">Tìm đối</NavLink>
           <NavLink to="/app/bookings">Lịch đặt</NavLink>
-          <NavLink to="/auth/login"><Button type="primary">Đăng nhập</Button></NavLink>
+          <AccountDropdown variant="header" placement="bottomRight" />
         </nav>
       </header>
       <Outlet />
     </div>
   )
 }
+

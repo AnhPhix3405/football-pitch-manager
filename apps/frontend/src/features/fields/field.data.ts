@@ -1,4 +1,4 @@
-import type { FootballField } from './field.types'
+import type { FootballField } from './interface/field.types'
 
 const photos = [
   'https://images.unsplash.com/photo-1575361204480-aadea25e6e68?auto=format&fit=crop&w=1400&q=80',

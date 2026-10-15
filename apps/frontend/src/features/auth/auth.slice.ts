@@ -1,12 +1,14 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
-import type { AuthUser } from './auth.types'
+import type { AuthUser } from './interface/auth.types'
 
 interface AuthState { user: AuthUser | null }
 export const authSessionKey = 'pitchmaster.authUser'
 
 function restoreUser(): AuthUser | null {
   try {
-    const stored = window.sessionStorage.getItem(authSessionKey)
+    const stored =
+      window.localStorage.getItem(authSessionKey) ||
+      window.sessionStorage.getItem(authSessionKey)
     if (!stored) return null
     const value: unknown = JSON.parse(stored)
     if (typeof value !== 'object' || value === null) return null

@@ -1,19 +1,256 @@
-import { CalendarOutlined, EnvironmentOutlined, SendOutlined, TeamOutlined } from '@ant-design/icons'
-import { Button, Input, Modal, Tag, message } from 'antd'
+import {
+  CalendarOutlined,
+  CheckOutlined,
+  CloseOutlined,
+  EnvironmentOutlined,
+  SendOutlined,
+  TeamOutlined,
+  UserOutlined,
+} from '@ant-design/icons'
+import { Avatar, Button, Input, Modal, Spin, Tag, message } from 'antd'
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { matchPosts } from '../user/user.data'
+import { useAppSelector } from '../../app/hooks'
+import { matchPosts, type MatchPost } from '../user/user.data'
+import { mapBackendPostToMatchPost } from './hooks/usePublicPosts'
+import { usePostDetail } from './hooks/usePostDetail'
+import type { BackendPostMatch } from './interface/post.types'
 
-const applicants = ['FC Hackney Lads', 'Red Star North', 'Casual Kickers']
 export function PostDetailPage() {
   const { postId = '' } = useParams()
-  const post = matchPosts.find((item) => item.id === postId)
-  const [comment, setComment] = useState('')
-  const [comments, setComments] = useState(['Đội mình sẵn sàng thi đấu tối thứ bảy. Có cần chuẩn bị bóng không?'])
-  const [resolved, setResolved] = useState<string[]>([])
+  const currentUser = useAppSelector((state) => state.auth.user)
+  const {
+    postData,
+    matches,
+    comments,
+    loading,
+    actionLoading,
+    applyForMatch,
+    acceptMatchApplicant,
+    rejectMatchApplicant,
+    sendComment,
+  } = usePostDetail(postId)
+
+  const [commentText, setCommentText] = useState('')
   const [messageApi, contextHolder] = message.useMessage()
-  if (!post) return <section className="user-page">Không tìm thấy bài đăng. <Link to="/app/posts">Quay lại</Link></section>
-  const decide = (team: string, accept: boolean) => Modal.confirm({ title: accept ? `Chấp nhận ${team}?` : `Từ chối ${team}?`, content: accept ? 'Đội này sẽ được ghép vào trận đấu và nhận thông báo.' : 'Ứng viên sẽ nhận thông báo từ chối.', onOk: () => { setResolved((items) => [...items, team]); messageApi.success(accept ? 'Đã ghép đội thành công.' : 'Đã từ chối ứng viên.') } })
-  const send = () => { if (!comment.trim()) return; setComments((items) => [...items, comment.trim()]); setComment('') }
-  return <section className="user-page">{contextHolder}<Link className="back-link" to="/app/posts">← Trở lại bài đăng</Link><div className="post-detail-grid"><article className="post-detail"><header><Tag color="green">MATCH REQUEST</Tag><Tag>{post.status.toUpperCase()}</Tag></header><h1>{post.title}</h1><div className="post-metadata"><span><EnvironmentOutlined /> {post.location}</span><span><CalendarOutlined /> {post.date} · {post.time}</span><span><TeamOutlined /> {post.format} · {post.level}</span></div><p>{post.description}</p></article><aside className="applicant-panel"><header><h2>Ứng viên</h2><Tag color="green">{applicants.length} PENDING</Tag></header>{applicants.filter((team) => !resolved.includes(team)).map((team) => <div className="applicant" key={team}><b>{team}</b><span>LEVEL: INTERMEDIATE</span><div><Button type="primary" onClick={() => decide(team, true)}>Chấp nhận</Button><Button onClick={() => decide(team, false)}>Từ chối</Button></div></div>)}</aside><section className="discussion"><h2>Thảo luận ({comments.length})</h2>{comments.map((item, index) => <blockquote key={`${item}-${index}`}><b>{index ? 'Bạn' : 'FC Hackney Lads'}</b><p>{item}</p></blockquote>)}<Input value={comment} onChange={(event) => setComment(event.target.value)} onPressEnter={send} placeholder="Thêm bình luận công khai..." suffix={<Button type="text" icon={<SendOutlined />} onClick={send} aria-label="Gửi bình luận" />} /></section></div></section>
+
+  const fallbackPost = matchPosts.find((item) => item.id === postId)
+  const post: MatchPost | undefined = postData
+    ? mapBackendPostToMatchPost(postData)
+    : fallbackPost
+
+  const isOwner = Boolean(currentUser?.id && postData?.userId === currentUser.id)
+  const hasApplied = Boolean(
+    currentUser?.id && matches.some((m) => m.applicantId === currentUser.id),
+  )
+
+  const handleApply = async () => {
+    if (!currentUser) {
+      messageApi.warning('Vui lòng đăng nhập để bắt đối.')
+      return
+    }
+    try {
+      await applyForMatch()
+      messageApi.success('Đã gửi yêu cầu bắt đối! Chờ chủ bài duyệt.')
+    } catch (err: unknown) {
+      messageApi.error(err instanceof Error ? err.message : 'Không thể gửi yêu cầu.')
+    }
+  }
+
+  const handleDecide = (match: BackendPostMatch, accept: boolean) => {
+    const applicantName = match.applicant?.fullName || match.applicant?.email || 'Đội bạn'
+    Modal.confirm({
+      title: accept ? `Chấp nhận ${applicantName}?` : `Từ chối ${applicantName}?`,
+      content: accept
+        ? 'Trận đấu sẽ được chốt kèo và chuyển sang trạng thái ĐÃ GHÉP.'
+        : 'Ứng viên này sẽ bị từ chối.',
+      okText: accept ? 'Chấp nhận' : 'Từ chối',
+      cancelText: 'Hủy',
+      onOk: async () => {
+        try {
+          if (accept) {
+            await acceptMatchApplicant(match.id)
+            messageApi.success(`Đã ghép đội thành công với ${applicantName}!`)
+          } else {
+            await rejectMatchApplicant(match.id)
+            messageApi.info(`Đã từ chối ${applicantName}.`)
+          }
+        } catch (err: unknown) {
+          messageApi.error(err instanceof Error ? err.message : 'Thao tác thất bại.')
+        }
+      },
+    })
+  }
+
+  const handleSendComment = async () => {
+    if (!commentText.trim()) return
+    if (!currentUser) {
+      messageApi.warning('Vui lòng đăng nhập để bình luận.')
+      return
+    }
+    try {
+      await sendComment(commentText.trim())
+      setCommentText('')
+      messageApi.success('Đã gửi bình luận.')
+    } catch (err: unknown) {
+      messageApi.error(err instanceof Error ? err.message : 'Không thể gửi bình luận.')
+    }
+  }
+
+  if (loading) {
+    return (
+      <section className="user-page" style={{ textAlign: 'center', padding: '100px 0' }}>
+        <Spin size="large" />
+      </section>
+    )
+  }
+
+  if (!post) {
+    return (
+      <section className="user-page">
+        Không tìm thấy bài đăng. <Link to="/app/posts">Quay lại danh sách</Link>
+      </section>
+    )
+  }
+
+  return (
+    <section className="user-page">
+      {contextHolder}
+      <Link className="back-link" to="/app/posts">
+        ← Trở lại danh sách bài đăng
+      </Link>
+
+      <div className="post-detail-grid">
+        <article className="post-detail">
+          <header>
+            <Tag color={post.status === 'open' ? 'green' : post.status === 'matched' ? 'blue' : 'default'}>
+              {post.status === 'open' ? 'MATCH REQUEST' : post.status === 'matched' ? 'MATCHED' : 'CLOSED'}
+            </Tag>
+            <Tag>{post.status.toUpperCase()}</Tag>
+          </header>
+          <h1>{post.title}</h1>
+          <div className="post-metadata">
+            <span>
+              <EnvironmentOutlined /> {post.location}
+            </span>
+            <span>
+              <CalendarOutlined /> {post.date} · {post.time}
+            </span>
+            <span>
+              <TeamOutlined /> {post.format} · {post.level}
+            </span>
+          </div>
+          <p>{post.description}</p>
+
+          {!isOwner && post.status === 'open' && (
+            <div style={{ marginTop: 24 }}>
+              <Button
+                type="primary"
+                size="large"
+                loading={actionLoading}
+                disabled={hasApplied}
+                onClick={handleApply}
+              >
+                {hasApplied ? 'Đã gửi yêu cầu bắt đối' : 'Bắt đối / Xin giao lưu ngay'}
+              </Button>
+            </div>
+          )}
+        </article>
+
+        <aside className="applicant-panel">
+          <header>
+            <h2>Ứng viên xin bắt đối</h2>
+            <Tag color={matches.filter((m) => m.status === 'pending').length > 0 ? 'green' : 'default'}>
+              {matches.filter((m) => m.status === 'pending').length} PENDING
+            </Tag>
+          </header>
+
+          {matches.length === 0 ? (
+            <p style={{ color: '#888', fontStyle: 'italic', padding: '16px 0' }}>
+              Chưa có ứng viên nào gửi yêu cầu bắt đối.
+            </p>
+          ) : (
+            matches.map((item) => (
+              <div className="applicant" key={item.id} style={{ marginBottom: 12 }}>
+                <div>
+                  <b>{item.applicant?.fullName || item.applicant?.email || 'Đội bóng'}</b>
+                  <div style={{ fontSize: '12px', color: '#888' }}>
+                    Trạng thái:{' '}
+                    <Tag color={item.status === 'accepted' ? 'green' : item.status === 'rejected' ? 'red' : 'gold'}>
+                      {item.status.toUpperCase()}
+                    </Tag>
+                  </div>
+                </div>
+
+                {isOwner && item.status === 'pending' && (
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <Button
+                      type="primary"
+                      icon={<CheckOutlined />}
+                      size="small"
+                      loading={actionLoading}
+                      onClick={() => handleDecide(item, true)}
+                    >
+                      Nhận
+                    </Button>
+                    <Button
+                      danger
+                      icon={<CloseOutlined />}
+                      size="small"
+                      loading={actionLoading}
+                      onClick={() => handleDecide(item, false)}
+                    >
+                      Từ chối
+                    </Button>
+                  </div>
+                )}
+              </div>
+            ))
+          )}
+        </aside>
+
+        <section className="discussion">
+          <h2>Thảo luận ({comments.length})</h2>
+          {comments.length === 0 ? (
+            <p style={{ color: '#888', fontStyle: 'italic', marginBottom: 16 }}>
+              Chưa có bình luận nào. Hãy bắt đầu cuộc trò chuyện!
+            </p>
+          ) : (
+            comments.map((item) => (
+              <blockquote key={item.id}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                  <Avatar size="small" icon={<UserOutlined />} />
+                  <b>{item.user?.fullName || item.user?.email || 'Thành viên'}</b>
+                  <small style={{ color: '#888', marginLeft: 'auto' }}>
+                    {new Date(item.createdAt).toLocaleTimeString('vi-VN', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </small>
+                </div>
+                <p style={{ margin: 0 }}>{item.content}</p>
+              </blockquote>
+            ))
+          )}
+
+          <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+            <Input
+              value={commentText}
+              onChange={(e) => setCommentText(e.target.value)}
+              onPressEnter={handleSendComment}
+              placeholder="Thêm câu hỏi hoặc thảo luận về trận đấu..."
+            />
+            <Button
+              type="primary"
+              icon={<SendOutlined />}
+              loading={actionLoading}
+              onClick={handleSendComment}
+            >
+              Gửi
+            </Button>
+          </div>
+        </section>
+      </div>
+    </section>
+  )
 }

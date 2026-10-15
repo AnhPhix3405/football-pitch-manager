@@ -1,10 +1,9 @@
 import { AuditOutlined, BellOutlined, CalendarOutlined, CheckSquareOutlined, CreditCardOutlined, DashboardOutlined, DollarOutlined, HomeOutlined, MenuOutlined, MessageOutlined, SafetyCertificateOutlined, SettingOutlined, ShopOutlined, TeamOutlined } from '@ant-design/icons'
 import { Button, Drawer } from 'antd'
 import { useState } from 'react'
-import { NavLink, Outlet, useNavigate } from 'react-router-dom'
-import { useAppDispatch, useAppSelector } from '../../app/hooks'
-import { BrandMark } from '../../common/BrandMark'
-import { signedOut } from '../../features/auth/auth.slice'
+import { NavLink, Outlet } from 'react-router-dom'
+import { AccountDropdown } from '../../components/AccountDropdown'
+import { BrandMark } from '../../components/BrandMark'
 
 const userNavItems = [
   { to: '/app', label: 'Tổng quan', icon: <HomeOutlined /> },
@@ -39,23 +38,27 @@ function Navigation({ close, mode }: { close?: () => void; mode: 'user' | 'owner
 
 export function DashboardLayout({ mode = 'user' }: { mode?: 'user' | 'owner' | 'admin' }) {
   const [open, setOpen] = useState(false)
-  const user = useAppSelector((state) => state.auth.user)
-  const displayName = user?.name?.trim() || 'Operator'
-  const dispatch = useAppDispatch()
-  const navigate = useNavigate()
-  const logout = () => { dispatch(signedOut()); navigate('/auth/login') }
   return (
     <div className="dashboard-shell">
-      <aside className="dashboard-sidebar"><BrandMark /><Navigation mode={mode} /><button className="sign-out" type="button" onClick={logout}>Ngắt kết nối</button></aside>
+      <aside className="dashboard-sidebar">
+        <BrandMark />
+        <Navigation mode={mode} />
+      </aside>
       <section className="dashboard-main">
         <header className="dashboard-header">
           <Button className="mobile-menu" icon={<MenuOutlined />} onClick={() => setOpen(true)} aria-label="Mở điều hướng" />
           <span className="connection"><i /> HỆ THỐNG TRỰC TUYẾN</span>
-          <div className="account"><Button type="text" icon={<BellOutlined />} aria-label="Thông báo" /><span>{displayName}</span><b>{displayName.slice(0, 2).toUpperCase()}</b></div>
+          <div className="header-actions">
+            <Button type="text" icon={<BellOutlined />} aria-label="Thông báo" />
+            <AccountDropdown variant="header" placement="bottomRight" />
+          </div>
         </header>
         <main className="dashboard-content"><Outlet /></main>
       </section>
-      <Drawer title={<BrandMark />} placement="left" open={open} onClose={() => setOpen(false)}><Navigation mode={mode} close={() => setOpen(false)} /></Drawer>
+      <Drawer title={<BrandMark />} placement="left" open={open} onClose={() => setOpen(false)}>
+        <Navigation mode={mode} close={() => setOpen(false)} />
+      </Drawer>
     </div>
   )
 }
+

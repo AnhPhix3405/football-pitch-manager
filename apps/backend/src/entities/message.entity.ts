@@ -30,4 +30,10 @@ export class MessageEntity extends UuidEntity {
 
   @Column({ name: 'message_type', type: 'varchar', default: 'text' })
   messageType!: string;
+
+  @Column({ name: 'is_edited', type: 'boolean', default: false })
+  isEdited!: boolean;
+
+  @Column({ name: 'deleted_at', type: 'timestamptz', nullable: true })
+  deletedAt!: Date | null;
 }

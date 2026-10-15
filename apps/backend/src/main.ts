@@ -24,6 +24,19 @@ async function bootstrap() {
     app.setGlobalPrefix(apiPrefix);
   }
 
+  const corsOrigin = configService.get<string>('app.corsOrigin');
+  if (corsOrigin) {
+    app.enableCors({
+      origin: corsOrigin.split(',').map((item) => item.trim()),
+      credentials: true,
+    });
+  } else {
+    app.enableCors({
+      origin: true,
+      credentials: true,
+    });
+  }
+
   configureSwagger(app);
 
   await app.listen({ host, port });
