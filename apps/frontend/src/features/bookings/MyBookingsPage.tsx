@@ -1,32 +1,33 @@
 import { CalendarOutlined, EnvironmentOutlined, PlusOutlined } from '@ant-design/icons'
 import { Button, Empty, Modal, Segmented, Tag, message } from 'antd'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { formatPrice } from '../fields/field.data'
 import type { BookingStatus } from '../user/user.data'
 import { useBookings, type BookingFilterType } from './hooks/useBookings'
 
-const labels: Record<BookingStatus, string> = {
-  confirmed: 'ĐÃ XÁC NHẬN',
-  pending: 'CHỜ ĐẶT CỌC',
-  completed: 'HOÀN TẤT',
-  cancelled: 'ĐÃ HỦY',
-}
-
 export function MyBookingsPage() {
+  const { t } = useTranslation()
   const { filter, setFilter, visible, cancel } = useBookings()
   const [messageApi, contextHolder] = message.useMessage()
 
+  const statusLabels: Record<BookingStatus, string> = {
+    confirmed: t('booking.status.confirmed'),
+    pending: t('booking.status.pending'),
+    completed: t('booking.status.completed'),
+    cancelled: t('booking.status.cancelled'),
+  }
+
   const handleCancelConfirm = (id: string) =>
     Modal.confirm({
-      title: 'Hủy lịch đặt sân?',
-      content:
-        'Lịch sẽ được chuyển sang trạng thái đã hủy. Chính sách hoàn tiền phụ thuộc vào thời điểm hủy.',
-      okText: 'Xác nhận hủy',
+      title: t('booking.cancelModal.title'),
+      content: t('booking.cancelModal.content'),
+      okText: t('booking.cancelModal.ok'),
       okButtonProps: { danger: true },
-      cancelText: 'Giữ lịch',
+      cancelText: t('booking.cancelModal.cancel'),
       onOk: () => {
         cancel(id)
-        messageApi.success('Đã hủy lịch đặt sân.')
+        messageApi.success(t('booking.cancelModal.success'))
       },
     })
 
@@ -35,13 +36,13 @@ export function MyBookingsPage() {
       {contextHolder}
       <header className="user-page__head">
         <div>
-          <span className="eyebrow">RESERVATION LOG</span>
-          <h1>Lịch đặt sân của tôi</h1>
-          <p>Quản lý trận sắp tới và xem lại lịch sử sử dụng sân.</p>
+          <span className="eyebrow">{t('booking.eyebrow')}</span>
+          <h1>{t('booking.title')}</h1>
+          <p>{t('booking.subtitle')}</p>
         </div>
         <Link to="/app/fields">
           <Button type="primary" icon={<PlusOutlined />}>
-            Đặt sân mới
+            {t('booking.newBooking')}
           </Button>
         </Link>
       </header>
@@ -51,9 +52,9 @@ export function MyBookingsPage() {
         value={filter}
         onChange={(val) => setFilter(val as BookingFilterType)}
         options={[
-          { value: 'upcoming', label: 'Sắp tới' },
-          { value: 'pending', label: 'Chờ xử lý' },
-          { value: 'history', label: 'Lịch sử' },
+          { value: 'upcoming', label: t('booking.tabs.upcoming') },
+          { value: 'pending', label: t('booking.tabs.pending') },
+          { value: 'history', label: t('booking.tabs.history') },
         ]}
       />
 
@@ -63,7 +64,7 @@ export function MyBookingsPage() {
             <article className="booking-card" key={booking.id}>
               <div className="booking-card__visual">
                 <img src={booking.image} alt={booking.field} />
-                <Tag>{labels[booking.status]}</Tag>
+                <Tag>{statusLabels[booking.status]}</Tag>
               </div>
               <div className="booking-card__body">
                 <h2>{booking.field}</h2>
@@ -72,7 +73,7 @@ export function MyBookingsPage() {
                 </p>
                 <dl>
                   <div>
-                    <dt>NGÀY & GIỜ</dt>
+                    <dt>{t('booking.card.dateTime')}</dt>
                     <dd>
                       <CalendarOutlined /> {booking.date}
                       <br />
@@ -80,19 +81,19 @@ export function MyBookingsPage() {
                     </dd>
                   </div>
                   <div>
-                    <dt>TỔNG TIỀN</dt>
+                    <dt>{t('booking.card.total')}</dt>
                     <dd className="lime">{formatPrice(booking.price)}</dd>
                   </div>
                 </dl>
                 <div>
-                  <Button>Xem chi tiết</Button>
+                  <Button>{t('booking.card.viewDetails')}</Button>
                   {booking.status === 'confirmed' && (
                     <Button danger onClick={() => handleCancelConfirm(booking.id)}>
-                      Hủy lịch
+                      {t('booking.card.cancel')}
                     </Button>
                   )}
                   {booking.status === 'pending' && (
-                    <Button type="primary">Thanh toán cọc</Button>
+                    <Button type="primary">{t('booking.card.payDeposit')}</Button>
                   )}
                 </div>
               </div>
@@ -100,7 +101,7 @@ export function MyBookingsPage() {
           ))}
         </div>
       ) : (
-        <Empty description="Không có lịch đặt sân trong mục này." />
+        <Empty description={t('booking.card.empty')} />
       )}
     </section>
   )

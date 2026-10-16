@@ -20,7 +20,11 @@ export class PostCommentService {
     return this.postCommentRepository.findByPostId(postId);
   }
 
-  async addComment(postId: string, userId: string, content: string): Promise<PostCommentEntity> {
+  async addComment(
+    postId: string,
+    userId: string,
+    content: string,
+  ): Promise<PostCommentEntity> {
     const post = await this.postRepository.findById(postId);
     if (!post || post.deletedAt) {
       throw new NotFoundException('Không tìm thấy bài đăng.');

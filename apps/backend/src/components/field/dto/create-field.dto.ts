@@ -84,12 +84,15 @@ export class CreateFieldDto {
   requireDeposit?: boolean;
 
   @ApiPropertyOptional({
-    description: 'Loại đặt cọc: fixed (tiền cố định) hoặc percentage (phần trăm)',
+    description:
+      'Loại đặt cọc: fixed (tiền cố định) hoặc percentage (phần trăm)',
     enum: ['fixed', 'percentage'],
     example: 'fixed',
   })
   @ValidateIf((o) => o.requireDeposit === true)
-  @IsNotEmpty({ message: 'depositType is required when requireDeposit is true' })
+  @IsNotEmpty({
+    message: 'depositType is required when requireDeposit is true',
+  })
   @IsIn(['fixed', 'percentage'], {
     message: 'depositType must be either fixed or percentage',
   })
@@ -100,7 +103,9 @@ export class CreateFieldDto {
     example: 100000,
   })
   @ValidateIf((o) => o.requireDeposit === true)
-  @IsNotEmpty({ message: 'depositValue is required when requireDeposit is true' })
+  @IsNotEmpty({
+    message: 'depositValue is required when requireDeposit is true',
+  })
   @Type(() => Number)
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0, { message: 'depositValue must be greater than or equal to 0' })

@@ -34,7 +34,8 @@ export class RegisterOwnerDto {
 
   @ApiPropertyOptional({
     description: 'Ghi chú thêm gửi Admin duyệt',
-    example: 'Tôi có cụm 4 sân bóng cỏ nhân tạo 7 người tại khu vực Tân Bình, mong admin duyệt sớm.',
+    example:
+      'Tôi có cụm 4 sân bóng cỏ nhân tạo 7 người tại khu vực Tân Bình, mong admin duyệt sớm.',
     maxLength: 500,
   })
   @IsOptional()

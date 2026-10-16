@@ -34,7 +34,11 @@ export const extractRefreshTokenFromRequest = (
   cookieName: string,
   bodyToken?: string | null,
 ): string | null => {
-  if (bodyToken && typeof bodyToken === 'string' && bodyToken.trim().length > 0) {
+  if (
+    bodyToken &&
+    typeof bodyToken === 'string' &&
+    bodyToken.trim().length > 0
+  ) {
     return bodyToken.trim();
   }
 

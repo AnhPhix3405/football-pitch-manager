@@ -6,10 +6,7 @@ import { HttpStatus } from '@nestjs/common';
 import { ApplicationException } from '~/common/exceptions/application.exception';
 import { AuthSessionEntity } from '~/entities/auth-session.entity';
 import { AuthSessionRepository } from '~/repositories/auth-session.repository';
-import {
-  AuthSessionService,
-  hashRefreshToken,
-} from './auth-session.service';
+import { AuthSessionService, hashRefreshToken } from './auth-session.service';
 
 describe('AuthSessionService', () => {
   let service: AuthSessionService;

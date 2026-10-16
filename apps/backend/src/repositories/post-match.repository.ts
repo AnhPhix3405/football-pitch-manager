@@ -13,14 +13,18 @@ export class PostMatchRepository extends BaseRepository<PostMatchEntity> {
   }
 
   async findByPostId(postId: string): Promise<PostMatchEntity[]> {
-    return this.repository.createQueryBuilder('match')
+    return this.repository
+      .createQueryBuilder('match')
       .leftJoinAndSelect('match.applicant', 'applicant')
       .where('match.postId = :postId', { postId })
       .orderBy('match.createdAt', 'DESC')
       .getMany();
   }
 
-  async findByPostAndApplicant(postId: string, applicantId: string): Promise<PostMatchEntity | null> {
+  async findByPostAndApplicant(
+    postId: string,
+    applicantId: string,
+  ): Promise<PostMatchEntity | null> {
     return this.repository.findOne({
       where: { postId, applicantId },
       relations: { applicant: true },

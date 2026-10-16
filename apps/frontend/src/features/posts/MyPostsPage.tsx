@@ -1,32 +1,35 @@
 import { PlusOutlined, ReloadOutlined } from '@ant-design/icons'
 import { Button, Empty, Segmented, Spin } from 'antd'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { matchPosts, type MatchPost } from '../user/user.data'
 import { CreatePostModal } from './components/CreatePostModal'
 import { PostCard } from './components/PostCard'
 import { useMyPosts } from './hooks/useMyPosts'
 
 export function MyPostsPage() {
+  const { t } = useTranslation()
   const [status, setStatus] = useState<MatchPost['status']>('open')
   const [isModalOpen, setIsModalOpen] = useState(false)
   const { apiPosts, loading, refetch } = useMyPosts(status)
 
-  const visible = apiPosts.length > 0 ? apiPosts : matchPosts.filter((post) => post.status === status)
+  const visible =
+    apiPosts.length > 0 ? apiPosts : matchPosts.filter((post) => post.status === status)
 
   return (
     <section className="user-page">
       <header className="user-page__head">
         <div>
           <span className="eyebrow">MY MATCH SIGNALS</span>
-          <h1>Bài đăng của tôi</h1>
-          <p>Quản lý các yêu cầu tìm đối và trạng thái ghép đội.</p>
+          <h1>{t('posts.myPosts')}</h1>
+          <p>{t('posts.myPostsSubtitle')}</p>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           <Button icon={<ReloadOutlined />} onClick={() => refetch()} loading={loading}>
-            Làm mới
+            {t('common.refresh', { defaultValue: 'Làm mới' })}
           </Button>
           <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsModalOpen(true)}>
-            Tạo yêu cầu mới
+            {t('posts.createPost', { defaultValue: 'Tạo yêu cầu mới' })}
           </Button>
         </div>
       </header>
@@ -52,7 +55,7 @@ export function MyPostsPage() {
           ))}
         </div>
       ) : (
-        <Empty description="Không có bài đăng ở trạng thái này." />
+        <Empty description={t('posts.empty', { defaultValue: 'Không có bài đăng ở trạng thái này.' })} />
       )}
 
       <CreatePostModal

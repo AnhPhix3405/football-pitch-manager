@@ -40,7 +40,9 @@ export class OwnerProfileService {
     return OwnerProfileResponseDto.fromEntity(profile);
   }
 
-  async getPublicProfileById(id: string): Promise<PublicOwnerProfileResponseDto> {
+  async getPublicProfileById(
+    id: string,
+  ): Promise<PublicOwnerProfileResponseDto> {
     const profile = await this.ownerProfileRepository.findById(id);
 
     if (!profile) {

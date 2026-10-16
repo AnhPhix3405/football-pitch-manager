@@ -13,7 +13,8 @@ export const configureSwagger = (app: INestApplication): void => {
         type: 'http',
         scheme: 'bearer',
         bearerFormat: 'JWT',
-        description: 'Nhập Bearer JWT Access Token để xác thực các tài nguyên được bảo vệ',
+        description:
+          'Nhập Bearer JWT Access Token để xác thực các tài nguyên được bảo vệ',
       },
       'bearer',
     )

@@ -1,16 +1,18 @@
 import { FilterOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons'
 import { Button, DatePicker, Empty, Input, Select, Spin } from 'antd'
-import dayjs from 'dayjs'
+import type { Dayjs } from 'dayjs'
 import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { matchPosts } from '../user/user.data'
 import { CreatePostModal } from './components/CreatePostModal'
 import { PostCard } from './components/PostCard'
 import { filterPosts, usePublicPosts } from './hooks/usePublicPosts'
 
 export function OpponentDiscoveryPage() {
+  const { t } = useTranslation()
   const [query, setQuery] = useState('')
   const [level, setLevel] = useState('all')
-  const [selectedDate, setSelectedDate] = useState<dayjs.Dayjs | null>(null)
+  const [selectedDate, setSelectedDate] = useState<Dayjs | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
 
   const formattedDate = selectedDate ? selectedDate.format('YYYY-MM-DD') : null
@@ -25,16 +27,16 @@ export function OpponentDiscoveryPage() {
     <section className="user-page">
       <header className="user-page__head">
         <div>
-          <span className="eyebrow">MATCHMAKING NETWORK</span>
-          <h1>Tìm đối thủ</h1>
-          <p>Lọc theo trình độ và khu vực để tìm kèo phù hợp hoặc đăng bài tìm đối mới.</p>
+          <span className="eyebrow">{t('posts.eyebrow')}</span>
+          <h1>{t('posts.title')}</h1>
+          <p>{t('posts.subtitle')}</p>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           <Button icon={<ReloadOutlined />} onClick={() => refetch()} loading={loading}>
-            Làm mới
+            {t('common.refresh', { defaultValue: 'Làm mới' })}
           </Button>
           <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsModalOpen(true)}>
-            Đăng yêu cầu
+            {t('posts.createPost', { defaultValue: 'Đăng yêu cầu' })}
           </Button>
         </div>
       </header>
@@ -43,7 +45,7 @@ export function OpponentDiscoveryPage() {
         <Input
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Tìm đội, khu vực..."
+          placeholder={t('posts.searchPlaceholder', { defaultValue: 'Tìm đội, khu vực...' })}
           prefix={<FilterOutlined />}
           allowClear
         />
@@ -51,7 +53,7 @@ export function OpponentDiscoveryPage() {
           value={level}
           onChange={setLevel}
           options={[
-            { value: 'all', label: 'Mọi trình độ' },
+            { value: 'all', label: t('posts.allSkills', { defaultValue: 'Mọi trình độ' }) },
             ...['Phong trào', 'Trung bình khá', 'Khá', 'Bán chuyên'].map((value) => ({
               value,
               label: value,
@@ -59,7 +61,7 @@ export function OpponentDiscoveryPage() {
           ]}
         />
         <DatePicker
-          placeholder="Chọn ngày thi đấu"
+          placeholder={t('booking.flow.matchDate', { defaultValue: 'Chọn ngày thi đấu' })}
           value={selectedDate}
           onChange={setSelectedDate}
         />
@@ -70,7 +72,7 @@ export function OpponentDiscoveryPage() {
             setSelectedDate(null)
           }}
         >
-          Đặt lại
+          {t('common.reset', { defaultValue: 'Đặt lại' })}
         </Button>
       </div>
 
@@ -85,7 +87,7 @@ export function OpponentDiscoveryPage() {
           ))}
         </div>
       ) : (
-        <Empty description="Chưa tìm thấy kèo phù hợp. Hãy thử thay đổi bộ lọc hoặc tạo bài đăng mới." />
+        <Empty description={t('posts.empty', { defaultValue: 'Chưa tìm thấy kèo phù hợp. Hãy thử thay đổi bộ lọc hoặc tạo bài đăng mới.' })} />
       )}
 
       <CreatePostModal

@@ -84,10 +84,7 @@ export class PostController {
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Đóng / Xóa bài đăng' })
-  async deletePost(
-    @CurrentUser('id') userId: string,
-    @Param('id') id: string,
-  ) {
+  async deletePost(@CurrentUser('id') userId: string, @Param('id') id: string) {
     return this.postService.deletePost(userId, id);
   }
 }

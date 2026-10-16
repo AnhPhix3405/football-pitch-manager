@@ -1,6 +1,7 @@
 import { Button, DatePicker, Form, Input, InputNumber, Modal, Select, TimePicker, message } from 'antd'
 import dayjs from 'dayjs'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { createPost } from '../service/post.service'
 import type { CreatePostPayload } from '../interface/post.types'
 
@@ -23,6 +24,7 @@ export function CreatePostModal({
   onClose: () => void
   onSuccess: () => void
 }) {
+  const { t } = useTranslation()
   const [form] = Form.useForm<CreatePostFormValues>()
   const [loading, setLoading] = useState(false)
   const [messageApi, contextHolder] = message.useMessage()
@@ -45,7 +47,7 @@ export function CreatePostModal({
       }
 
       await createPost(payload)
-      messageApi.success('Đăng bài tìm đối thành công!')
+      messageApi.success(t('posts.createModal.success', { defaultValue: 'Đăng bài tìm đối thành công!' }))
       form.resetFields()
       setTimeout(() => {
         onSuccess()
@@ -62,7 +64,7 @@ export function CreatePostModal({
     <>
       {contextHolder}
       <Modal
-        title="Đăng yêu cầu tìm đối thủ / Ghép trận"
+        title={t('posts.createModal.title', { defaultValue: 'Đăng yêu cầu tìm đối thủ / Ghép trận' })}
         open={open}
         onCancel={onClose}
         footer={null}
@@ -83,7 +85,7 @@ export function CreatePostModal({
           style={{ marginTop: 16 }}
         >
           <Form.Item
-            label="TIÊU ĐỀ BÀI ĐĂNG"
+            label={t('posts.createModal.postTitle', { defaultValue: 'TIÊU ĐỀ BÀI ĐĂNG' })}
             name="title"
             rules={[{ required: true, message: 'Vui lòng nhập tiêu đề bài đăng.' }]}
           >
@@ -92,7 +94,7 @@ export function CreatePostModal({
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
             <Form.Item
-              label="NGÀY ĐÁ"
+              label={t('booking.flow.matchDate', { defaultValue: 'NGÀY ĐÁ' })}
               name="playDate"
               rules={[{ required: true, message: 'Vui lòng chọn ngày.' }]}
             >
@@ -100,7 +102,7 @@ export function CreatePostModal({
             </Form.Item>
 
             <Form.Item
-              label="KHUNG GIỜ"
+              label={t('booking.flow.chooseTimeSlot', { defaultValue: 'KHUNG GIỜ' })}
               name="timeRange"
               rules={[{ required: true, message: 'Vui lòng chọn khung giờ.' }]}
             >
@@ -109,7 +111,7 @@ export function CreatePostModal({
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-            <Form.Item label="TRÌNH ĐỘ YÊU CẦU" name="skillLevelRequired">
+            <Form.Item label={t('posts.skillLevel', { defaultValue: 'TRÌNH ĐỘ YÊU CẦU' })} name="skillLevelRequired">
               <Select
                 options={[
                   { value: 'Phong trào', label: 'Phong trào (Vui là chính)' },
@@ -129,7 +131,7 @@ export function CreatePostModal({
             <Input placeholder="Ví dụ: Sân Chánh Hưng, Quận 8, TP.HCM" />
           </Form.Item>
 
-          <Form.Item label="GHI CHÚ / ĐIỀU LỆ TRẬN ĐẤU" name="content">
+          <Form.Item label={t('posts.createModal.description', { defaultValue: 'GHI CHÚ / ĐIỀU LỆ TRẬN ĐẤU' })} name="content">
             <Input.TextArea
               rows={3}
               placeholder="Chia tiền sân 5-5, chuẩn bị bóng thi đấu, đá văn minh không va chạm thô bạo..."
@@ -137,9 +139,9 @@ export function CreatePostModal({
           </Form.Item>
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 24 }}>
-            <Button onClick={onClose}>Hủy</Button>
+            <Button onClick={onClose}>{t('common.cancel', { defaultValue: 'Hủy' })}</Button>
             <Button type="primary" htmlType="submit" loading={loading}>
-              Đăng yêu cầu ngay
+              {t('posts.createModal.submit', { defaultValue: 'Đăng yêu cầu ngay' })}
             </Button>
           </div>
         </Form>

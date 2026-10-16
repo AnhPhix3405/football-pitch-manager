@@ -68,37 +68,62 @@ describe('OwnerFieldController', () => {
   it('getOwnerFields delegates to OwnerFieldService', async () => {
     service.getOwnerFields.mockResolvedValue(mockListResponse);
 
-    const result = await controller.getOwnerFields(mockOwnerId, { page: 1, limit: 10 });
+    const result = await controller.getOwnerFields(mockOwnerId, {
+      page: 1,
+      limit: 10,
+    });
 
-    expect(service.getOwnerFields).toHaveBeenCalledWith(mockOwnerId, { page: 1, limit: 10 });
+    expect(service.getOwnerFields).toHaveBeenCalledWith(mockOwnerId, {
+      page: 1,
+      limit: 10,
+    });
     expect(result).toEqual(mockListResponse);
   });
 
   it('getOwnerFieldDetail delegates to OwnerFieldService', async () => {
     service.getOwnerFieldDetail.mockResolvedValue(mockFieldResponse);
 
-    const result = await controller.getOwnerFieldDetail(mockOwnerId, 'field-123');
+    const result = await controller.getOwnerFieldDetail(
+      mockOwnerId,
+      'field-123',
+    );
 
-    expect(service.getOwnerFieldDetail).toHaveBeenCalledWith('field-123', mockOwnerId);
+    expect(service.getOwnerFieldDetail).toHaveBeenCalledWith(
+      'field-123',
+      mockOwnerId,
+    );
     expect(result).toEqual(mockFieldResponse);
   });
 
   it('updateField delegates to OwnerFieldService', async () => {
     const dto: UpdateFieldDto = { name: 'Sân Mới' };
-    service.updateField.mockResolvedValue({ ...mockFieldResponse, name: 'Sân Mới' });
+    service.updateField.mockResolvedValue({
+      ...mockFieldResponse,
+      name: 'Sân Mới',
+    });
 
     const result = await controller.updateField(mockOwnerId, 'field-123', dto);
 
-    expect(service.updateField).toHaveBeenCalledWith('field-123', mockOwnerId, dto);
+    expect(service.updateField).toHaveBeenCalledWith(
+      'field-123',
+      mockOwnerId,
+      dto,
+    );
     expect(result.name).toBe('Sân Mới');
   });
 
   it('deactivateField delegates to OwnerFieldService', async () => {
-    service.deactivateField.mockResolvedValue({ ...mockFieldResponse, status: 'inactive' });
+    service.deactivateField.mockResolvedValue({
+      ...mockFieldResponse,
+      status: 'inactive',
+    });
 
     const result = await controller.deactivateField(mockOwnerId, 'field-123');
 
-    expect(service.deactivateField).toHaveBeenCalledWith('field-123', mockOwnerId);
+    expect(service.deactivateField).toHaveBeenCalledWith(
+      'field-123',
+      mockOwnerId,
+    );
     expect(result.status).toBe('inactive');
   });
 });

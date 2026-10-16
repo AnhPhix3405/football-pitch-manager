@@ -38,12 +38,14 @@ export function ApiLoginDoc() {
     }),
     ApiResponse({
       status: HttpStatus.OK,
-      description: 'Đăng nhập thành công, trả về Access Token và lưu Refresh Token vào HttpOnly Cookie',
+      description:
+        'Đăng nhập thành công, trả về Access Token và lưu Refresh Token vào HttpOnly Cookie',
       type: LoginResponseDto,
     }),
     ApiResponse({
       status: HttpStatus.UNAUTHORIZED,
-      description: 'Email hoặc mật khẩu không chính xác, hoặc tài khoản chưa kích hoạt/bị khóa',
+      description:
+        'Email hoặc mật khẩu không chính xác, hoặc tài khoản chưa kích hoạt/bị khóa',
     }),
   );
 }
@@ -68,7 +70,8 @@ export function ApiGoogleLoginDoc() {
 export function ApiRefreshTokenDoc() {
   return applyDecorators(
     ApiOperation({
-      summary: 'Làm mới Access Token khi hết hạn thông qua Refresh Token cookie / body',
+      summary:
+        'Làm mới Access Token khi hết hạn thông qua Refresh Token cookie / body',
     }),
     ApiResponse({
       status: HttpStatus.OK,
@@ -77,7 +80,8 @@ export function ApiRefreshTokenDoc() {
     }),
     ApiResponse({
       status: HttpStatus.UNAUTHORIZED,
-      description: 'Refresh token không hợp lệ, đã hết hạn hoặc phiên làm việc đã bị thu hồi',
+      description:
+        'Refresh token không hợp lệ, đã hết hạn hoặc phiên làm việc đã bị thu hồi',
     }),
   );
 }

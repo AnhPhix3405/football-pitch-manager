@@ -165,7 +165,9 @@ describe('RefreshTokenService', () => {
 
     const result = await service.execute(rawRefreshToken);
 
-    expect(tokenService.verifyRefreshToken).toHaveBeenCalledWith(rawRefreshToken);
+    expect(tokenService.verifyRefreshToken).toHaveBeenCalledWith(
+      rawRefreshToken,
+    );
     expect(authSessionService.rotateSession).toHaveBeenCalledWith(
       sampleSessionId,
       rawRefreshToken,

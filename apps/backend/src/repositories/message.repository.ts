@@ -13,6 +13,6 @@ export class MessageRepository extends BaseRepository<MessageEntity> {
   }
 
   async updateMessage(id: string, partial: Partial<MessageEntity>) {
-    await this.repository.update(id, partial as any);
+    await this.repository.update(id, partial);
   }
 }

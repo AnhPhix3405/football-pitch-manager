@@ -29,7 +29,11 @@ export class RefreshTokenService {
   async execute(
     refreshToken: string | null | undefined,
   ): Promise<RefreshTokenExecutionResult> {
-    if (!refreshToken || typeof refreshToken !== 'string' || refreshToken.trim().length === 0) {
+    if (
+      !refreshToken ||
+      typeof refreshToken !== 'string' ||
+      refreshToken.trim().length === 0
+    ) {
       throw new ApplicationException({
         code: 'REFRESH_TOKEN_MISSING',
         messageKey: 'error.refreshTokenMissing',
@@ -37,7 +41,9 @@ export class RefreshTokenService {
       });
     }
 
-    const payload = await this.tokenService.verifyRefreshToken(refreshToken.trim());
+    const payload = await this.tokenService.verifyRefreshToken(
+      refreshToken.trim(),
+    );
 
     const user = await this.userRepository.findById(payload.sub);
     if (!user) {

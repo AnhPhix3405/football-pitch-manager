@@ -1,10 +1,12 @@
 import { CheckOutlined, CloseOutlined, EyeOutlined, FileTextOutlined, ReloadOutlined, SearchOutlined } from '@ant-design/icons'
 import { Button, Descriptions, Drawer, Input, Modal, Segmented, Table, Tag, message } from 'antd'
 import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { approvalRequests, type ApprovalRequest } from './admin.data'
 import { mapOwnerApprovalToRequest, useAdminApprovals } from './hooks/useAdminApprovals'
 
 export function AdminApprovalsPage() {
+  const { t } = useTranslation()
   const [type, setType] = useState<'owner' | 'field'>('owner')
   const [query, setQuery] = useState('')
   const [selected, setSelected] = useState<ApprovalRequest>()
@@ -60,8 +62,8 @@ export function AdminApprovalsPage() {
       <header className="user-page__head">
         <div>
           <span className="eyebrow">VERIFICATION QUEUE</span>
-          <h1>Phê duyệt chủ sân & sân</h1>
-          <p>Kiểm tra hồ sơ, tài liệu và mức độ rủi ro trước khi kích hoạt.</p>
+          <h1>{t('admin.approvalsTitle', { defaultValue: 'Phê duyệt chủ sân & sân' })}</h1>
+          <p>{t('admin.approvalsSubtitle', { defaultValue: 'Kiểm tra hồ sơ, tài liệu và mức độ rủi ro trước khi kích hoạt.' })}</p>
         </div>
       </header>
       <div className="admin-toolbar">
@@ -80,7 +82,7 @@ export function AdminApprovalsPage() {
           placeholder="Tìm hồ sơ..."
         />
         <Button icon={<ReloadOutlined />} onClick={() => refetch()} loading={loading}>
-          Làm mới
+          {t('common.refresh', { defaultValue: 'Làm mới' })}
         </Button>
       </div>
       <Table
@@ -97,9 +99,15 @@ export function AdminApprovalsPage() {
             title: 'THAO TÁC',
             render: (_, record) => (
               <div style={{ display: 'flex', gap: 6 }}>
-                <Button size="small" icon={<EyeOutlined />} onClick={() => setSelected(record)}>Xem</Button>
-                <Button size="small" type="primary" icon={<CheckOutlined />} onClick={() => decide(record, true)}>Duyệt</Button>
-                <Button size="small" danger icon={<CloseOutlined />} onClick={() => decide(record, false)}>Từ chối</Button>
+                <Button size="small" icon={<EyeOutlined />} onClick={() => setSelected(record)}>
+                  {t('common.details', { defaultValue: 'Xem' })}
+                </Button>
+                <Button size="small" type="primary" icon={<CheckOutlined />} onClick={() => decide(record, true)}>
+                  {t('common.confirm', { defaultValue: 'Duyệt' })}
+                </Button>
+                <Button size="small" danger icon={<CloseOutlined />} onClick={() => decide(record, false)}>
+                  {t('common.cancel', { defaultValue: 'Từ chối' })}
+                </Button>
               </div>
             ),
           },

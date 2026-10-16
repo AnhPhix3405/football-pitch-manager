@@ -84,7 +84,7 @@ describe('OwnerRegistrationService', () => {
       userRepository.findById.mockResolvedValue({
         ...mockUser,
         role: 'owner',
-      } as UserEntity);
+      });
 
       try {
         await service.registerOwner('user-1', validDto);
@@ -105,7 +105,7 @@ describe('OwnerRegistrationService', () => {
       userRepository.findById.mockResolvedValue({
         ...mockUser,
         role: 'admin',
-      } as UserEntity);
+      });
 
       try {
         await service.registerOwner('user-1', validDto);
@@ -124,10 +124,12 @@ describe('OwnerRegistrationService', () => {
 
     it('throws 400 REGISTRATION_REQUEST_PENDING when user already has pending request', async () => {
       userRepository.findById.mockResolvedValue(mockUser);
-      approvalRequestRepository.findPendingByRequesterAndType.mockResolvedValue({
-        id: 'request-1',
-        status: 'pending',
-      } as ApprovalRequestEntity);
+      approvalRequestRepository.findPendingByRequesterAndType.mockResolvedValue(
+        {
+          id: 'request-1',
+          status: 'pending',
+        } as ApprovalRequestEntity,
+      );
 
       try {
         await service.registerOwner('user-1', validDto);

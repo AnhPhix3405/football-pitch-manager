@@ -21,7 +21,9 @@ describe('JwtAuthGuard', () => {
     guard = new JwtAuthGuard(reflector, tokenService);
   });
 
-  const createMockContext = (headers: Record<string, string> = {}): ExecutionContext => {
+  const createMockContext = (
+    headers: Record<string, string> = {},
+  ): ExecutionContext => {
     const request = {
       headers,
       user: undefined,
@@ -96,7 +98,9 @@ describe('JwtAuthGuard', () => {
     const result = await guard.canActivate(context);
 
     expect(result).toBe(true);
-    expect(tokenService.verifyAccessToken).toHaveBeenCalledWith('valid.jwt.token');
+    expect(tokenService.verifyAccessToken).toHaveBeenCalledWith(
+      'valid.jwt.token',
+    );
     const req = context.switchToHttp().getRequest();
     expect(req.user).toEqual(mockPayload);
   });

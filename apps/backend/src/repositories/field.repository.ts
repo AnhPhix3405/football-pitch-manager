@@ -63,14 +63,18 @@ export class FieldRepository extends BaseRepository<FieldEntity> {
       name: data.name,
       address: data.address,
       district: data.district ?? null,
-      lat: data.lat !== undefined && data.lat !== null ? String(data.lat) : null,
-      lng: data.lng !== undefined && data.lng !== null ? String(data.lng) : null,
+      lat:
+        data.lat !== undefined && data.lat !== null ? String(data.lat) : null,
+      lng:
+        data.lng !== undefined && data.lng !== null ? String(data.lng) : null,
       description: data.description ?? null,
       status: 'pending',
       requireDeposit: data.requireDeposit ?? false,
       depositType: data.requireDeposit ? (data.depositType ?? null) : null,
       depositValue:
-        data.requireDeposit && data.depositValue !== undefined && data.depositValue !== null
+        data.requireDeposit &&
+        data.depositValue !== undefined &&
+        data.depositValue !== null
           ? String(data.depositValue)
           : null,
     });
@@ -99,9 +103,7 @@ export class FieldRepository extends BaseRepository<FieldEntity> {
       qb.andWhere('field.name ILIKE :search', { search: `%${sanitized}%` });
     }
 
-    qb.orderBy('field.createdAt', 'DESC')
-      .skip(skip)
-      .take(limit);
+    qb.orderBy('field.createdAt', 'DESC').skip(skip).take(limit);
 
     const [items, total] = await qb.getManyAndCount();
     return { items, total };
@@ -128,7 +130,9 @@ export class FieldRepository extends BaseRepository<FieldEntity> {
       .where('field.status = :status', { status: 'active' });
 
     if (options.district?.trim()) {
-      qb.andWhere('field.district = :district', { district: options.district.trim() });
+      qb.andWhere('field.district = :district', {
+        district: options.district.trim(),
+      });
     }
 
     if (options.search?.trim()) {
@@ -136,9 +140,7 @@ export class FieldRepository extends BaseRepository<FieldEntity> {
       qb.andWhere('field.name ILIKE :search', { search: `%${sanitized}%` });
     }
 
-    qb.orderBy('field.createdAt', 'DESC')
-      .skip(skip)
-      .take(limit);
+    qb.orderBy('field.createdAt', 'DESC').skip(skip).take(limit);
 
     const [items, total] = await qb.getManyAndCount();
     return { items, total };

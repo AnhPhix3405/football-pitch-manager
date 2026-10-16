@@ -3,10 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { sign } from 'jsonwebtoken';
 import { ApplicationException } from '~/common/exceptions/application.exception';
 import { JwtPayload } from '../interfaces/jwt-payload.interface';
-import {
-  parseDurationToSeconds,
-  TokenService,
-} from './token.service';
+import { parseDurationToSeconds, TokenService } from './token.service';
 
 describe('TokenService', () => {
   let tokenService: TokenService;

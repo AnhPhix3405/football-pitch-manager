@@ -82,13 +82,18 @@ export class AuthController {
       sessionId,
       userId: user.id,
       refreshToken: tokens.refreshToken,
-      userAgent: (req.headers['user-agent'] as string) ?? null,
+      userAgent: req.headers['user-agent'] ?? null,
       ipAddress: req.ip ?? null,
       ttlSeconds: cookieOptions.maxAge,
     });
 
     const cookieName = this.tokenService.getRefreshCookieName();
-    setRefreshTokenCookie(reply, cookieName, tokens.refreshToken, cookieOptions);
+    setRefreshTokenCookie(
+      reply,
+      cookieName,
+      tokens.refreshToken,
+      cookieOptions,
+    );
 
     return {
       messageKey: 'success.loginSuccess',
@@ -124,13 +129,18 @@ export class AuthController {
       sessionId,
       userId: user.id,
       refreshToken: tokens.refreshToken,
-      userAgent: (req.headers['user-agent'] as string) ?? null,
+      userAgent: req.headers['user-agent'] ?? null,
       ipAddress: req.ip ?? null,
       ttlSeconds: cookieOptions.maxAge,
     });
 
     const cookieName = this.tokenService.getRefreshCookieName();
-    setRefreshTokenCookie(reply, cookieName, tokens.refreshToken, cookieOptions);
+    setRefreshTokenCookie(
+      reply,
+      cookieName,
+      tokens.refreshToken,
+      cookieOptions,
+    );
 
     return {
       messageKey: 'success.loginGoogleSuccess',
@@ -152,7 +162,11 @@ export class AuthController {
     @Res({ passthrough: true }) reply: FastifyReply,
   ): Promise<RefreshTokenResponseDto> {
     const cookieName = this.tokenService.getRefreshCookieName();
-    const token = extractRefreshTokenFromRequest(req, cookieName, body?.refreshToken);
+    const token = extractRefreshTokenFromRequest(
+      req,
+      cookieName,
+      body?.refreshToken,
+    );
 
     const result = await this.refreshTokenService.execute(token);
 
@@ -183,7 +197,11 @@ export class AuthController {
     @Res({ passthrough: true }) reply: FastifyReply,
   ): Promise<LogoutResponseDto> {
     const cookieName = this.tokenService.getRefreshCookieName();
-    const token = extractRefreshTokenFromRequest(req, cookieName, body?.refreshToken);
+    const token = extractRefreshTokenFromRequest(
+      req,
+      cookieName,
+      body?.refreshToken,
+    );
 
     await this.logoutService.execute(token);
 

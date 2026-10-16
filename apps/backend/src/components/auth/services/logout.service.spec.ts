@@ -40,7 +40,9 @@ describe('LogoutService', () => {
 
     const result = await service.execute(rawRefreshToken);
 
-    expect(tokenService.verifyRefreshToken).toHaveBeenCalledWith(rawRefreshToken);
+    expect(tokenService.verifyRefreshToken).toHaveBeenCalledWith(
+      rawRefreshToken,
+    );
     expect(authSessionService.revokeSession).toHaveBeenCalledWith(
       sampleSessionId,
     );
@@ -48,7 +50,9 @@ describe('LogoutService', () => {
   });
 
   it('is idempotent: ignores invalid or expired token without throwing errors', async () => {
-    tokenService.verifyRefreshToken.mockRejectedValue(new Error('Token expired'));
+    tokenService.verifyRefreshToken.mockRejectedValue(
+      new Error('Token expired'),
+    );
 
     const result = await service.execute('expired.invalid.token');
 

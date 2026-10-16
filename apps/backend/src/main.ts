@@ -25,15 +25,20 @@ async function bootstrap() {
   }
 
   const corsOrigin = configService.get<string>('app.corsOrigin');
+  const corsOptions = {
+    credentials: true,
+    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
+  };
+
   if (corsOrigin) {
     app.enableCors({
+      ...corsOptions,
       origin: corsOrigin.split(',').map((item) => item.trim()),
-      credentials: true,
     });
   } else {
     app.enableCors({
+      ...corsOptions,
       origin: true,
-      credentials: true,
     });
   }
 

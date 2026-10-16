@@ -49,9 +49,17 @@ describe('FieldController', () => {
   it('getPublicFields delegates to FieldService', async () => {
     service.getPublicFields.mockResolvedValue(mockListResponse);
 
-    const result = await controller.getPublicFields({ page: 1, limit: 10, district: 'Tân Bình' });
+    const result = await controller.getPublicFields({
+      page: 1,
+      limit: 10,
+      district: 'Tân Bình',
+    });
 
-    expect(service.getPublicFields).toHaveBeenCalledWith({ page: 1, limit: 10, district: 'Tân Bình' });
+    expect(service.getPublicFields).toHaveBeenCalledWith({
+      page: 1,
+      limit: 10,
+      district: 'Tân Bình',
+    });
     expect(result).toEqual(mockListResponse);
   });
 

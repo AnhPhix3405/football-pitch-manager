@@ -24,7 +24,8 @@ export class CreatePostDto {
 
   @ApiPropertyOptional({
     description: 'Nội dung chi tiết, tiền sân chia 5-5, màu áo, quy định',
-    example: 'Đội mình trung bình, đá văn minh không va chạm thô bạo. Tiền sân chia đều.',
+    example:
+      'Đội mình trung bình, đá văn minh không va chạm thô bạo. Tiền sân chia đều.',
   })
   @IsString()
   @IsOptional()
@@ -36,7 +37,9 @@ export class CreatePostDto {
   })
   @IsString()
   @IsNotEmpty({ message: 'Ngày đá không được để trống' })
-  @Matches(/^\d{4}-\d{2}-\d{2}$/, { message: 'Ngày đá phải đúng định dạng YYYY-MM-DD' })
+  @Matches(/^\d{4}-\d{2}-\d{2}$/, {
+    message: 'Ngày đá phải đúng định dạng YYYY-MM-DD',
+  })
   playDate!: string;
 
   @ApiProperty({
@@ -64,7 +67,8 @@ export class CreatePostDto {
   skillLevelRequired?: string;
 
   @ApiProperty({
-    description: 'Số người đá mỗi đội hoặc quy mô trận đấu (ví dụ: 10, 14, 5, 7)',
+    description:
+      'Số người đá mỗi đội hoặc quy mô trận đấu (ví dụ: 10, 14, 5, 7)',
     example: 14,
   })
   @Type(() => Number)

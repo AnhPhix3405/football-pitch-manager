@@ -15,7 +15,12 @@ export class CreateTblAuthSessions2026091900029 implements MigrationInterface {
           { name: 'user_id', type: 'uuid' },
           { name: 'refresh_token_hash', type: 'varchar', length: '64' },
           { name: 'user_agent', type: 'text', isNullable: true },
-          { name: 'ip_address', type: 'varchar', length: '45', isNullable: true },
+          {
+            name: 'ip_address',
+            type: 'varchar',
+            length: '45',
+            isNullable: true,
+          },
           { name: 'is_revoked', type: 'boolean', default: false },
           { name: 'expires_at', type: 'timestamptz' },
           ...auditColumns(),

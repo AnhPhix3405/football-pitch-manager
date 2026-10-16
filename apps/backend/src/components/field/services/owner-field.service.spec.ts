@@ -119,7 +119,7 @@ describe('OwnerFieldService', () => {
         name: 'Sân bóng',
         address: '123 Đường A',
         requireDeposit: true,
-        depositType: 'invalid-type' as any,
+        depositType: 'invalid-type',
         depositValue: 50,
       };
 
@@ -167,7 +167,10 @@ describe('OwnerFieldService', () => {
     it('returns field detail when field exists and belongs to owner', async () => {
       fieldRepository.findByIdAndOwnerId.mockResolvedValue(mockFieldEntity);
 
-      const result = await service.getOwnerFieldDetail('field-123', mockOwnerId);
+      const result = await service.getOwnerFieldDetail(
+        'field-123',
+        mockOwnerId,
+      );
 
       expect(result.id).toBe('field-123');
       expect(result.ownerId).toBe(mockOwnerId);
@@ -194,10 +197,16 @@ describe('OwnerFieldService', () => {
         requireDeposit: false,
       };
 
-      fieldRepository.findByIdAndOwnerId.mockResolvedValue({ ...mockFieldEntity });
+      fieldRepository.findByIdAndOwnerId.mockResolvedValue({
+        ...mockFieldEntity,
+      });
       fieldRepository.save.mockImplementation(async (entity: any) => entity);
 
-      const result = await service.updateField('field-123', mockOwnerId, updateDto);
+      const result = await service.updateField(
+        'field-123',
+        mockOwnerId,
+        updateDto,
+      );
 
       expect(result.name).toBe('Sân bóng Tân Bình Mới');
       expect(result.requireDeposit).toBe(false);
@@ -216,7 +225,9 @@ describe('OwnerFieldService', () => {
 
   describe('deactivateField', () => {
     it('sets field status to inactive', async () => {
-      fieldRepository.findByIdAndOwnerId.mockResolvedValue({ ...mockFieldEntity });
+      fieldRepository.findByIdAndOwnerId.mockResolvedValue({
+        ...mockFieldEntity,
+      });
       fieldRepository.save.mockImplementation(async (entity: any) => entity);
 
       const result = await service.deactivateField('field-123', mockOwnerId);

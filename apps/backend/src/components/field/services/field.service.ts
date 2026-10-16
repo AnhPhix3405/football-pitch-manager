@@ -60,7 +60,8 @@ export class FieldService {
       status: field.status,
       requireDeposit: field.requireDeposit,
       depositType: field.depositType,
-      depositValue: field.depositValue !== null ? Number(field.depositValue) : null,
+      depositValue:
+        field.depositValue !== null ? Number(field.depositValue) : null,
       createdAt: field.createdAt,
       updatedAt: field.updatedAt,
     };

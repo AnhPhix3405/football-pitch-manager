@@ -3,14 +3,20 @@ import { Type } from 'class-transformer';
 import { IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
 
 export class QueryPostDto {
-  @ApiPropertyOptional({ description: 'Trang hiện tại (mặc định: 1)', default: 1 })
+  @ApiPropertyOptional({
+    description: 'Trang hiện tại (mặc định: 1)',
+    default: 1,
+  })
   @Type(() => Number)
   @IsInt()
   @Min(1)
   @IsOptional()
   page: number = 1;
 
-  @ApiPropertyOptional({ description: 'Số lượng bài mỗi trang (mặc định: 10)', default: 10 })
+  @ApiPropertyOptional({
+    description: 'Số lượng bài mỗi trang (mặc định: 10)',
+    default: 10,
+  })
   @Type(() => Number)
   @IsInt()
   @Min(1)
@@ -23,7 +29,9 @@ export class QueryPostDto {
   @IsOptional()
   search?: string;
 
-  @ApiPropertyOptional({ description: 'Trình độ yêu cầu (Phong trào, Trung bình khá, Khá)' })
+  @ApiPropertyOptional({
+    description: 'Trình độ yêu cầu (Phong trào, Trung bình khá, Khá)',
+  })
   @IsString()
   @IsOptional()
   skillLevel?: string;
@@ -33,7 +41,9 @@ export class QueryPostDto {
   @IsOptional()
   playDate?: string;
 
-  @ApiPropertyOptional({ description: 'Trạng thái bài đăng (open, matched, closed)' })
+  @ApiPropertyOptional({
+    description: 'Trạng thái bài đăng (open, matched, closed)',
+  })
   @IsString()
   @IsOptional()
   status?: string;

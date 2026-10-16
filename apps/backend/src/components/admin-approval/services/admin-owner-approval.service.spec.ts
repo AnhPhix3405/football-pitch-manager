@@ -113,8 +113,12 @@ describe('AdminOwnerApprovalService', () => {
 
       const result = await service.getOwnerApprovals(query);
 
-      expect(approvalRequestRepository.findOwnerRegistrations).toHaveBeenCalledWith(query);
-      expect(ownerProfileRepository.findByIds).toHaveBeenCalledWith(['profile-1']);
+      expect(
+        approvalRequestRepository.findOwnerRegistrations,
+      ).toHaveBeenCalledWith(query);
+      expect(ownerProfileRepository.findByIds).toHaveBeenCalledWith([
+        'profile-1',
+      ]);
       expect(result.total).toBe(1);
       expect(result.page).toBe(1);
       expect(result.limit).toBe(10);
@@ -122,13 +126,17 @@ describe('AdminOwnerApprovalService', () => {
       expect(result.items).toHaveLength(1);
       expect(result.items[0].id).toBe('req-1');
       expect(result.items[0].requester.email).toBe('applicant@example.com');
-      expect(result.items[0].ownerProfile?.businessName).toBe('Tan Binh Sport Complex');
+      expect(result.items[0].ownerProfile?.businessName).toBe(
+        'Tan Binh Sport Complex',
+      );
     });
   });
 
   describe('getOwnerApprovalDetail', () => {
     it('throws 404 APPROVAL_REQUEST_NOT_FOUND when request does not exist', async () => {
-      approvalRequestRepository.findOwnerRegistrationById.mockResolvedValue(null);
+      approvalRequestRepository.findOwnerRegistrationById.mockResolvedValue(
+        null,
+      );
 
       try {
         await service.getOwnerApprovalDetail('non-existent');
@@ -146,7 +154,9 @@ describe('AdminOwnerApprovalService', () => {
     });
 
     it('returns detailed approval request with profile and reviewer info', async () => {
-      approvalRequestRepository.findOwnerRegistrationById.mockResolvedValue(mockPendingRequest);
+      approvalRequestRepository.findOwnerRegistrationById.mockResolvedValue(
+        mockPendingRequest,
+      );
       ownerProfileRepository.findById.mockResolvedValue(mockProfile);
 
       const result = await service.getOwnerApprovalDetail('req-1');
@@ -180,7 +190,11 @@ describe('AdminOwnerApprovalService', () => {
       });
 
       try {
-        await service.approveOwnerRegistration('non-existent', 'admin-1', approveDto);
+        await service.approveOwnerRegistration(
+          'non-existent',
+          'admin-1',
+          approveDto,
+        );
         throw new Error('Should have failed');
       } catch (error) {
         expect(error).toBeInstanceOf(ApplicationException);
@@ -251,7 +265,9 @@ describe('AdminOwnerApprovalService', () => {
 
       const mockUserRepo = {
         findOne: jest.fn().mockResolvedValue(mockRequesterUser),
-        save: jest.fn().mockResolvedValue({ ...mockRequesterUser, role: 'owner' }),
+        save: jest
+          .fn()
+          .mockResolvedValue({ ...mockRequesterUser, role: 'owner' }),
       };
 
       const mockApprovalRepo = {
@@ -272,7 +288,11 @@ describe('AdminOwnerApprovalService', () => {
         return callback(mockManager);
       });
 
-      const result = await service.approveOwnerRegistration('req-1', 'admin-1', approveDto);
+      const result = await service.approveOwnerRegistration(
+        'req-1',
+        'admin-1',
+        approveDto,
+      );
 
       expect(mockApprovalRepo.findOne).toHaveBeenCalledWith({
         where: { id: 'req-1', type: 'owner_register' },
@@ -306,7 +326,11 @@ describe('AdminOwnerApprovalService', () => {
       });
 
       try {
-        await service.rejectOwnerRegistration('non-existent', 'admin-1', rejectDto);
+        await service.rejectOwnerRegistration(
+          'non-existent',
+          'admin-1',
+          rejectDto,
+        );
         throw new Error('Should have failed');
       } catch (error) {
         expect(error).toBeInstanceOf(ApplicationException);
@@ -386,7 +410,11 @@ describe('AdminOwnerApprovalService', () => {
         return callback(mockManager);
       });
 
-      const result = await service.rejectOwnerRegistration('req-1', 'admin-1', rejectDto);
+      const result = await service.rejectOwnerRegistration(
+        'req-1',
+        'admin-1',
+        rejectDto,
+      );
 
       expect(mockApprovalRepo.findOne).toHaveBeenCalledWith({
         where: { id: 'req-1', type: 'owner_register' },

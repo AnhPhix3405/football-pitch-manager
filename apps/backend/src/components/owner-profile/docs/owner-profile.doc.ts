@@ -19,7 +19,8 @@ export function ApiGetMyProfileDoc() {
   return applyDecorators(
     ApiBearerAuth(),
     ApiOperation({
-      summary: 'Lấy thông tin chi tiết hồ sơ chủ sân của tài khoản đang đăng nhập',
+      summary:
+        'Lấy thông tin chi tiết hồ sơ chủ sân của tài khoản đang đăng nhập',
     }),
     ApiResponse({
       status: HttpStatus.OK,
@@ -41,7 +42,8 @@ export function ApiUpdateMyProfileDoc() {
   return applyDecorators(
     ApiBearerAuth(),
     ApiOperation({
-      summary: 'Tạo mới hoặc cập nhật thông tin hồ sơ chủ sân của tài khoản hiện tại',
+      summary:
+        'Tạo mới hoặc cập nhật thông tin hồ sơ chủ sân của tài khoản hiện tại',
     }),
     ApiResponse({
       status: HttpStatus.OK,

@@ -19,11 +19,7 @@ import { PostService } from './services/post.service';
     TypeOrmModule.forFeature([PostEntity, PostMatchEntity, PostCommentEntity]),
     AuthModule,
   ],
-  controllers: [
-    PostController,
-    PostMatchController,
-    PostCommentController,
-  ],
+  controllers: [PostController, PostMatchController, PostCommentController],
   providers: [
     PostService,
     PostMatchService,
@@ -32,10 +28,6 @@ import { PostService } from './services/post.service';
     PostMatchRepository,
     PostCommentRepository,
   ],
-  exports: [
-    PostService,
-    PostMatchService,
-    PostCommentService,
-  ],
+  exports: [PostService, PostMatchService, PostCommentService],
 })
 export class PostModule {}

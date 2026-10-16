@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { env } from './env'
+import i18n from './i18n'
 
 export const ACCESS_TOKEN_KEY = 'pitchmaster.accessToken'
 
@@ -32,6 +33,14 @@ apiClient.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
   }
+
+  const currentLanguage =
+    i18n.resolvedLanguage ||
+    i18n.language ||
+    window.localStorage.getItem('i18nextLng') ||
+    'vi'
+  config.headers['Accept-Language'] = currentLanguage
+
   return config
 })
 

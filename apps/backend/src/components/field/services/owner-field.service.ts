@@ -180,7 +180,11 @@ export class OwnerFieldService {
       });
     }
 
-    if (depositValue === undefined || depositValue === null || depositValue < 0) {
+    if (
+      depositValue === undefined ||
+      depositValue === null ||
+      depositValue < 0
+    ) {
       throw new ApplicationException({
         code: 'INVALID_DEPOSIT_CONFIG',
         messageKey: 'error.invalidDepositConfig',
@@ -188,7 +192,10 @@ export class OwnerFieldService {
       });
     }
 
-    if (depositType === 'percentage' && (depositValue <= 0 || depositValue > 100)) {
+    if (
+      depositType === 'percentage' &&
+      (depositValue <= 0 || depositValue > 100)
+    ) {
       throw new ApplicationException({
         code: 'INVALID_DEPOSIT_CONFIG',
         messageKey: 'error.invalidDepositConfig',
@@ -215,7 +222,8 @@ export class OwnerFieldService {
       status: field.status,
       requireDeposit: field.requireDeposit,
       depositType: field.depositType,
-      depositValue: field.depositValue !== null ? Number(field.depositValue) : null,
+      depositValue:
+        field.depositValue !== null ? Number(field.depositValue) : null,
       createdAt: field.createdAt,
       updatedAt: field.updatedAt,
     };

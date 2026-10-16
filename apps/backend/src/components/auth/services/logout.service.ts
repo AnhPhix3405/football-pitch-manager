@@ -10,7 +10,11 @@ export class LogoutService {
   ) {}
 
   async execute(refreshToken?: string | null): Promise<{ success: true }> {
-    if (refreshToken && typeof refreshToken === 'string' && refreshToken.trim().length > 0) {
+    if (
+      refreshToken &&
+      typeof refreshToken === 'string' &&
+      refreshToken.trim().length > 0
+    ) {
       try {
         const payload = await this.tokenService.verifyRefreshToken(
           refreshToken.trim(),

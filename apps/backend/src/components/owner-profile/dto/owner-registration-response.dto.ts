@@ -46,7 +46,9 @@ export class OwnerRegistrationResponseDto {
   })
   createdAt!: Date;
 
-  static fromEntity(entity: ApprovalRequestEntity): OwnerRegistrationResponseDto {
+  static fromEntity(
+    entity: ApprovalRequestEntity,
+  ): OwnerRegistrationResponseDto {
     const dto = new OwnerRegistrationResponseDto();
     dto.id = entity.id;
     dto.type = entity.type;

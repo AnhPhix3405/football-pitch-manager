@@ -10,10 +10,7 @@ import { FieldListResponseDto } from '../dto/field-list-response.dto';
 import { FieldResponseDto } from '../dto/field-response.dto';
 
 export function ApiOwnerFieldControllerDoc() {
-  return applyDecorators(
-    ApiTags('Owner Fields'),
-    ApiBearerAuth(),
-  );
+  return applyDecorators(ApiTags('Owner Fields'), ApiBearerAuth());
 }
 
 export function ApiCreateFieldDoc() {
@@ -32,7 +29,8 @@ export function ApiCreateFieldDoc() {
     }),
     ApiResponse({
       status: HttpStatus.FORBIDDEN,
-      description: 'Chỉ tài khoản Chủ sân (Owner) hoặc Admin mới có quyền thao tác',
+      description:
+        'Chỉ tài khoản Chủ sân (Owner) hoặc Admin mới có quyền thao tác',
     }),
   );
 }
@@ -40,7 +38,8 @@ export function ApiCreateFieldDoc() {
 export function ApiGetOwnerFieldsDoc() {
   return applyDecorators(
     ApiOperation({
-      summary: 'Danh sách các cụm sân thuộc quyền sở hữu của chủ sân đang đăng nhập',
+      summary:
+        'Danh sách các cụm sân thuộc quyền sở hữu của chủ sân đang đăng nhập',
     }),
     ApiResponse({
       status: HttpStatus.OK,
@@ -49,7 +48,8 @@ export function ApiGetOwnerFieldsDoc() {
     }),
     ApiResponse({
       status: HttpStatus.FORBIDDEN,
-      description: 'Chỉ tài khoản Chủ sân (Owner) hoặc Admin mới có quyền thao tác',
+      description:
+        'Chỉ tài khoản Chủ sân (Owner) hoặc Admin mới có quyền thao tác',
     }),
   );
 }

@@ -31,22 +31,30 @@ export class PostRepository extends BaseRepository<PostEntity> {
     const limit = Math.max(1, Math.min(50, Number(options.limit) || 10));
     const skip = (page - 1) * limit;
 
-    const qb = this.repository.createQueryBuilder('post')
+    const qb = this.repository
+      .createQueryBuilder('post')
       .leftJoinAndSelect('post.user', 'user')
       .where('post.deletedAt IS NULL')
       .andWhere('post.status = :status', { status: 'open' });
 
     if (options.search?.trim()) {
       const search = `%${options.search.trim().toLowerCase()}%`;
-      qb.andWhere('(LOWER(post.title) LIKE :search OR LOWER(post.content) LIKE :search)', { search });
+      qb.andWhere(
+        '(LOWER(post.title) LIKE :search OR LOWER(post.content) LIKE :search)',
+        { search },
+      );
     }
 
     if (options.skillLevel?.trim() && options.skillLevel !== 'all') {
-      qb.andWhere('post.skillLevelRequired = :skillLevel', { skillLevel: options.skillLevel.trim() });
+      qb.andWhere('post.skillLevelRequired = :skillLevel', {
+        skillLevel: options.skillLevel.trim(),
+      });
     }
 
     if (options.playDate?.trim()) {
-      qb.andWhere('post.playDate = :playDate', { playDate: options.playDate.trim() });
+      qb.andWhere('post.playDate = :playDate', {
+        playDate: options.playDate.trim(),
+      });
     }
 
     qb.orderBy('post.playDate', 'ASC')
@@ -70,7 +78,8 @@ export class PostRepository extends BaseRepository<PostEntity> {
     const limit = Math.max(1, Math.min(50, Number(options.limit) || 10));
     const skip = (page - 1) * limit;
 
-    const qb = this.repository.createQueryBuilder('post')
+    const qb = this.repository
+      .createQueryBuilder('post')
       .where('post.userId = :userId', { userId })
       .andWhere('post.deletedAt IS NULL');
 
@@ -78,9 +87,7 @@ export class PostRepository extends BaseRepository<PostEntity> {
       qb.andWhere('post.status = :status', { status: options.status.trim() });
     }
 
-    qb.orderBy('post.createdAt', 'DESC')
-      .skip(skip)
-      .take(limit);
+    qb.orderBy('post.createdAt', 'DESC').skip(skip).take(limit);
 
     const [items, total] = await qb.getManyAndCount();
 
@@ -94,7 +101,8 @@ export class PostRepository extends BaseRepository<PostEntity> {
   }
 
   async findPostDetailById(id: string): Promise<PostEntity | null> {
-    return this.repository.createQueryBuilder('post')
+    return this.repository
+      .createQueryBuilder('post')
       .leftJoinAndSelect('post.user', 'user')
       .where('post.id = :id', { id })
       .andWhere('post.deletedAt IS NULL')

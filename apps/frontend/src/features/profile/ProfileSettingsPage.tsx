@@ -1,6 +1,7 @@
 import { LockOutlined, MailOutlined, SafetyCertificateFilled, UserOutlined } from '@ant-design/icons'
 import { Avatar, Button, Form, Input, Select, Switch, Tabs, Tag, message } from 'antd'
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useAppSelector } from '../../app/hooks'
 import { updateMyProfile } from '../owner/service/owner.service'
 
@@ -11,10 +12,15 @@ interface ProfileForm {
 }
 
 export function ProfileSettingsPage() {
+  const { t, i18n } = useTranslation()
   const user = useAppSelector((state) => state.auth.user)
   const [form] = Form.useForm<ProfileForm>()
   const [messageApi, contextHolder] = message.useMessage()
   const [notifications, setNotifications] = useState(true)
+
+  const currentLang = (i18n.resolvedLanguage || i18n.language || 'vi').toLowerCase().startsWith('en')
+    ? 'en'
+    : 'vi'
 
   useEffect(() => {
     if (user) {
@@ -35,6 +41,15 @@ export function ProfileSettingsPage() {
     } catch {
       messageApi.success('Đã lưu hồ sơ cục bộ.')
     }
+  }
+
+  const handleLanguageSelect = async (lng: string) => {
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem('i18nextLng', lng)
+      document.documentElement.lang = lng
+    }
+    await i18n.changeLanguage(lng)
+    messageApi.success(t('language.switchSuccess', { defaultValue: 'Đã đổi ngôn ngữ thành công.' }))
   }
 
   const profile = (
@@ -79,7 +94,7 @@ export function ProfileSettingsPage() {
           <Input.TextArea rows={4} showCount maxLength={240} />
         </Form.Item>
         <Button type="primary" htmlType="submit">
-          Lưu thay đổi
+          {t('common.save', { defaultValue: 'Lưu thay đổi' })}
         </Button>
       </Form>
     </div>
@@ -90,9 +105,10 @@ export function ProfileSettingsPage() {
       <span className="eyebrow">SYSTEM PREFERENCES</span>
       <h2>Tùy chọn tài khoản</h2>
       <label>
-        NGÔN NGỮ
+        {t('language.switch', { defaultValue: 'NGÔN NGỮ' }).toUpperCase()}
         <Select
-          defaultValue="vi"
+          value={currentLang}
+          onChange={handleLanguageSelect}
           options={[
             { value: 'vi', label: 'Tiếng Việt' },
             { value: 'en', label: 'English' },
@@ -107,7 +123,7 @@ export function ProfileSettingsPage() {
         <Switch checked={notifications} onChange={setNotifications} />
       </div>
       <Button type="primary" onClick={() => messageApi.success('Đã lưu tùy chọn.')}>
-        Lưu tùy chọn
+        {t('common.save', { defaultValue: 'Lưu tùy chọn' })}
       </Button>
     </div>
   )
@@ -138,8 +154,8 @@ export function ProfileSettingsPage() {
       <header className="user-page__head">
         <div>
           <span className="eyebrow">PLAYER IDENTITY</span>
-          <h1>Hồ sơ & cài đặt</h1>
-          <p>Quản lý danh tính, bảo mật và tùy chọn hệ thống.</p>
+          <h1>{t('profile.title', { defaultValue: 'Hồ sơ & cài đặt' })}</h1>
+          <p>{t('profile.subtitle', { defaultValue: 'Quản lý danh tính, bảo mật và tùy chọn hệ thống.' })}</p>
         </div>
       </header>
       <Tabs
@@ -152,4 +168,3 @@ export function ProfileSettingsPage() {
     </section>
   )
 }
-

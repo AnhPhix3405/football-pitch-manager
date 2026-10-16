@@ -11,10 +11,7 @@ import {
 } from '../dto/owner-registration-response.dto';
 
 export function ApiOwnerRegistrationControllerDoc() {
-  return applyDecorators(
-    ApiTags('Owner Registration'),
-    ApiBearerAuth(),
-  );
+  return applyDecorators(ApiTags('Owner Registration'), ApiBearerAuth());
 }
 
 export function ApiRegisterOwnerDoc() {

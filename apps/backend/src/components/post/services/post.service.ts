@@ -1,4 +1,9 @@
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import { PostEntity } from '~/entities/post.entity';
 import { PostRepository } from '~/repositories/post.repository';
@@ -31,7 +36,9 @@ export class PostService {
   async getPostDetail(id: string): Promise<PostEntity> {
     const post = await this.postRepository.findPostDetailById(id);
     if (!post) {
-      throw new NotFoundException('Không tìm thấy bài đăng hoặc bài đã bị xóa.');
+      throw new NotFoundException(
+        'Không tìm thấy bài đăng hoặc bài đã bị xóa.',
+      );
     }
     return post;
   }
@@ -60,14 +67,20 @@ export class PostService {
     return this.postRepository.save(post);
   }
 
-  async updatePost(userId: string, id: string, dto: UpdatePostDto): Promise<PostEntity> {
+  async updatePost(
+    userId: string,
+    id: string,
+    dto: UpdatePostDto,
+  ): Promise<PostEntity> {
     const post = await this.postRepository.findById(id);
     if (!post || post.deletedAt) {
       throw new NotFoundException('Không tìm thấy bài đăng.');
     }
 
     if (post.userId !== userId) {
-      throw new ForbiddenException('Bạn không có quyền chỉnh sửa bài đăng này.');
+      throw new ForbiddenException(
+        'Bạn không có quyền chỉnh sửa bài đăng này.',
+      );
     }
 
     if (dto.title !== undefined) post.title = dto.title.trim();
@@ -75,7 +88,8 @@ export class PostService {
     if (dto.playDate !== undefined) post.playDate = dto.playDate;
     if (dto.startTime !== undefined) post.startTime = dto.startTime;
     if (dto.endTime !== undefined) post.endTime = dto.endTime || null;
-    if (dto.skillLevelRequired !== undefined) post.skillLevelRequired = dto.skillLevelRequired?.trim() || null;
+    if (dto.skillLevelRequired !== undefined)
+      post.skillLevelRequired = dto.skillLevelRequired?.trim() || null;
     if (dto.maxPlayers !== undefined) post.maxPlayers = dto.maxPlayers;
     if (dto.lat !== undefined) post.lat = dto.lat ? String(dto.lat) : null;
     if (dto.lng !== undefined) post.lng = dto.lng ? String(dto.lng) : null;

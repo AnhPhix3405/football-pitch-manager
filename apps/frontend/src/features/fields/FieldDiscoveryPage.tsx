@@ -1,6 +1,7 @@
 import { AppstoreOutlined, EnvironmentOutlined, UnorderedListOutlined } from '@ant-design/icons'
 import { Button, Empty, Pagination, Select, Spin } from 'antd'
 import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link, useSearchParams } from 'react-router-dom'
 import { FieldCard } from './components/FieldCard'
 import { FieldFilter } from './components/FieldFilter'
@@ -11,6 +12,7 @@ import type { FieldFilters } from './interface/field.types'
 const pageSize = 4
 
 export function FieldDiscoveryPage() {
+  const { t } = useTranslation()
   const [params, setParams] = useSearchParams()
   const [page, setPage] = useState(1)
   const [showMap, setShowMap] = useState(true)
@@ -49,9 +51,9 @@ export function FieldDiscoveryPage() {
     <main className="discovery-page">
       <section className="discovery-head">
         <div>
-          <span className="eyebrow">FIELD DISCOVERY NODE</span>
-          <h1>Tìm sân phù hợp</h1>
-          <p>Quét mạng lưới sân bóng đã xác minh quanh bạn.</p>
+          <span className="eyebrow">{t('fields.eyebrow')}</span>
+          <h1>{t('fields.title')}</h1>
+          <p>{t('fields.subtitle')}</p>
         </div>
         <div className="view-actions">
           <Button
@@ -59,14 +61,14 @@ export function FieldDiscoveryPage() {
             onClick={() => setShowMap(false)}
             className={!showMap ? 'active' : ''}
           >
-            Danh sách
+            {t('common.list', { defaultValue: 'Danh sách' })}
           </Button>
           <Button
             icon={<AppstoreOutlined />}
             onClick={() => setShowMap(true)}
             className={showMap ? 'active' : ''}
           >
-            Bản đồ
+            {t('common.map', { defaultValue: 'Bản đồ' })}
           </Button>
         </div>
       </section>
@@ -75,7 +77,9 @@ export function FieldDiscoveryPage() {
         <div className="discovery-sidebar">
           <FieldFilter filters={filters} onChange={changeFilters} />
           <div className="result-toolbar">
-            <b>{results.length} sân được tìm thấy</b>
+            <b>
+              {results.length} {t('fields.pitchesFound')}
+            </b>
             <Select
               value={filters.sort}
               onChange={(sort) => changeFilters({ ...filters, sort })}
@@ -97,7 +101,7 @@ export function FieldDiscoveryPage() {
               ))}
             </div>
           ) : (
-            <Empty description="Không có sân phù hợp. Hãy thử nới bộ lọc." />
+            <Empty description={t('fields.empty')} />
           )}
           <Pagination
             current={page}
@@ -112,7 +116,7 @@ export function FieldDiscoveryPage() {
           <div className="field-network-map">
             <div className="map-grid" />
             <span className="map-location">
-              <EnvironmentOutlined /> Vị trí của bạn
+              <EnvironmentOutlined /> {t('fields.yourLocation', { defaultValue: 'Vị trí của bạn' })}
             </span>
             {results.map((field) => (
               <Link

@@ -26,11 +26,17 @@ export class ChatService {
   }
 
   async updateDeliveredAt(conversationId: string, userId: string) {
-    await this.conversationMemberRepository.updateLastDeliveredAt(conversationId, userId);
+    await this.conversationMemberRepository.updateLastDeliveredAt(
+      conversationId,
+      userId,
+    );
   }
 
   async updateReadAt(conversationId: string, userId: string) {
-    await this.conversationMemberRepository.updateLastReadAt(conversationId, userId);
+    await this.conversationMemberRepository.updateLastReadAt(
+      conversationId,
+      userId,
+    );
   }
 
   async editMessage(userId: string, payload: EditMessageDto) {

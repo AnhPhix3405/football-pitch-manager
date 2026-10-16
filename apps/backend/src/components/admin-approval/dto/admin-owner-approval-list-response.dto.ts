@@ -8,7 +8,10 @@ export class AdminOwnerApprovalListResponseDto {
   })
   items!: AdminOwnerApprovalDetailResponseDto[];
 
-  @ApiProperty({ description: 'Tổng số bản ghi thỏa điều kiện lọc', example: 25 })
+  @ApiProperty({
+    description: 'Tổng số bản ghi thỏa điều kiện lọc',
+    example: 25,
+  })
   total!: number;
 
   @ApiProperty({ description: 'Trang hiện tại', example: 1 })

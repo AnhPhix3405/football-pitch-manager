@@ -1,66 +1,46 @@
 import i18n from 'i18next'
 import { initReactI18next } from 'react-i18next'
 
-const resources = {
+import enError from '../i18n/en/error.json'
+import enTranslation from '../i18n/en/en.json'
+import viError from '../i18n/vi/error.json'
+import viTranslation from '../i18n/vi/vi.json'
+
+export const defaultNS = 'translation'
+export const resources = {
   vi: {
-    translation: {
-      brand: { name: 'PitchMaster', tagline: 'Điều hành sân bóng thông minh' },
-      nav: { home: 'Tổng quan', fields: 'Sân bóng', bookings: 'Đặt sân', posts: 'Kèo bóng', messages: 'Tin nhắn', settings: 'Cài đặt' },
-      chat: {
-        eyebrow: 'COMMS_LINK',
-        title: 'Tin nhắn',
-        searchPlaceholder: 'Tìm hội thoại...',
-        fieldChannel: 'Kênh liên hệ sân bóng',
-        teamChannel: 'Trưởng nhóm đối thủ',
-        infoAria: 'Thông tin hội thoại',
-        attachAria: 'Đính kèm tệp',
-        inputPlaceholder: 'Nhập tin nhắn...',
-        sendAria: 'Gửi tin nhắn',
-        emptyPrompt: 'Chọn một cuộc trò chuyện để bắt đầu.',
-      },
-      auth: {
-        login: 'Đăng nhập',
-        register: 'Tạo tài khoản mới',
-        logout: 'Đăng xuất',
-        profileSettings: 'Cài đặt & Hồ sơ',
-        portalAdmin: 'Cổng quản trị',
-        portalOwner: 'Quản lý sân bóng',
-        portalPlayer: 'Lịch đặt & Hoạt động',
-        guest: 'Khách vãng lai',
-        role: 'Vai trò',
-      },
-    },
+    translation: viTranslation,
+    error: viError,
   },
   en: {
-    translation: {
-      brand: { name: 'PitchMaster', tagline: 'Smart football operations' },
-      nav: { home: 'Overview', fields: 'Fields', bookings: 'Bookings', posts: 'Matches', messages: 'Messages', settings: 'Settings' },
-      chat: {
-        eyebrow: 'COMMS_LINK',
-        title: 'Messages',
-        searchPlaceholder: 'Search conversations...',
-        fieldChannel: 'Pitch Contact Channel',
-        teamChannel: 'Opponent Team Leader',
-        infoAria: 'Conversation info',
-        attachAria: 'Attach file',
-        inputPlaceholder: 'Type a message...',
-        sendAria: 'Send message',
-        emptyPrompt: 'Select a conversation to start chatting.',
-      },
-      auth: {
-        login: 'Sign In',
-        register: 'Create Account',
-        logout: 'Sign Out',
-        profileSettings: 'Profile & Settings',
-        portalAdmin: 'Command Center',
-        portalOwner: 'Pitch Management',
-        portalPlayer: 'My Bookings & Activity',
-        guest: 'Guest',
-        role: 'Role',
-      },
-    },
+    translation: enTranslation,
+    error: enError,
   },
 } as const
 
-void i18n.use(initReactI18next).init({ resources, lng: 'vi', fallbackLng: 'vi', interpolation: { escapeValue: false } })
+const getInitialLanguage = (): string => {
+  if (typeof window === 'undefined') return 'vi'
+  const saved = window.localStorage.getItem('i18nextLng')
+  return saved && saved.toLowerCase().startsWith('en') ? 'en' : 'vi'
+}
+
+void i18n.use(initReactI18next).init({
+  resources,
+  lng: getInitialLanguage(),
+  fallbackLng: 'vi',
+  defaultNS,
+  ns: ['translation', 'error'],
+  interpolation: {
+    escapeValue: false,
+  },
+})
+
+i18n.on('languageChanged', (lng: string) => {
+  if (typeof window !== 'undefined') {
+    const normalized = lng.toLowerCase().startsWith('en') ? 'en' : 'vi'
+    window.localStorage.setItem('i18nextLng', normalized)
+    document.documentElement.lang = normalized
+  }
+})
+
 export default i18n

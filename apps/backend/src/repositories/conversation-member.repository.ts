@@ -12,10 +12,20 @@ export class ConversationMemberRepository {
   ) {}
 
   async updateLastDeliveredAt(conversationId: string, userId: string) {
-    await this.repository.update({ conversationId, userId }, { lastDeliveredAt: new Date() } as any);
+    await this.repository.update(
+      { conversationId, userId },
+      {
+        lastDeliveredAt: new Date(),
+      },
+    );
   }
 
   async updateLastReadAt(conversationId: string, userId: string) {
-    await this.repository.update({ conversationId, userId }, { lastReadAt: new Date() } as any);
+    await this.repository.update(
+      { conversationId, userId },
+      {
+        lastReadAt: new Date(),
+      },
+    );
   }
 }

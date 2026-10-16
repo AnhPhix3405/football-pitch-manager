@@ -1,4 +1,9 @@
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import { PostMatchEntity } from '~/entities/post-match.entity';
 import { PostMatchRepository } from '~/repositories/post-match.repository';
@@ -11,27 +16,41 @@ export class PostMatchService {
     private readonly postMatchRepository: PostMatchRepository,
   ) {}
 
-  async applyMatch(postId: string, applicantId: string): Promise<PostMatchEntity> {
+  async applyMatch(
+    postId: string,
+    applicantId: string,
+  ): Promise<PostMatchEntity> {
     const post = await this.postRepository.findById(postId);
     if (!post || post.deletedAt) {
       throw new NotFoundException('Bài đăng không tồn tại hoặc đã bị xóa.');
     }
 
     if (post.status !== 'open') {
-      throw new BadRequestException('Bài đăng này đã đóng hoặc đã có đội ghép.');
+      throw new BadRequestException(
+        'Bài đăng này đã đóng hoặc đã có đội ghép.',
+      );
     }
 
     if (post.userId === applicantId) {
-      throw new BadRequestException('Bạn không thể tự xin bắt đối vào bài đăng của chính mình.');
+      throw new BadRequestException(
+        'Bạn không thể tự xin bắt đối vào bài đăng của chính mình.',
+      );
     }
 
-    const existingMatch = await this.postMatchRepository.findByPostAndApplicant(postId, applicantId);
+    const existingMatch = await this.postMatchRepository.findByPostAndApplicant(
+      postId,
+      applicantId,
+    );
     if (existingMatch) {
       if (existingMatch.status === 'pending') {
-        throw new BadRequestException('Bạn đã gửi yêu cầu bắt đối cho bài viết này rồi, vui lòng chờ duyệt.');
+        throw new BadRequestException(
+          'Bạn đã gửi yêu cầu bắt đối cho bài viết này rồi, vui lòng chờ duyệt.',
+        );
       }
       if (existingMatch.status === 'accepted') {
-        throw new BadRequestException('Yêu cầu bắt đối của bạn đã được chấp nhận trước đó.');
+        throw new BadRequestException(
+          'Yêu cầu bắt đối của bạn đã được chấp nhận trước đó.',
+        );
       }
       // If rejected or cancelled, re-open as pending
       existingMatch.status = 'pending';
@@ -49,7 +68,10 @@ export class PostMatchService {
     return this.postMatchRepository.save(match);
   }
 
-  async getPostMatches(postId: string, userId: string): Promise<PostMatchEntity[]> {
+  async getPostMatches(
+    postId: string,
+    userId: string,
+  ): Promise<PostMatchEntity[]> {
     const post = await this.postRepository.findById(postId);
     if (!post || post.deletedAt) {
       throw new NotFoundException('Không tìm thấy bài đăng.');
@@ -58,14 +80,20 @@ export class PostMatchService {
     return this.postMatchRepository.findByPostId(postId);
   }
 
-  async acceptMatch(postId: string, matchId: string, userId: string): Promise<PostMatchEntity> {
+  async acceptMatch(
+    postId: string,
+    matchId: string,
+    userId: string,
+  ): Promise<PostMatchEntity> {
     const post = await this.postRepository.findById(postId);
     if (!post || post.deletedAt) {
       throw new NotFoundException('Không tìm thấy bài đăng.');
     }
 
     if (post.userId !== userId) {
-      throw new ForbiddenException('Chỉ chủ bài đăng mới có quyền chấp nhận đội bắt đối.');
+      throw new ForbiddenException(
+        'Chỉ chủ bài đăng mới có quyền chấp nhận đội bắt đối.',
+      );
     }
 
     const match = await this.postMatchRepository.findById(matchId);
@@ -82,14 +110,20 @@ export class PostMatchService {
     return match;
   }
 
-  async rejectMatch(postId: string, matchId: string, userId: string): Promise<PostMatchEntity> {
+  async rejectMatch(
+    postId: string,
+    matchId: string,
+    userId: string,
+  ): Promise<PostMatchEntity> {
     const post = await this.postRepository.findById(postId);
     if (!post || post.deletedAt) {
       throw new NotFoundException('Không tìm thấy bài đăng.');
     }
 
     if (post.userId !== userId) {
-      throw new ForbiddenException('Chỉ chủ bài đăng mới có quyền từ chối yêu cầu.');
+      throw new ForbiddenException(
+        'Chỉ chủ bài đăng mới có quyền từ chối yêu cầu.',
+      );
     }
 
     const match = await this.postMatchRepository.findById(matchId);
@@ -102,7 +136,10 @@ export class PostMatchService {
   }
 
   async cancelMatch(postId: string, applicantId: string): Promise<void> {
-    const match = await this.postMatchRepository.findByPostAndApplicant(postId, applicantId);
+    const match = await this.postMatchRepository.findByPostAndApplicant(
+      postId,
+      applicantId,
+    );
     if (!match) {
       throw new NotFoundException('Không tìm thấy yêu cầu bắt đối của bạn.');
     }

@@ -9,6 +9,7 @@ import {
 import { GoogleLogin, type CredentialResponse } from '@react-oauth/google'
 import { Alert, Button, Checkbox, Form, Input } from 'antd'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { BrandMark } from '../../components/BrandMark'
 import { useAuthActions } from './hooks/useAuthActions'
@@ -33,6 +34,7 @@ function FieldDiagram() {
 }
 
 export function AuthPage() {
+  const { t } = useTranslation()
   const params = useParams<{ mode: string }>()
   const mode: AuthMode = params.mode === 'register' ? 'register' : 'login'
   const [showPassword, setShowPassword] = useState(false)
@@ -60,7 +62,7 @@ export function AuthPage() {
         </div>
         <FieldDiagram />
         <div className="system-status">
-          <i /> SYSTEM ONLINE
+          <i /> {t('common.online', { defaultValue: 'SYSTEM ONLINE' })}
         </div>
       </section>
       <section className="auth-panel">
@@ -78,7 +80,7 @@ export function AuthPage() {
               className={mode === 'login' ? 'active' : ''}
               onClick={() => changeMode('login')}
             >
-              Đăng nhập
+              {t('auth.login', { defaultValue: 'Đăng nhập' })}
             </button>
             <button
               role="tab"
@@ -86,16 +88,20 @@ export function AuthPage() {
               className={mode === 'register' ? 'active' : ''}
               onClick={() => changeMode('register')}
             >
-              Đăng ký
+              {t('auth.register', { defaultValue: 'Đăng ký' })}
             </button>
           </div>
           <div className="auth-heading">
             <span className="eyebrow">SECURE ACCESS NODE</span>
-            <h1>{mode === 'login' ? 'Chào mừng trở lại.' : 'Tạo tài khoản mới.'}</h1>
+            <h1>
+              {mode === 'login'
+                ? t('auth.loginTitle', { defaultValue: 'Chào mừng trở lại.' })
+                : t('auth.registerTitle', { defaultValue: 'Tạo tài khoản mới.' })}
+            </h1>
             <p>
               {mode === 'login'
-                ? 'Đăng nhập để tiếp tục quản lý trận đấu của bạn.'
-                : 'Tham gia cộng đồng và bắt đầu đặt sân.'}
+                ? t('auth.loginSubtitle', { defaultValue: 'Đăng nhập để tiếp tục quản lý trận đấu của bạn.' })
+                : t('auth.registerSubtitle', { defaultValue: 'Tham gia cộng đồng và bắt đầu đặt sân.' })}
             </p>
           </div>
           {error && (
@@ -118,7 +124,7 @@ export function AuthPage() {
             {mode === 'register' && (
               <>
                 <Form.Item
-                  label="HỌ VÀ TÊN"
+                  label={t('auth.nameLabel', { defaultValue: 'HỌ VÀ TÊN' })}
                   name="name"
                   rules={[
                     { required: true, message: 'Vui lòng nhập họ và tên.' },
@@ -128,7 +134,7 @@ export function AuthPage() {
                   <Input prefix={<UserOutlined />} placeholder="Nguyễn Minh Anh" autoComplete="name" />
                 </Form.Item>
                 <Form.Item
-                  label="SỐ ĐIỆN THOẠI"
+                  label={t('auth.phoneLabel', { defaultValue: 'SỐ ĐIỆN THOẠI' })}
                   name="phone"
                   rules={[{ pattern: /^(0|\+84)\d{9,10}$/, message: 'Số điện thoại không hợp lệ.' }]}
                 >
@@ -137,7 +143,7 @@ export function AuthPage() {
               </>
             )}
             <Form.Item
-              label="OPERATOR ID (EMAIL)"
+              label={t('auth.emailLabel', { defaultValue: 'OPERATOR ID (EMAIL)' })}
               name="email"
               rules={[
                 { required: true, message: 'Vui lòng nhập email.' },
@@ -149,7 +155,7 @@ export function AuthPage() {
             <Form.Item
               label={
                 <span className="password-label">
-                  <span>ACCESS CODE</span>
+                  <span>{t('auth.passwordLabel', { defaultValue: 'ACCESS CODE' })}</span>
                   {mode === 'login' && <button type="button">Đặt lại mã</button>}
                 </span>
               }
@@ -201,7 +207,9 @@ export function AuthPage() {
             )}
             <Form.Item name="remember" valuePropName="checked">
               <Checkbox>
-                {mode === 'login' ? 'Duy trì kết nối' : 'Tôi đồng ý với điều khoản sử dụng'}
+                {mode === 'login'
+                  ? t('auth.rememberMe', { defaultValue: 'Duy trì kết nối' })
+                  : t('auth.termsAgree', { defaultValue: 'Tôi đồng ý với điều khoản sử dụng' })}
               </Checkbox>
             </Form.Item>
             <Form.Item>
@@ -212,7 +220,9 @@ export function AuthPage() {
                 loading={loading}
                 block
               >
-                {mode === 'login' ? 'Khởi tạo kết nối' : 'Tạo tài khoản'}
+                {mode === 'login'
+                  ? t('auth.loginBtn', { defaultValue: 'Khởi tạo kết nối' })
+                  : t('auth.registerBtn', { defaultValue: 'Tạo tài khoản' })}
               </Button>
             </Form.Item>
           </Form>
@@ -241,9 +251,9 @@ export function AuthPage() {
                 </>
               ) : (
                 <>
-                  Đã có tài khoản?{' '}
+                  {t('auth.haveAccount', { defaultValue: 'Đã có tài khoản?' })}{' '}
                   <button type="button" onClick={() => changeMode('login')}>
-                    Đăng nhập
+                    {t('auth.login', { defaultValue: 'Đăng nhập' })}
                   </button>
                 </>
               )}

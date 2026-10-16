@@ -10,10 +10,7 @@ import { AdminOwnerApprovalDetailResponseDto } from '../dto/admin-owner-approval
 import { AdminOwnerApprovalListResponseDto } from '../dto/admin-owner-approval-list-response.dto';
 
 export function ApiAdminOwnerApprovalControllerDoc() {
-  return applyDecorators(
-    ApiTags('Admin Owner Approvals'),
-    ApiBearerAuth(),
-  );
+  return applyDecorators(ApiTags('Admin Owner Approvals'), ApiBearerAuth());
 }
 
 export function ApiGetApprovalsDoc() {
@@ -62,7 +59,8 @@ export function ApiGetApprovalDetailDoc() {
 export function ApiApproveOwnerRegistrationDoc() {
   return applyDecorators(
     ApiOperation({
-      summary: 'Phê duyệt hồ sơ đăng ký chủ sân và nâng quyền tài khoản thành Owner',
+      summary:
+        'Phê duyệt hồ sơ đăng ký chủ sân và nâng quyền tài khoản thành Owner',
     }),
     ApiParam({
       name: 'id',
@@ -76,7 +74,8 @@ export function ApiApproveOwnerRegistrationDoc() {
     }),
     ApiResponse({
       status: HttpStatus.BAD_REQUEST,
-      description: 'Yêu cầu không ở trạng thái pending hoặc đã được xử lý trước đó',
+      description:
+        'Yêu cầu không ở trạng thái pending hoặc đã được xử lý trước đó',
     }),
     ApiResponse({
       status: HttpStatus.NOT_FOUND,
@@ -106,7 +105,8 @@ export function ApiRejectOwnerRegistrationDoc() {
     }),
     ApiResponse({
       status: HttpStatus.BAD_REQUEST,
-      description: 'Yêu cầu không ở trạng thái pending hoặc đã được xử lý trước đó',
+      description:
+        'Yêu cầu không ở trạng thái pending hoặc đã được xử lý trước đó',
     }),
     ApiResponse({
       status: HttpStatus.NOT_FOUND,

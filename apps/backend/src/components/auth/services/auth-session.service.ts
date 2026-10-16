@@ -25,11 +25,11 @@ export const hashRefreshToken = (token: string): string => {
 
 @Injectable()
 export class AuthSessionService {
-  constructor(
-    private readonly authSessionRepository: AuthSessionRepository,
-  ) {}
+  constructor(private readonly authSessionRepository: AuthSessionRepository) {}
 
-  async createSession(options: CreateSessionOptions): Promise<AuthSessionEntity> {
+  async createSession(
+    options: CreateSessionOptions,
+  ): Promise<AuthSessionEntity> {
     const refreshTokenHash = hashRefreshToken(options.refreshToken);
     const expiresAt = new Date(Date.now() + options.ttlSeconds * 1000);
 

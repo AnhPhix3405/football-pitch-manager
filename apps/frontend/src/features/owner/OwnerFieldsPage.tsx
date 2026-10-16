@@ -1,11 +1,13 @@
 import { EditOutlined, EnvironmentOutlined, MoreOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons'
 import { Button, Dropdown, Empty, Spin, Tag, message } from 'antd'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { formatPrice } from '../fields/field.data'
 import { ownerFields } from './owner.data'
 import { useOwnerFields } from './hooks/useOwnerFields'
 
 export function OwnerFieldsPage() {
+  const { t } = useTranslation()
   const { apiFields, removed, loading, refetch, deleteField } = useOwnerFields()
   const [messageApi, contextHolder] = message.useMessage()
 
@@ -27,16 +29,16 @@ export function OwnerFieldsPage() {
       <header className="user-page__head">
         <div>
           <span className="eyebrow">FACILITY INVENTORY</span>
-          <h1>Sân của tôi</h1>
-          <p>Quản lý trạng thái, thông tin và lịch vận hành.</p>
+          <h1>{t('owner.myFieldsTitle', { defaultValue: 'Sân của tôi' })}</h1>
+          <p>{t('owner.myFieldsSubtitle', { defaultValue: 'Quản lý trạng thái, thông tin và lịch vận hành.' })}</p>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           <Button icon={<ReloadOutlined />} onClick={() => refetch()} loading={loading}>
-            Làm mới
+            {t('common.refresh', { defaultValue: 'Làm mới' })}
           </Button>
           <Link to="/owner/fields/new">
             <Button type="primary" icon={<PlusOutlined />}>
-              Thêm sân mới
+              {t('owner.addNewPitch', { defaultValue: 'Thêm sân mới' })}
             </Button>
           </Link>
         </div>
@@ -77,7 +79,7 @@ export function OwnerFieldsPage() {
                         items: [
                           {
                             key: 'edit',
-                            label: <Link to={`/owner/fields/${field.id}/edit`}>Chỉnh sửa</Link>,
+                            label: <Link to={`/owner/fields/${field.id}/edit`}>{t('common.edit', { defaultValue: 'Chỉnh sửa' })}</Link>,
                             icon: <EditOutlined />,
                           },
                           {

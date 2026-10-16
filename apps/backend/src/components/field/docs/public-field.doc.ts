@@ -10,7 +10,8 @@ export function ApiPublicFieldControllerDoc() {
 export function ApiGetPublicFieldsDoc() {
   return applyDecorators(
     ApiOperation({
-      summary: 'Lấy danh sách các cụm sân bóng đang hoạt động (active) kèm bộ lọc quận/huyện và tìm kiếm',
+      summary:
+        'Lấy danh sách các cụm sân bóng đang hoạt động (active) kèm bộ lọc quận/huyện và tìm kiếm',
     }),
     ApiResponse({
       status: HttpStatus.OK,
@@ -37,7 +38,8 @@ export function ApiGetPublicFieldDetailDoc() {
     }),
     ApiResponse({
       status: HttpStatus.NOT_FOUND,
-      description: 'Không tìm thấy cụm sân hoặc sân chưa được kích hoạt hoạt động',
+      description:
+        'Không tìm thấy cụm sân hoặc sân chưa được kích hoạt hoạt động',
     }),
   );
 }

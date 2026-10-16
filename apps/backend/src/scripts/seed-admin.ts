@@ -9,10 +9,14 @@ import { UserEntity } from '../entities/user.entity';
 const PASSWORD_HASH_ROUNDS = 12;
 
 export const seedAdmin = async (): Promise<void> => {
-  const adminEmail = (process.env.ADMIN_EMAIL || 'admin@example.com').trim().toLowerCase();
+  const adminEmail = (process.env.ADMIN_EMAIL || 'admin@example.com')
+    .trim()
+    .toLowerCase();
   const adminPassword = process.env.ADMIN_PASSWORD || 'Admin@123456';
   const adminFullName = process.env.ADMIN_FULL_NAME || 'System Administrator';
-  const adminPhone = process.env.ADMIN_PHONE ? process.env.ADMIN_PHONE.trim() : null;
+  const adminPhone = process.env.ADMIN_PHONE
+    ? process.env.ADMIN_PHONE.trim()
+    : null;
 
   console.log(`[SeedAdmin] Connecting to database...`);
   const dataSource = new DataSource(typeOrmDataSourceOptions());
@@ -27,7 +31,9 @@ export const seedAdmin = async (): Promise<void> => {
     const passwordHash = await hash(adminPassword, PASSWORD_HASH_ROUNDS);
 
     if (user) {
-      console.log(`[SeedAdmin] User with email "${adminEmail}" already exists. Updating credentials and admin role...`);
+      console.log(
+        `[SeedAdmin] User with email "${adminEmail}" already exists. Updating credentials and admin role...`,
+      );
       user.role = 'admin';
       user.status = 'active';
       user.passwordHash = passwordHash;
@@ -36,7 +42,9 @@ export const seedAdmin = async (): Promise<void> => {
       }
       await userRepository.save(user);
 
-      let profile = await profileRepository.findOne({ where: { userId: user.id } });
+      let profile = await profileRepository.findOne({
+        where: { userId: user.id },
+      });
       if (!profile) {
         profile = profileRepository.create({
           id: randomUUID(),
@@ -52,9 +60,13 @@ export const seedAdmin = async (): Promise<void> => {
         profile.fullName = adminFullName;
       }
       await profileRepository.save(profile);
-      console.log(`[SeedAdmin] Admin user successfully updated: ${adminEmail} (Role: ${user.role})`);
+      console.log(
+        `[SeedAdmin] Admin user successfully updated: ${adminEmail} (Role: ${user.role})`,
+      );
     } else {
-      console.log(`[SeedAdmin] Creating new admin account for "${adminEmail}"...`);
+      console.log(
+        `[SeedAdmin] Creating new admin account for "${adminEmail}"...`,
+      );
       user = userRepository.create({
         id: randomUUID(),
         email: adminEmail,
@@ -80,7 +92,9 @@ export const seedAdmin = async (): Promise<void> => {
         gender: null,
       });
       await profileRepository.save(profile);
-      console.log(`[SeedAdmin] Admin user successfully created: ${adminEmail} (Role: admin)`);
+      console.log(
+        `[SeedAdmin] Admin user successfully created: ${adminEmail} (Role: admin)`,
+      );
     }
   } catch (error) {
     console.error(`[SeedAdmin] Error seeding admin account:`, error);

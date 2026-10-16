@@ -144,7 +144,9 @@ describe('AuthController', () => {
       } as unknown as FastifyReply;
 
       mockLoginService.execute.mockResolvedValue(authenticatedUser);
-      mockAuthSessionService.createSession.mockResolvedValue({ id: 'session-id' });
+      mockAuthSessionService.createSession.mockResolvedValue({
+        id: 'session-id',
+      });
 
       const result = await controller.login(loginDto, req, reply);
 
@@ -189,7 +191,9 @@ describe('AuthController', () => {
       } as unknown as FastifyReply;
 
       mockLoginGoogleService.execute.mockResolvedValue(googleUser);
-      mockAuthSessionService.createSession.mockResolvedValue({ id: 'session-id' });
+      mockAuthSessionService.createSession.mockResolvedValue({
+        id: 'session-id',
+      });
 
       const result = await controller.loginGoogle(googleLoginDto, req, reply);
 

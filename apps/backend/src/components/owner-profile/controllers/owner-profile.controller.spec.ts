@@ -2,7 +2,10 @@ jest.mock('@nestjs/typeorm', () => ({
   InjectRepository: () => () => undefined,
 }));
 
-import { OwnerProfileResponseDto, PublicOwnerProfileResponseDto } from '../dto/owner-profile-response.dto';
+import {
+  OwnerProfileResponseDto,
+  PublicOwnerProfileResponseDto,
+} from '../dto/owner-profile-response.dto';
 import { UpdateOwnerProfileDto } from '../dto/update-owner-profile.dto';
 import { OwnerProfileService } from '../services/owner-profile.service';
 import { OwnerProfileController } from './owner-profile.controller';

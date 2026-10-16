@@ -1,10 +1,18 @@
 import { EnvironmentOutlined, StarFilled } from '@ant-design/icons'
 import { Button, Tag } from 'antd'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { formatPrice } from '../field.data'
 import type { FootballField } from '../interface/field.types'
 
-export function FieldCard({ field, compact = false }: { field: FootballField; compact?: boolean }) {
+export function FieldCard({
+  field,
+  compact = false,
+}: {
+  field: FootballField
+  compact?: boolean
+}) {
+  const { t } = useTranslation()
   const fieldLink = `/app/fields/${field.id}`
 
   return (
@@ -35,14 +43,16 @@ export function FieldCard({ field, compact = false }: { field: FootballField; co
         </div>
         <div className="field-card__footer">
           <div>
-            <small>TỪ</small>
+            <small>{t('common.from')}</small>
             <strong>
               {formatPrice(field.pricePerHour)}
-              <em>/giờ</em>
+              <em> {t('fields.perHour')}</em>
             </strong>
           </div>
           <Link to={fieldLink}>
-            <Button type="primary">Xem sân</Button>
+            <Button type="primary">
+              {t('fields.viewField')}
+            </Button>
           </Link>
         </div>
       </div>
