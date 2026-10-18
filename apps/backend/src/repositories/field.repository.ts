@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { BaseRepository } from '~/core/base/base-repositories';
 import { FieldEntity } from '~/entities/field.entity';
 
@@ -149,6 +149,21 @@ export class FieldRepository extends BaseRepository<FieldEntity> {
   async findActiveById(id: string): Promise<FieldEntity | null> {
     return this.repository.findOne({
       where: { id, status: 'active' },
+    });
+  }
+
+  async findById(id: string): Promise<FieldEntity | null> {
+    return this.repository.findOne({
+      where: { id },
+    });
+  }
+
+  async findByIds(ids: string[]): Promise<FieldEntity[]> {
+    if (!ids.length) {
+      return [];
+    }
+    return this.repository.find({
+      where: { id: In(ids) },
     });
   }
 }

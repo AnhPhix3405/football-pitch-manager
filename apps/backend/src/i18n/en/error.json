@@ -24,5 +24,6 @@
   "approvalRequestAlreadyProcessed": "This approval request has already been processed",
   "rejectionReasonRequired": "Rejection reason is required",
   "fieldNotFound": "Field complex not found",
-  "invalidDepositConfig": "Invalid deposit configuration"
+  "invalidDepositConfig": "Invalid deposit configuration",
+  "fieldApprovalRequestPending": "This field complex already has a pending approval request"
 }
