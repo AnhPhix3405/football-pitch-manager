@@ -13,6 +13,7 @@
   - Danh sách cụ thể tất cả các file bị ảnh hưởng hoặc cần chỉnh sửa.
   - Tác động dự kiến của thay đổi đối với hệ thống.
 - **Luôn ưu tiên sử dụng i18n cho text:** Thêm key và value vào file i18n.ts với ngôn ngữ chính là en, vi
+- **Luôn cập nhật tài liệu API:** Mỗi khi thêm mới, sửa đổi hoặc xóa API/WebSocket event, bắt buộc phải cập nhật ngay vào file `docs/api-documentation.md` (bao gồm endpoint, phân loại, payload request và response).
 
 # 3. Quy Định Về Cơ Sở Dữ Liệu (Database)
 

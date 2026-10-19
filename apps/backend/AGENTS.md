@@ -19,6 +19,7 @@
 - Không tự refactor hoặc sửa code không liên quan.
 - Không viết ví dụ, giải thích dài dòng hoặc lặp lại yêu cầu.
 - Ưu tiên bảng và gạch đầu dòng.
+- Cập nhật tài liệu: Mỗi khi thêm mới, sửa đổi hoặc xóa API/WebSocket event, bắt buộc cập nhật file `docs/api-documentation.md`.
 
 ## 3. File nhạy cảm
 
