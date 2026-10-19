@@ -95,37 +95,16 @@ export class OwnerFieldService {
     };
   }
 
-  async getOwnerFieldDetail(
-    id: string,
-    ownerId: string,
-  ): Promise<FieldResponseDto> {
-    const field = await this.fieldRepository.findByIdAndOwnerId(id, ownerId);
-
-    if (!field) {
-      throw new ApplicationException({
-        code: 'FIELD_NOT_FOUND',
-        messageKey: 'error.fieldNotFound',
-        status: HttpStatus.NOT_FOUND,
-      });
-    }
-
+  getOwnerFieldDetail(field: FieldEntity): FieldResponseDto {
     return this.mapToResponseDto(field);
   }
 
   async updateField(
-    id: string,
+    field: FieldEntity,
     ownerId: string,
     dto: UpdateFieldDto,
   ): Promise<FieldResponseDto> {
-    const existing = await this.fieldRepository.findByIdAndOwnerId(id, ownerId);
-
-    if (!existing) {
-      throw new ApplicationException({
-        code: 'FIELD_NOT_FOUND',
-        messageKey: 'error.fieldNotFound',
-        status: HttpStatus.NOT_FOUND,
-      });
-    }
+    const existing = field;
 
     const hasCoreFieldChanges =
       dto.name !== undefined ||
@@ -139,10 +118,10 @@ export class OwnerFieldService {
 
     if (existing.status === 'active' && hasCoreFieldChanges) {
       const pendingRequest =
-        await this.approvalRequestRepository.findPendingByTargetIdAndTypes(id, [
-          'field_create',
-          'field_update',
-        ]);
+        await this.approvalRequestRepository.findPendingByTargetIdAndTypes(
+          existing.id,
+          ['field_create', 'field_update'],
+        );
 
       if (pendingRequest) {
         throw new ApplicationException({
@@ -268,22 +247,9 @@ export class OwnerFieldService {
     return this.mapToResponseDto(saved);
   }
 
-  async deactivateField(
-    id: string,
-    ownerId: string,
-  ): Promise<FieldResponseDto> {
-    const existing = await this.fieldRepository.findByIdAndOwnerId(id, ownerId);
-
-    if (!existing) {
-      throw new ApplicationException({
-        code: 'FIELD_NOT_FOUND',
-        messageKey: 'error.fieldNotFound',
-        status: HttpStatus.NOT_FOUND,
-      });
-    }
-
-    existing.status = 'inactive';
-    const saved = await this.fieldRepository.save(existing);
+  async deactivateField(field: FieldEntity): Promise<FieldResponseDto> {
+    field.status = 'inactive';
+    const saved = await this.fieldRepository.save(field);
     return this.mapToResponseDto(saved);
   }
 

@@ -8,7 +8,6 @@ jest.mock('@nestjs/typeorm', () => ({
   InjectRepository: () => () => undefined,
 }));
 
-import { HttpStatus } from '@nestjs/common';
 import { DataSource, EntityManager } from 'typeorm';
 import { ApplicationException } from '~/common/exceptions/application.exception';
 import { ApprovalRequestEntity } from '~/entities/approval-request.entity';
@@ -213,29 +212,13 @@ describe('OwnerFieldService', () => {
   });
 
   describe('getOwnerFieldDetail', () => {
-    it('returns field detail when field exists and belongs to owner', async () => {
-      fieldRepository.findByIdAndOwnerId.mockResolvedValue(mockFieldEntity);
-
-      const result = await service.getOwnerFieldDetail(
-        'field-123',
-        mockOwnerId,
-      );
+    it('returns field detail directly from injected field entity', () => {
+      const result = service.getOwnerFieldDetail(mockFieldEntity);
 
       expect(result.id).toBe('field-123');
       expect(result.ownerId).toBe(mockOwnerId);
-    });
-
-    it('throws 404 FIELD_NOT_FOUND when field does not exist or not owned by caller', async () => {
-      fieldRepository.findByIdAndOwnerId.mockResolvedValue(null);
-
-      try {
-        await service.getOwnerFieldDetail('field-999', mockOwnerId);
-        throw new Error('Should have failed');
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApplicationException);
-        const appError = error as ApplicationException;
-        expect(appError.getStatus()).toBe(HttpStatus.NOT_FOUND);
-      }
+      expect(result.name).toBe('Sân bóng Tân Bình Sport');
+      expect(fieldRepository.findByIdAndOwnerId).not.toHaveBeenCalled();
     });
   });
 
@@ -246,14 +229,14 @@ describe('OwnerFieldService', () => {
         requireDeposit: false,
       };
 
-      fieldRepository.findByIdAndOwnerId.mockResolvedValue({
+      const pendingField: FieldEntity = {
         ...mockFieldEntity,
         status: 'pending',
-      });
+      };
       fieldRepository.save.mockImplementation(async (entity: any) => entity);
 
       const result = await service.updateField(
-        'field-123',
+        pendingField,
         mockOwnerId,
         updateDto,
       );
@@ -262,6 +245,7 @@ describe('OwnerFieldService', () => {
       expect(result.requireDeposit).toBe(false);
       expect(result.depositType).toBeNull();
       expect(result.depositValue).toBeNull();
+      expect(fieldRepository.findByIdAndOwnerId).not.toHaveBeenCalled();
       expect(dataSource.transaction).not.toHaveBeenCalled();
     });
 
@@ -273,16 +257,16 @@ describe('OwnerFieldService', () => {
         depositValue: 200000,
       };
 
-      fieldRepository.findByIdAndOwnerId.mockResolvedValue({
+      const activeField: FieldEntity = {
         ...mockFieldEntity,
         status: 'active',
-      });
+      };
       approvalRequestRepository.findPendingByTargetIdAndTypes.mockResolvedValue(
         null,
       );
 
       const result = await service.updateField(
-        'field-123',
+        activeField,
         mockOwnerId,
         updateDto,
       );
@@ -305,10 +289,10 @@ describe('OwnerFieldService', () => {
     });
 
     it('throws 400 FIELD_APPROVAL_REQUEST_PENDING if an active field already has a pending approval request', async () => {
-      fieldRepository.findByIdAndOwnerId.mockResolvedValue({
+      const activeField: FieldEntity = {
         ...mockFieldEntity,
         status: 'active',
-      });
+      };
       approvalRequestRepository.findPendingByTargetIdAndTypes.mockResolvedValue(
         {
           id: 'existing-pending-req',
@@ -316,29 +300,22 @@ describe('OwnerFieldService', () => {
       );
 
       await expect(
-        service.updateField('field-123', mockOwnerId, { name: 'Đổi tên tiếp' }),
-      ).rejects.toThrow(ApplicationException);
-    });
-
-    it('throws 404 when updating non-existent field', async () => {
-      fieldRepository.findByIdAndOwnerId.mockResolvedValue(null);
-
-      await expect(
-        service.updateField('field-999', mockOwnerId, { name: 'Mới' }),
+        service.updateField(activeField, mockOwnerId, { name: 'Đổi tên tiếp' }),
       ).rejects.toThrow(ApplicationException);
     });
   });
 
   describe('deactivateField', () => {
-    it('sets field status to inactive', async () => {
-      fieldRepository.findByIdAndOwnerId.mockResolvedValue({
+    it('sets field status to inactive directly without extra query', async () => {
+      const activeField: FieldEntity = {
         ...mockFieldEntity,
-      });
+      };
       fieldRepository.save.mockImplementation(async (entity: any) => entity);
 
-      const result = await service.deactivateField('field-123', mockOwnerId);
+      const result = await service.deactivateField(activeField);
 
       expect(result.status).toBe('inactive');
+      expect(fieldRepository.findByIdAndOwnerId).not.toHaveBeenCalled();
       expect(fieldRepository.save).toHaveBeenCalledWith(
         expect.objectContaining({ status: 'inactive' }),
       );

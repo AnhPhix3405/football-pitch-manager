@@ -25,5 +25,7 @@
   "rejectionReasonRequired": "Vui lòng nhập lý do từ chối yêu cầu",
   "fieldNotFound": "Không tìm thấy thông tin cụm sân",
   "invalidDepositConfig": "Cấu hình đặt cọc không hợp lệ",
-  "fieldApprovalRequestPending": "Sân bóng này đang có một yêu cầu phê duyệt chờ xử lý"
+  "fieldApprovalRequestPending": "Sân bóng này đang có một yêu cầu phê duyệt chờ xử lý",
+  "forbiddenFieldAccess": "Bạn không có quyền truy cập hoặc chỉnh sửa cụm sân này.",
+  "invalidFieldId": "Mã định danh cụm sân không hợp lệ."
 }

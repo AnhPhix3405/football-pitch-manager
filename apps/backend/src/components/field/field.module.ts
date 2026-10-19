@@ -7,6 +7,7 @@ import { FieldRepository } from '~/repositories/field.repository';
 import { AuthModule } from '../auth/auth.module';
 import { FieldController } from './controllers/field.controller';
 import { OwnerFieldController } from './controllers/owner-field.controller';
+import { FieldOwnershipGuard } from './guards/field-ownership.guard';
 import { FieldService } from './services/field.service';
 import { OwnerFieldService } from './services/owner-field.service';
 
@@ -21,7 +22,14 @@ import { OwnerFieldService } from './services/owner-field.service';
     ApprovalRequestRepository,
     OwnerFieldService,
     FieldService,
+    FieldOwnershipGuard,
   ],
-  exports: [FieldRepository, OwnerFieldService, FieldService],
+  exports: [
+    FieldRepository,
+    OwnerFieldService,
+    FieldService,
+    FieldOwnershipGuard,
+    TypeOrmModule,
+  ],
 })
 export class FieldModule {}
