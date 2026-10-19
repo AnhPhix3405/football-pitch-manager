@@ -6,6 +6,9 @@ import { FieldListResponseDto } from '../dto/field-list-response.dto';
 import { FieldResponseDto } from '../dto/field-response.dto';
 import { PublicFieldQueryDto } from '../dto/public-field-query.dto';
 
+const UUID_REGEX =
+  /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+
 @Injectable()
 export class FieldService {
   constructor(private readonly fieldRepository: FieldRepository) {}
@@ -22,6 +25,9 @@ export class FieldService {
         limit,
         search: query.search,
         district: query.district,
+        requireDeposit: query.requireDeposit,
+        sortBy: query.sortBy,
+        sortOrder: query.sortOrder,
       });
 
     return {
@@ -34,6 +40,14 @@ export class FieldService {
   }
 
   async getPublicFieldDetail(id: string): Promise<FieldResponseDto> {
+    if (!UUID_REGEX.test(id)) {
+      throw new ApplicationException({
+        code: 'INVALID_FIELD_ID',
+        messageKey: 'error.invalidFieldId',
+        status: HttpStatus.BAD_REQUEST,
+      });
+    }
+
     const field = await this.fieldRepository.findActiveById(id);
 
     if (!field) {

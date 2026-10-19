@@ -9,5 +9,7 @@
   "ownerApprovalRejected": "Owner registration rejected successfully",
   "createFieldSuccess": "Field complex created successfully",
   "updateFieldSuccess": "Field complex updated successfully",
-  "deactivateFieldSuccess": "Field complex deactivated successfully"
+  "deactivateFieldSuccess": "Field complex deactivated successfully",
+  "fieldApprovalApproved": "Field complex approved successfully",
+  "fieldApprovalRejected": "Field complex request rejected successfully"
 }

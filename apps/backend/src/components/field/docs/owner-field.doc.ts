@@ -70,8 +70,16 @@ export function ApiGetOwnerFieldDetailDoc() {
       type: FieldResponseDto,
     }),
     ApiResponse({
+      status: HttpStatus.BAD_REQUEST,
+      description: 'Mã định danh cụm sân không hợp lệ',
+    }),
+    ApiResponse({
+      status: HttpStatus.FORBIDDEN,
+      description: 'Không có quyền truy cập cụm sân',
+    }),
+    ApiResponse({
       status: HttpStatus.NOT_FOUND,
-      description: 'Không tìm thấy cụm sân hoặc sân không thuộc quyền sở hữu',
+      description: 'Không tìm thấy cụm sân',
     }),
   );
 }
@@ -96,8 +104,12 @@ export function ApiUpdateFieldDoc() {
       description: 'Dữ liệu cập nhật hoặc cấu hình cọc không hợp lệ',
     }),
     ApiResponse({
+      status: HttpStatus.FORBIDDEN,
+      description: 'Không có quyền chỉnh sửa cụm sân',
+    }),
+    ApiResponse({
       status: HttpStatus.NOT_FOUND,
-      description: 'Không tìm thấy cụm sân hoặc sân không thuộc quyền sở hữu',
+      description: 'Không tìm thấy cụm sân',
     }),
   );
 }
@@ -118,8 +130,16 @@ export function ApiDeactivateFieldDoc() {
       type: FieldResponseDto,
     }),
     ApiResponse({
+      status: HttpStatus.BAD_REQUEST,
+      description: 'Mã định danh cụm sân không hợp lệ',
+    }),
+    ApiResponse({
+      status: HttpStatus.FORBIDDEN,
+      description: 'Không có quyền thao tác trên cụm sân',
+    }),
+    ApiResponse({
       status: HttpStatus.NOT_FOUND,
-      description: 'Không tìm thấy cụm sân hoặc sân không thuộc quyền sở hữu',
+      description: 'Không tìm thấy cụm sân',
     }),
   );
 }

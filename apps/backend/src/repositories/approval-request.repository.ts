@@ -19,6 +19,13 @@ export interface FindOwnerApprovalsOptions {
   limit?: number;
 }
 
+export interface FindFieldApprovalsOptions {
+  status?: string;
+  type?: 'field_create' | 'field_update' | 'all';
+  page?: number;
+  limit?: number;
+}
+
 export interface PaginatedApprovalRequests {
   items: ApprovalRequestEntity[];
   total: number;
@@ -116,6 +123,67 @@ export class ApprovalRequestRepository extends BaseRepository<ApprovalRequestEnt
       .leftJoinAndSelect('request.reviewer', 'reviewer')
       .where('request.id = :id', { id })
       .andWhere('request.type = :type', { type: 'owner_register' })
+      .getOne();
+  }
+
+  async findFieldApprovals(
+    options: FindFieldApprovalsOptions,
+  ): Promise<PaginatedApprovalRequests> {
+    const page = Math.max(1, options.page ?? 1);
+    const limit = Math.min(100, Math.max(1, options.limit ?? 10));
+    const skip = (page - 1) * limit;
+
+    const allowedTypes =
+      options.type && options.type !== 'all'
+        ? [options.type]
+        : ['field_create', 'field_update'];
+
+    const qb = this.repository
+      .createQueryBuilder('request')
+      .leftJoinAndSelect('request.requester', 'requester')
+      .leftJoinAndSelect('request.reviewer', 'reviewer')
+      .where('request.type IN (:...types)', { types: allowedTypes });
+
+    if (options.status && options.status !== 'all') {
+      qb.andWhere('request.status = :status', { status: options.status });
+    }
+
+    qb.orderBy('request.createdAt', 'DESC').skip(skip).take(limit);
+
+    const [items, total] = await qb.getManyAndCount();
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      items,
+      total,
+      page,
+      limit,
+      totalPages,
+    };
+  }
+
+  findFieldApprovalById(id: string): Promise<ApprovalRequestEntity | null> {
+    return this.repository
+      .createQueryBuilder('request')
+      .leftJoinAndSelect('request.requester', 'requester')
+      .leftJoinAndSelect('request.reviewer', 'reviewer')
+      .where('request.id = :id', { id })
+      .andWhere('request.type IN (:...types)', {
+        types: ['field_create', 'field_update'],
+      })
+      .getOne();
+  }
+
+  findPendingByTargetIdAndTypes(
+    targetId: string,
+    types: string[],
+  ): Promise<ApprovalRequestEntity | null> {
+    return this.repository
+      .createQueryBuilder('request')
+      .where('request.targetId = :targetId', { targetId })
+      .andWhere('request.status = :status', { status: 'pending' })
+      .andWhere('request.type IN (:...types)', { types })
+      .orderBy('request.createdAt', 'DESC')
       .getOne();
   }
 }

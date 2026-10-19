@@ -5,7 +5,6 @@ import {
   Get,
   HttpCode,
   HttpStatus,
-  Param,
   Patch,
   Post,
   Query,
@@ -17,6 +16,9 @@ import { Roles } from '~/components/auth/decorators/roles.decorator';
 import { AccountStatusGuard } from '~/components/auth/guards/account-status.guard';
 import { JwtAuthGuard } from '~/components/auth/guards/jwt-auth.guard';
 import { RolesGuard } from '~/components/auth/guards/roles.guard';
+import { FieldEntity } from '~/entities/field.entity';
+import { CheckFieldOwnership } from '../decorators/check-field-ownership.decorator';
+import { CurrentField } from '../decorators/current-field.decorator';
 import {
   ApiCreateFieldDoc,
   ApiDeactivateFieldDoc,
@@ -30,10 +32,11 @@ import { FieldListResponseDto } from '../dto/field-list-response.dto';
 import { FieldResponseDto } from '../dto/field-response.dto';
 import { OwnerFieldQueryDto } from '../dto/owner-field-query.dto';
 import { UpdateFieldDto } from '../dto/update-field.dto';
+import { FieldOwnershipGuard } from '../guards/field-ownership.guard';
 import { OwnerFieldService } from '../services/owner-field.service';
 
 @ApiOwnerFieldControllerDoc()
-@UseGuards(JwtAuthGuard, AccountStatusGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, AccountStatusGuard, RolesGuard, FieldOwnershipGuard)
 @Roles('owner', 'admin')
 @AllowedStatuses('active')
 @Controller('owner/fields')
@@ -63,31 +66,30 @@ export class OwnerFieldController {
   @Get(':id')
   @HttpCode(HttpStatus.OK)
   @ApiGetOwnerFieldDetailDoc()
-  async getOwnerFieldDetail(
-    @CurrentUser('id') ownerId: string,
-    @Param('id') id: string,
-  ): Promise<FieldResponseDto> {
-    return this.ownerFieldService.getOwnerFieldDetail(id, ownerId);
+  @CheckFieldOwnership()
+  getOwnerFieldDetail(@CurrentField() field: FieldEntity): FieldResponseDto {
+    return this.ownerFieldService.getOwnerFieldDetail(field);
   }
 
   @Patch(':id')
   @HttpCode(HttpStatus.OK)
   @ApiUpdateFieldDoc()
+  @CheckFieldOwnership()
   async updateField(
     @CurrentUser('id') ownerId: string,
-    @Param('id') id: string,
+    @CurrentField() field: FieldEntity,
     @Body() dto: UpdateFieldDto,
   ): Promise<FieldResponseDto> {
-    return this.ownerFieldService.updateField(id, ownerId, dto);
+    return this.ownerFieldService.updateField(field, ownerId, dto);
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
   @ApiDeactivateFieldDoc()
+  @CheckFieldOwnership()
   async deactivateField(
-    @CurrentUser('id') ownerId: string,
-    @Param('id') id: string,
+    @CurrentField() field: FieldEntity,
   ): Promise<FieldResponseDto> {
-    return this.ownerFieldService.deactivateField(id, ownerId);
+    return this.ownerFieldService.deactivateField(field);
   }
 }

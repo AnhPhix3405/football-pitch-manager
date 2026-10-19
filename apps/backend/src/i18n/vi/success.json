@@ -9,5 +9,7 @@
   "ownerApprovalRejected": "Từ chối hồ sơ chủ sân thành công",
   "createFieldSuccess": "Tạo cụm sân mới thành công",
   "updateFieldSuccess": "Cập nhật cụm sân thành công",
-  "deactivateFieldSuccess": "Ngưng hoạt động cụm sân thành công"
+  "deactivateFieldSuccess": "Ngưng hoạt động cụm sân thành công",
+  "fieldApprovalApproved": "Phê duyệt cụm sân thành công",
+  "fieldApprovalRejected": "Từ chối yêu cầu phê duyệt cụm sân thành công"
 }

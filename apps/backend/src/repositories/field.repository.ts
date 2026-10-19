@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { BaseRepository } from '~/core/base/base-repositories';
 import { FieldEntity } from '~/entities/field.entity';
 
@@ -42,6 +42,9 @@ export interface FindPublicFieldsOptions {
   limit?: number;
   search?: string;
   district?: string;
+  requireDeposit?: boolean;
+  sortBy?: 'createdAt' | 'name';
+  sortOrder?: 'ASC' | 'DESC';
 }
 
 @Injectable()
@@ -130,17 +133,31 @@ export class FieldRepository extends BaseRepository<FieldEntity> {
       .where('field.status = :status', { status: 'active' });
 
     if (options.district?.trim()) {
-      qb.andWhere('field.district = :district', {
+      qb.andWhere('TRIM(LOWER(field.district)) = LOWER(:district)', {
         district: options.district.trim(),
       });
     }
 
     if (options.search?.trim()) {
-      const sanitized = options.search.trim().replace(/[%_]/g, '\\$&');
-      qb.andWhere('field.name ILIKE :search', { search: `%${sanitized}%` });
+      const sanitized = options.search.trim().replace(/[%_\\]/g, '\\$&');
+      qb.andWhere('(field.name ILIKE :search OR field.address ILIKE :search)', {
+        search: `%${sanitized}%`,
+      });
     }
 
-    qb.orderBy('field.createdAt', 'DESC').skip(skip).take(limit);
+    if (typeof options.requireDeposit === 'boolean') {
+      qb.andWhere('field.requireDeposit = :requireDeposit', {
+        requireDeposit: options.requireDeposit,
+      });
+    }
+
+    const sortColumn =
+      options.sortBy === 'name' ? 'field.name' : 'field.createdAt';
+    const sortDirection =
+      options.sortOrder?.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
+
+    qb.orderBy(sortColumn, sortDirection).addOrderBy('field.id', 'ASC');
+    qb.skip(skip).take(limit);
 
     const [items, total] = await qb.getManyAndCount();
     return { items, total };
@@ -149,6 +166,21 @@ export class FieldRepository extends BaseRepository<FieldEntity> {
   async findActiveById(id: string): Promise<FieldEntity | null> {
     return this.repository.findOne({
       where: { id, status: 'active' },
+    });
+  }
+
+  async findById(id: string): Promise<FieldEntity | null> {
+    return this.repository.findOne({
+      where: { id },
+    });
+  }
+
+  async findByIds(ids: string[]): Promise<FieldEntity[]> {
+    if (!ids.length) {
+      return [];
+    }
+    return this.repository.find({
+      where: { id: In(ids) },
     });
   }
 }
