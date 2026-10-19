@@ -89,7 +89,7 @@ export class CreateFieldDto {
     enum: ['fixed', 'percentage'],
     example: 'fixed',
   })
-  @ValidateIf((o) => o.requireDeposit === true)
+  @ValidateIf((o: CreateFieldDto) => o.requireDeposit === true)
   @IsNotEmpty({
     message: 'depositType is required when requireDeposit is true',
   })
@@ -102,7 +102,7 @@ export class CreateFieldDto {
     description: 'Giá trị tiền cọc (VND khi fixed hoặc % khi percentage)',
     example: 100000,
   })
-  @ValidateIf((o) => o.requireDeposit === true)
+  @ValidateIf((o: CreateFieldDto) => o.requireDeposit === true)
   @IsNotEmpty({
     message: 'depositValue is required when requireDeposit is true',
   })

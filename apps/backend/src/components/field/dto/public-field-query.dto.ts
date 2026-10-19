@@ -1,6 +1,14 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
-import { IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
+import { Transform, Type } from 'class-transformer';
+import {
+  IsBoolean,
+  IsIn,
+  IsInt,
+  IsOptional,
+  IsString,
+  Max,
+  Min,
+} from 'class-validator';
 
 export class PublicFieldQueryDto {
   @ApiPropertyOptional({
@@ -27,10 +35,13 @@ export class PublicFieldQueryDto {
   limit?: number = 10;
 
   @ApiPropertyOptional({
-    description: 'Từ khóa tìm kiếm theo tên cụm sân',
+    description: 'Từ khóa tìm kiếm theo tên hoặc địa chỉ cụm sân',
     example: 'Chảo Lửa',
   })
   @IsOptional()
+  @Transform(({ value }: { value: unknown }): string | undefined =>
+    typeof value === 'string' ? value.trim() : (value as string | undefined),
+  )
   @IsString()
   search?: string;
 
@@ -39,6 +50,50 @@ export class PublicFieldQueryDto {
     example: 'Tân Bình',
   })
   @IsOptional()
+  @Transform(({ value }: { value: unknown }): string | undefined =>
+    typeof value === 'string' ? value.trim() : (value as string | undefined),
+  )
   @IsString()
   district?: string;
+
+  @ApiPropertyOptional({
+    description: 'Lọc theo yêu cầu đặt cọc (true/false)',
+    example: false,
+    nullable: true,
+  })
+  @IsOptional()
+  @Transform(({ value }: { value: unknown }): boolean | undefined => {
+    if (value === 'true' || value === true || value === '1' || value === 1) {
+      return true;
+    }
+    if (value === 'false' || value === false || value === '0' || value === 0) {
+      return false;
+    }
+    return undefined;
+  })
+  @IsBoolean()
+  requireDeposit?: boolean;
+
+  @ApiPropertyOptional({
+    description: 'Cột sắp xếp kết quả',
+    enum: ['createdAt', 'name'],
+    default: 'createdAt',
+  })
+  @IsOptional()
+  @IsIn(['createdAt', 'name'])
+  sortBy?: 'createdAt' | 'name' = 'createdAt';
+
+  @ApiPropertyOptional({
+    description: 'Thứ tự sắp xếp (tăng dần ASC hoặc giảm dần DESC)',
+    enum: ['ASC', 'DESC'],
+    default: 'DESC',
+  })
+  @IsOptional()
+  @Transform(({ value }: { value: unknown }): 'ASC' | 'DESC' | undefined =>
+    typeof value === 'string'
+      ? (value.toUpperCase() as 'ASC' | 'DESC')
+      : (value as 'ASC' | 'DESC' | undefined),
+  )
+  @IsIn(['ASC', 'DESC'])
+  sortOrder?: 'ASC' | 'DESC' = 'DESC';
 }
