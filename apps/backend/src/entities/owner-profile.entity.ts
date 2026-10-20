@@ -1,8 +1,10 @@
-import { Column, Entity, JoinColumn, OneToOne } from 'typeorm';
+import { Column, Entity, Index, JoinColumn, OneToOne } from 'typeorm';
 import { UuidEntity } from '../core/entities/uuid.entity';
 import { UserEntity } from './user.entity';
 
 @Entity({ name: 'owner_profiles' })
+@Index('IDX_owner_profiles_business_name', ['businessName'])
+@Index('IDX_owner_profiles_verified_at', ['verifiedAt'])
 export class OwnerProfileEntity extends UuidEntity {
   @Column({ name: 'user_id', type: 'uuid', unique: true })
   userId!: string;

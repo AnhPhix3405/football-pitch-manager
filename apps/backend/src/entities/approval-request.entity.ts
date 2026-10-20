@@ -8,6 +8,12 @@ import { UserEntity } from './user.entity';
 @Index(['status'])
 @Index(['type', 'targetId'])
 @Index(['status', 'createdAt'])
+@Index('IDX_approval_requests_type_status_created_at', [
+  'type',
+  'status',
+  'createdAt',
+])
+@Index('IDX_approval_requests_target_id_status', ['targetId', 'status'])
 export class ApprovalRequestEntity extends UuidEntity {
   @Column({ type: 'varchar' })
   type!: string;

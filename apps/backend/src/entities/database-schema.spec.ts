@@ -63,6 +63,38 @@ describe('database schema metadata', () => {
 
     expect(polymorphicRelations).toHaveLength(0);
   });
+
+  it('registers required indexes with explicit names on owner_profiles, fields, and approval_requests', () => {
+    const storage = getMetadataArgsStorage();
+
+    const getIndicesForTarget = (entityName: string) =>
+      storage.indices.filter(
+        ({ target }) =>
+          typeof target === 'function' && target.name === entityName,
+      );
+
+    const ownerIndices = getIndicesForTarget('OwnerProfileEntity');
+    const ownerIndexNames = ownerIndices.map((idx) => idx.name);
+    expect(ownerIndexNames).toContain('IDX_owner_profiles_business_name');
+    expect(ownerIndexNames).toContain('IDX_owner_profiles_verified_at');
+
+    const fieldIndices = getIndicesForTarget('FieldEntity');
+    const fieldIndexNames = fieldIndices.map((idx) => idx.name);
+    expect(fieldIndexNames).toContain('IDX_fields_owner_id_created_at');
+    expect(fieldIndexNames).toContain('IDX_fields_owner_id_status');
+    expect(fieldIndexNames).toContain('IDX_fields_status_district');
+    expect(fieldIndexNames).toContain('IDX_fields_status_created_at');
+    expect(fieldIndexNames).toContain('IDX_fields_status_require_deposit');
+
+    const approvalIndices = getIndicesForTarget('ApprovalRequestEntity');
+    const approvalIndexNames = approvalIndices.map((idx) => idx.name);
+    expect(approvalIndexNames).toContain(
+      'IDX_approval_requests_type_status_created_at',
+    );
+    expect(approvalIndexNames).toContain(
+      'IDX_approval_requests_target_id_status',
+    );
+  });
 });
 
 const TransactionEntityName = 'TransactionEntity';
