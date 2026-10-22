@@ -7,6 +7,11 @@ import { UserEntity } from './user.entity';
 @Index(['status'])
 @Index(['district'])
 @Index(['lat', 'lng'])
+@Index('IDX_fields_owner_id_created_at', ['ownerId', 'createdAt'])
+@Index('IDX_fields_owner_id_status', ['ownerId', 'status'])
+@Index('IDX_fields_status_district', ['status', 'district'])
+@Index('IDX_fields_status_created_at', ['status', 'createdAt'])
+@Index('IDX_fields_status_require_deposit', ['status', 'requireDeposit'])
 @Check('"deposit_value" IS NULL OR "deposit_value" >= 0')
 export class FieldEntity extends UuidEntity {
   @Column({ name: 'owner_id', type: 'uuid' })
