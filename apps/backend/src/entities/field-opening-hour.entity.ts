@@ -3,9 +3,14 @@ import { UuidEntity } from '../core/entities/uuid.entity';
 import { FieldEntity } from './field.entity';
 
 @Entity({ name: 'field_opening_hours' })
-@Index(['fieldId', 'dayOfWeek'], { unique: true })
-@Check('"day_of_week" BETWEEN 1 AND 7')
+@Index(
+  'IDX_field_opening_hours_field_id_day_of_week',
+  ['fieldId', 'dayOfWeek'],
+  { unique: true },
+)
+@Check('CHK_field_opening_hours_day_of_week', '"day_of_week" BETWEEN 1 AND 7')
 @Check(
+  'CHK_field_opening_hours_open_close_time',
   '"is_closed" = true OR ("open_time" IS NOT NULL AND "close_time" IS NOT NULL AND "open_time" < "close_time")',
 )
 export class FieldOpeningHourEntity extends UuidEntity {

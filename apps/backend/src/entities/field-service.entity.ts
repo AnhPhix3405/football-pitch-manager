@@ -1,11 +1,20 @@
-import { Check, Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
+import {
+  Check,
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  ManyToOne,
+  Unique,
+} from 'typeorm';
 import { UuidEntity } from '../core/entities/uuid.entity';
 import { FieldEntity } from './field.entity';
 
 @Entity({ name: 'field_services' })
-@Index(['fieldId'])
-@Index(['fieldId', 'isActive'])
-@Check('"price" >= 0')
+@Index('IDX_field_services_field_id', ['fieldId'])
+@Index('IDX_field_services_field_id_is_active', ['fieldId', 'isActive'])
+@Check('CHK_field_services_price', '"price" >= 0')
+@Unique('UQ_field_services_field_id_name', ['fieldId', 'name'])
 export class FieldServiceEntity extends UuidEntity {
   @Column({ name: 'field_id', type: 'uuid' })
   fieldId!: string;

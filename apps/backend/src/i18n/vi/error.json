@@ -27,5 +27,18 @@
   "invalidDepositConfig": "Cấu hình đặt cọc không hợp lệ",
   "fieldApprovalRequestPending": "Sân bóng này đang có một yêu cầu phê duyệt chờ xử lý",
   "forbiddenFieldAccess": "Bạn không có quyền truy cập hoặc chỉnh sửa cụm sân này.",
-  "invalidFieldId": "Mã định danh cụm sân không hợp lệ."
+  "invalidFieldId": "Mã định danh cụm sân không hợp lệ.",
+  "courtNameAlreadyExists": "Tên sân con đã tồn tại trong cụm sân",
+  "courtNotFound": "Không tìm thấy thông tin sân con",
+  "invalidCourtType": "Loại sân không hợp lệ",
+  "imageNotFound": "Không tìm thấy hình ảnh sân",
+  "serviceNameAlreadyExists": "Tên dịch vụ đã tồn tại trong cụm sân",
+  "serviceNotFound": "Không tìm thấy thông tin dịch vụ",
+  "invalidServicePrice": "Giá dịch vụ không được âm",
+  "invalidOpeningHours": "Cấu hình giờ mở cửa không hợp lệ",
+  "invalidDayOfWeek": "Ngày trong tuần phải từ 1 (Thứ 2) đến 7 (Chủ Nhật)",
+  "invalidTimeRange": "Khoảng thời gian không hợp lệ: giờ bắt đầu phải trước giờ kết thúc",
+  "courtNotInField": "Sân con không thuộc về cụm sân này",
+  "blockedSlotOverlap": "Khoảng thời gian khóa bị trùng với khoảng thời gian đã khóa trước đó",
+  "blockedSlotNotFound": "Không tìm thấy khung giờ bị khóa"
 }

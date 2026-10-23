@@ -32,6 +32,24 @@ Tài liệu chi tiết toàn bộ các API HTTP REST và WebSocket Gateway của
 | | `GET` | `/owner/fields/:id` | Owner / Admin | Chủ sân xem chi tiết cụm sân của mình |
 | | `PATCH` | `/owner/fields/:id` | Owner / Admin | Chủ sân cập nhật thông tin cụm sân |
 | | `DELETE` | `/owner/fields/:id` | Owner / Admin | Chủ sân vô hiệu hóa (tắt hoạt động) cụm sân |
+| | `POST` | `/owner/fields/:fieldId/courts` | Owner / Admin | Tạo sân con mới (loại 5/7/11) |
+| | `GET` | `/owner/fields/:fieldId/courts` | Owner / Admin | Lấy danh sách sân con thuộc cụm sân |
+| | `GET` | `/owner/fields/:fieldId/courts/:courtId` | Owner / Admin | Xem chi tiết thông tin một sân con |
+| | `PATCH` | `/owner/fields/:fieldId/courts/:courtId` | Owner / Admin | Cập nhật thông tin sân con |
+| | `DELETE` | `/owner/fields/:fieldId/courts/:courtId` | Owner / Admin | Vô hiệu hóa (inactive) sân con |
+| | `POST` | `/owner/fields/:fieldId/images` | Owner / Admin | Thêm hình ảnh mới cho cụm sân |
+| | `GET` | `/owner/fields/:fieldId/images` | Owner / Admin | Lấy danh sách hình ảnh theo thứ tự hiển thị |
+| | `PATCH` | `/owner/fields/:fieldId/images/:imageId` | Owner / Admin | Cập nhật thứ tự hoặc đặt làm thumbnail |
+| | `DELETE` | `/owner/fields/:fieldId/images/:imageId` | Owner / Admin | Xóa hình ảnh khỏi cụm sân |
+| | `POST` | `/owner/fields/:fieldId/services` | Owner / Admin | Tạo dịch vụ đi kèm mới cho cụm sân |
+| | `GET` | `/owner/fields/:fieldId/services` | Owner / Admin | Lấy danh sách dịch vụ đi kèm |
+| | `PATCH` | `/owner/fields/:fieldId/services/:serviceId` | Owner / Admin | Cập nhật thông tin dịch vụ đi kèm |
+| | `DELETE` | `/owner/fields/:fieldId/services/:serviceId` | Owner / Admin | Tắt trạng thái hoạt động của dịch vụ |
+| | `PUT` | `/owner/fields/:fieldId/opening-hours` | Owner / Admin | Cấu hình tuần hoàn giờ mở cửa 7 ngày |
+| | `GET` | `/owner/fields/:fieldId/opening-hours` | Owner / Admin | Xem cấu hình giờ mở cửa theo tuần |
+| | `POST` | `/owner/fields/:fieldId/courts/:courtId/blocked-slots` | Owner / Admin | Khóa khoảng giờ sân con chống chồng chéo |
+| | `GET` | `/owner/fields/:fieldId/courts/:courtId/blocked-slots` | Owner / Admin | Xem danh sách khoảng giờ bị khóa của sân con |
+| | `DELETE` | `/owner/fields/:fieldId/courts/:courtId/blocked-slots/:slotId` | Owner / Admin | Mở khóa (xóa) khoảng giờ bị khóa |
 | **Tìm đối & Bình luận** | `GET` | `/posts` | Public | Lấy danh sách bài đăng tìm đối công khai |
 | | `GET` | `/posts/me` | User / Active | Lấy danh sách bài đăng tìm đối của chính mình |
 | | `GET` | `/posts/:id` | Public | Lấy chi tiết một bài đăng tìm đối |
@@ -264,6 +282,121 @@ Tài liệu chi tiết toàn bộ các API HTTP REST và WebSocket Gateway của
 #### 3.2.7. Chủ sân vô hiệu hóa cụm sân (`DELETE /owner/fields/:id`)
 - **Quyền truy cập:** `owner`, `admin` (Yêu cầu quyền sở hữu sân)
 - **Response (`200 OK` - `FieldResponseDto`):** Cụm sân chuyển trạng thái sang `inactive`.
+
+---
+
+
+#### 3.2.8. Quản lý sân con (Courts - FIELD-03)
+- **Tạo sân con mới (`POST /owner/fields/:fieldId/courts`):**
+  - **Quyền truy cập:** `owner`, `admin` (Bảo vệ bởi `FieldOwnershipGuard`)
+  - **Request Body (`CreateFieldCourtDto`):**
+    ```json
+    {
+      "name": "Sân 1 (5 người)",
+      "type": "5",                     // "5" | "7" | "11"
+      "status": "active"               // "active" | "inactive" | "maintenance" (mặc định: "active")
+    }
+    ```
+  - **Response (`201 Created` - `FieldCourtResponseDto`):** Trả về thông tin sân con vừa tạo.
+  - **Mã lỗi đặc thù:** `COURT_NAME_ALREADY_EXISTS` (409 Conflict) khi tên sân con bị trùng trong cùng cụm sân.
+- **Lấy danh sách sân con (`GET /owner/fields/:fieldId/courts`):**
+  - **Query Parameters:** `type` (tùy chọn: 5, 7, 11), `status` (tùy chọn: active, inactive, maintenance).
+  - **Response (`200 OK`):** Mảng danh sách các sân con thuộc cụm sân.
+- **Chi tiết sân con (`GET /owner/fields/:fieldId/courts/:courtId`):**
+  - **Response (`200 OK` - `FieldCourtResponseDto`)**
+- **Cập nhật sân con (`PATCH /owner/fields/:fieldId/courts/:courtId`):**
+  - **Request Body (`UpdateFieldCourtDto`):** Các trường tùy chọn `name`, `type`, `status`.
+  - **Response (`200 OK` - `FieldCourtResponseDto`)**
+- **Vô hiệu hóa sân con (`DELETE /owner/fields/:fieldId/courts/:courtId`):**
+  - **Response (`200 OK` - `FieldCourtResponseDto`):** Chuyển trạng thái sang `inactive`.
+
+#### 3.2.9. Quản lý thư viện hình ảnh cụm sân (Images - FIELD-04)
+- **Thêm hình ảnh (`POST /owner/fields/:fieldId/images`):**
+  - **Quyền truy cập:** `owner`, `admin`
+  - **Request Body (`CreateFieldImageDto`):**
+    ```json
+    {
+      "url": "https://storage.example.com/fields/pitch-overview.jpg",
+      "displayOrder": 0,
+      "isThumbnail": true               // Nếu true: tự động unmark thumbnail cũ trong transaction
+    }
+    ```
+  - **Response (`201 Created` - `FieldImageResponseDto`)**
+- **Lấy danh sách hình ảnh (`GET /owner/fields/:fieldId/images`):**
+  - **Response (`200 OK`):** Danh sách ảnh được sắp xếp theo `displayOrder ASC`.
+- **Cập nhật hình ảnh (`PATCH /owner/fields/:fieldId/images/:imageId`):**
+  - **Request Body (`UpdateFieldImageDto`):** `displayOrder`, `isThumbnail`.
+  - **Response (`200 OK` - `FieldImageResponseDto`)**
+- **Xóa hình ảnh (`DELETE /owner/fields/:fieldId/images/:imageId`):**
+  - **Response (`200 OK` - `FieldImageResponseDto`)**
+
+#### 3.2.10. Quản lý dịch vụ đi kèm (Services - FIELD-05)
+- **Tạo dịch vụ (`POST /owner/fields/:fieldId/services`):**
+  - **Quyền truy cập:** `owner`, `admin`
+  - **Request Body (`CreateFieldServiceDto`):**
+    ```json
+    {
+      "name": "Thuê bóng thi đấu",
+      "price": 50000,                   // Đơn giá >= 0
+      "unit": "quả / trận",
+      "isActive": true
+    }
+    ```
+  - **Response (`201 Created` - `FieldServiceResponseDto`)**
+  - **Mã lỗi đặc thù:** `SERVICE_NAME_ALREADY_EXISTS` (409 Conflict) khi trùng tên dịch vụ trong cụm sân.
+- **Danh sách dịch vụ (`GET /owner/fields/:fieldId/services`):**
+  - **Query Parameters:** `isActive` (boolean, tùy chọn).
+  - **Response (`200 OK`):** Mảng danh sách dịch vụ đi kèm.
+- **Cập nhật dịch vụ (`PATCH /owner/fields/:fieldId/services/:serviceId`):**
+  - **Request Body (`UpdateFieldServiceDto`):** `name`, `price`, `unit`, `isActive`.
+  - **Response (`200 OK` - `FieldServiceResponseDto`)**
+- **Tắt trạng thái hoạt động (`DELETE /owner/fields/:fieldId/services/:serviceId`):**
+  - **Response (`200 OK` - `FieldServiceResponseDto`):** Đặt `isActive = false`.
+
+#### 3.2.11. Cấu hình giờ mở cửa theo tuần (Opening Hours - FIELD-06)
+- **Cập nhật tuần hoàn 7 ngày (`PUT /owner/fields/:fieldId/opening-hours`):**
+  - **Quyền truy cập:** `owner`, `admin`
+  - **Request Body (`UpsertFieldOpeningHoursDto`):**
+    ```json
+    {
+      "hours": [
+        { "dayOfWeek": 1, "openTime": "06:00", "closeTime": "22:00", "isClosed": false },
+        { "dayOfWeek": 2, "openTime": "06:00", "closeTime": "22:00", "isClosed": false },
+        { "dayOfWeek": 3, "openTime": "06:00", "closeTime": "22:00", "isClosed": false },
+        { "dayOfWeek": 4, "openTime": "06:00", "closeTime": "22:00", "isClosed": false },
+        { "dayOfWeek": 5, "openTime": "06:00", "closeTime": "22:00", "isClosed": false },
+        { "dayOfWeek": 6, "openTime": "06:00", "closeTime": "23:00", "isClosed": false },
+        { "dayOfWeek": 7, "openTime": "06:00", "closeTime": "23:00", "isClosed": false }
+      ]
+    }
+    ```
+  - **Response (`200 OK` - Mảng `FieldOpeningHourResponseDto`):** Cập nhật nguyên tử toàn bộ lịch tuần.
+  - **Ràng buộc kiểm tra:** `dayOfWeek` từ 1 đến 7; khi `isClosed = false`, bắt buộc `openTime < closeTime` (`INVALID_TIME_RANGE` - 400).
+- **Xem giờ mở cửa (`GET /owner/fields/:fieldId/opening-hours`):**
+  - **Response (`200 OK`):** Danh sách 7 ngày trong tuần theo thứ tự từ Thứ Hai đến Chủ Nhật.
+
+#### 3.2.12. Quản lý khóa lịch sân con chống chồng chéo (Blocked Slots - FIELD-07)
+- **Tạo khoảng khóa lịch sân con (`POST /owner/fields/:fieldId/courts/:courtId/blocked-slots`):**
+  - **Quyền truy cập:** `owner`, `admin`
+  - **Request Body (`CreateBlockedSlotDto`):**
+    ```json
+    {
+      "blockedDate": "2026-10-25",
+      "startTime": "08:00",
+      "endTime": "10:00",
+      "reason": "Bảo trì định kỳ thay mặt cỏ"
+    }
+    ```
+  - **Response (`201 Created` - `BlockedSlotResponseDto`)**
+  - **Thuật toán kiểm tra chống chồng chéo:**
+    - Khoảng thời gian bị khóa không được phép giao nhau: `existing.startTime < new.endTime AND existing.endTime > new.startTime`.
+    - Trùng lặp sẽ trả về mã lỗi `BLOCKED_SLOT_OVERLAP` (409 Conflict).
+    - Các khoảng thời gian tiếp xúc điểm biên (ví dụ: `08:00 - 10:00` và `10:00 - 12:00`) được phép tạo bình thường.
+- **Lấy danh sách khóa lịch (`GET /owner/fields/:fieldId/courts/:courtId/blocked-slots`):**
+  - **Query Parameters:** `date` (lọc chính xác ngày), hoặc `startDate` và `endDate` (lọc theo khoảng ngày).
+  - **Response (`200 OK`):** Mảng danh sách khung giờ bị khóa của sân con.
+- **Mở khóa sân con (`DELETE /owner/fields/:fieldId/courts/:courtId/blocked-slots/:slotId`):**
+  - **Response (`200 OK` - `BlockedSlotResponseDto`):** Xóa bản ghi khóa lịch thành công.
 
 ---
 

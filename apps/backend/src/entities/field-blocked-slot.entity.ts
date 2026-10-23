@@ -3,10 +3,15 @@ import { UuidEntity } from '../core/entities/uuid.entity';
 import { FieldCourtEntity } from './field-court.entity';
 
 @Entity({ name: 'field_blocked_slots' })
-@Index(['fieldCourtId'])
-@Index(['fieldCourtId', 'blockedDate'])
-@Index(['fieldCourtId', 'blockedDate', 'startTime', 'endTime'])
-@Check('"start_time" < "end_time"')
+@Index('IDX_field_blocked_slots_court_id', ['fieldCourtId'])
+@Index('IDX_field_blocked_slots_court_date', ['fieldCourtId', 'blockedDate'])
+@Index('IDX_field_blocked_slots_court_date_time', [
+  'fieldCourtId',
+  'blockedDate',
+  'startTime',
+  'endTime',
+])
+@Check('CHK_field_blocked_slots_time_range', '"start_time" < "end_time"')
 export class FieldBlockedSlotEntity extends UuidEntity {
   @Column({ name: 'field_court_id', type: 'uuid' })
   fieldCourtId!: string;

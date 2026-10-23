@@ -27,5 +27,18 @@
   "invalidDepositConfig": "Invalid deposit configuration",
   "fieldApprovalRequestPending": "This field complex already has a pending approval request",
   "forbiddenFieldAccess": "You do not have permission to access or modify this football field.",
-  "invalidFieldId": "Invalid football field ID."
+  "invalidFieldId": "Invalid football field ID.",
+  "courtNameAlreadyExists": "Court name already exists in this field",
+  "courtNotFound": "Court not found",
+  "invalidCourtType": "Invalid court type",
+  "imageNotFound": "Field image not found",
+  "serviceNameAlreadyExists": "Service name already exists in this field",
+  "serviceNotFound": "Service not found",
+  "invalidServicePrice": "Service price cannot be negative",
+  "invalidOpeningHours": "Invalid opening hours configuration",
+  "invalidDayOfWeek": "Day of week must be between 1 and 7",
+  "invalidTimeRange": "Invalid time range: start time must be before end time",
+  "courtNotInField": "Court does not belong to this field",
+  "blockedSlotOverlap": "Blocked slot overlaps with an existing blocked slot",
+  "blockedSlotNotFound": "Blocked slot not found"
 }

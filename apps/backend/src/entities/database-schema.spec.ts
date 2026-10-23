@@ -94,6 +94,71 @@ describe('database schema metadata', () => {
     expect(approvalIndexNames).toContain(
       'IDX_approval_requests_target_id_status',
     );
+
+    const courtIndices = getIndicesForTarget('FieldCourtEntity').map(
+      (i) => i.name,
+    );
+    expect(courtIndices).toContain('IDX_field_courts_field_id');
+    expect(courtIndices).toContain('IDX_field_courts_field_id_status');
+    expect(courtIndices).toContain('IDX_field_courts_field_id_type_status');
+
+    const imageIndices = getIndicesForTarget('FieldImageEntity').map(
+      (i) => i.name,
+    );
+    expect(imageIndices).toContain('IDX_field_images_field_id');
+    expect(imageIndices).toContain('IDX_field_images_field_id_display_order');
+    expect(imageIndices).toContain('IDX_field_images_field_id_thumbnail');
+
+    const serviceIndices = getIndicesForTarget('FieldServiceEntity').map(
+      (i) => i.name,
+    );
+    expect(serviceIndices).toContain('IDX_field_services_field_id');
+    expect(serviceIndices).toContain('IDX_field_services_field_id_is_active');
+
+    const openingHourIndices = getIndicesForTarget(
+      'FieldOpeningHourEntity',
+    ).map((i) => i.name);
+    expect(openingHourIndices).toContain(
+      'IDX_field_opening_hours_field_id_day_of_week',
+    );
+
+    const blockedSlotIndices = getIndicesForTarget(
+      'FieldBlockedSlotEntity',
+    ).map((i) => i.name);
+    expect(blockedSlotIndices).toContain('IDX_field_blocked_slots_court_id');
+    expect(blockedSlotIndices).toContain('IDX_field_blocked_slots_court_date');
+    expect(blockedSlotIndices).toContain(
+      'IDX_field_blocked_slots_court_date_time',
+    );
+  });
+
+  it('registers required check and unique constraints on field operational entities', () => {
+    const storage = getMetadataArgsStorage();
+
+    const courtChecks = storage.checks
+      .filter(
+        ({ target }) =>
+          typeof target === 'function' && target.name === 'FieldCourtEntity',
+      )
+      .map((c) => c.name);
+    expect(courtChecks).toContain('CHK_field_courts_type');
+    expect(courtChecks).toContain('CHK_field_courts_status');
+
+    const courtUniques = storage.uniques
+      .filter(
+        ({ target }) =>
+          typeof target === 'function' && target.name === 'FieldCourtEntity',
+      )
+      .map((u) => u.name);
+    expect(courtUniques).toContain('UQ_field_courts_field_id_name');
+
+    const serviceUniques = storage.uniques
+      .filter(
+        ({ target }) =>
+          typeof target === 'function' && target.name === 'FieldServiceEntity',
+      )
+      .map((u) => u.name);
+    expect(serviceUniques).toContain('UQ_field_services_field_id_name');
   });
 });
 
