@@ -37,6 +37,27 @@ export class FieldBlockedSlotRepository extends BaseRepository<FieldBlockedSlotE
       .getMany();
   }
 
+  async findOverlappingSlotsByCourtsAndDate(
+    courtIds: string[],
+    blockedDate: string,
+    startTime: string,
+    endTime: string,
+  ): Promise<FieldBlockedSlotEntity[]> {
+    if (!courtIds || courtIds.length === 0) {
+      return [];
+    }
+
+    return this.repository
+      .createQueryBuilder('slot')
+      .where('slot.fieldCourtId IN (:...courtIds)', { courtIds })
+      .andWhere('slot.blockedDate = :blockedDate', { blockedDate })
+      .andWhere('slot.startTime < :endTime AND slot.endTime > :startTime', {
+        startTime,
+        endTime,
+      })
+      .getMany();
+  }
+
   async findByCourtId(
     courtId: string,
     filter?: BlockedSlotFilter,

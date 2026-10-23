@@ -59,4 +59,35 @@ describe('FieldBlockedSlotRepository', () => {
     );
     expect(result).toEqual(mockSlots);
   });
+
+  it('finds overlapping slots across multiple courts', async () => {
+    qb.getMany.mockResolvedValue([
+      { id: 'slot-1' },
+    ] as FieldBlockedSlotEntity[]);
+
+    const result = await repository.findOverlappingSlotsByCourtsAndDate(
+      ['court-1', 'court-2'],
+      '2026-10-24',
+      '09:00',
+      '11:00',
+    );
+
+    expect(qb.where).toHaveBeenCalledWith(
+      'slot.fieldCourtId IN (:...courtIds)',
+      {
+        courtIds: ['court-1', 'court-2'],
+      },
+    );
+    expect(result).toHaveLength(1);
+  });
+
+  it('returns empty array when courtIds is empty in findOverlappingSlotsByCourtsAndDate', async () => {
+    const result = await repository.findOverlappingSlotsByCourtsAndDate(
+      [],
+      '2026-10-24',
+      '09:00',
+      '11:00',
+    );
+    expect(result).toEqual([]);
+  });
 });

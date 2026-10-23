@@ -29,6 +29,15 @@ export class FieldOpeningHourRepository extends BaseRepository<FieldOpeningHourE
     });
   }
 
+  async findByFieldAndDay(
+    fieldId: string,
+    dayOfWeek: number,
+  ): Promise<FieldOpeningHourEntity | null> {
+    return this.repository.findOne({
+      where: { fieldId, dayOfWeek },
+    });
+  }
+
   async upsertWeeklyHours(
     fieldId: string,
     hours: WeeklyOpeningHourInput[],

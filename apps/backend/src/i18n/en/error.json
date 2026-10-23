@@ -40,5 +40,11 @@
   "invalidTimeRange": "Invalid time range: start time must be before end time",
   "courtNotInField": "Court does not belong to this field",
   "blockedSlotOverlap": "Blocked slot overlaps with an existing blocked slot",
-  "blockedSlotNotFound": "Blocked slot not found"
+  "blockedSlotNotFound": "Blocked slot not found",
+  "pricingSlotOverlap": "Pricing slot overlaps with an existing pricing slot",
+  "pricingNotFound": "Pricing configuration not found",
+  "priceConfigurationMissing": "No pricing configuration covers the entire requested duration",
+  "outsideOpeningHours": "Requested time range is outside the opening hours of the pitch",
+  "courtNotAvailable": "The sub-court is not available during the requested time",
+  "invalidCourtAssignment": "Invalid sub-court assignment"
 }

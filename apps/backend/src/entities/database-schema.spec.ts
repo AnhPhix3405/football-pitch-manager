@@ -130,10 +130,33 @@ describe('database schema metadata', () => {
     expect(blockedSlotIndices).toContain(
       'IDX_field_blocked_slots_court_date_time',
     );
+
+    const pricingIndices = getIndicesForTarget('FieldPricingEntity').map(
+      (i) => i.name,
+    );
+    expect(pricingIndices).toContain('IDX_field_pricing_lookup');
+    expect(pricingIndices).toContain('IDX_field_pricing_time_range');
+
+    const bookingIndices = getIndicesForTarget('BookingEntity').map(
+      (i) => i.name,
+    );
+    expect(bookingIndices).toContain('IDX_bookings_court_date_times');
+    expect(bookingIndices).toContain('IDX_bookings_court_date_status');
   });
 
   it('registers required check and unique constraints on field operational entities', () => {
     const storage = getMetadataArgsStorage();
+
+    const pricingChecks = storage.checks
+      .filter(
+        ({ target }) =>
+          typeof target === 'function' && target.name === 'FieldPricingEntity',
+      )
+      .map((c) => c.name);
+    expect(pricingChecks).toContain('CHK_field_pricing_court_type');
+    expect(pricingChecks).toContain('CHK_field_pricing_day_type');
+    expect(pricingChecks).toContain('CHK_field_pricing_time_order');
+    expect(pricingChecks).toContain('CHK_field_pricing_price_positive');
 
     const courtChecks = storage.checks
       .filter(

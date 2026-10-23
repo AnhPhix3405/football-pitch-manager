@@ -40,5 +40,11 @@
   "invalidTimeRange": "Khoảng thời gian không hợp lệ: giờ bắt đầu phải trước giờ kết thúc",
   "courtNotInField": "Sân con không thuộc về cụm sân này",
   "blockedSlotOverlap": "Khoảng thời gian khóa bị trùng với khoảng thời gian đã khóa trước đó",
-  "blockedSlotNotFound": "Không tìm thấy khung giờ bị khóa"
+  "blockedSlotNotFound": "Không tìm thấy khung giờ bị khóa",
+  "pricingSlotOverlap": "Khung giờ giá bị trùng lặp với khung giờ đã tồn tại",
+  "pricingNotFound": "Không tìm thấy cấu hình bảng giá",
+  "priceConfigurationMissing": "Chưa có cấu hình bảng giá bao phủ toàn bộ khoảng thời gian yêu cầu",
+  "outsideOpeningHours": "Thời gian yêu cầu nằm ngoài giờ mở cửa của cụm sân",
+  "courtNotAvailable": "Sân con không khả dụng trong khoảng thời gian yêu cầu",
+  "invalidCourtAssignment": "Gán sân con không hợp lệ"
 }

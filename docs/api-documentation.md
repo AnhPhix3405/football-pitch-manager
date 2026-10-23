@@ -50,6 +50,14 @@ Tài liệu chi tiết toàn bộ các API HTTP REST và WebSocket Gateway của
 | | `POST` | `/owner/fields/:fieldId/courts/:courtId/blocked-slots` | Owner / Admin | Khóa khoảng giờ sân con chống chồng chéo |
 | | `GET` | `/owner/fields/:fieldId/courts/:courtId/blocked-slots` | Owner / Admin | Xem danh sách khoảng giờ bị khóa của sân con |
 | | `DELETE` | `/owner/fields/:fieldId/courts/:courtId/blocked-slots/:slotId` | Owner / Admin | Mở khóa (xóa) khoảng giờ bị khóa |
+| | `POST` | `/owner/fields/:fieldId/pricing` | Owner / Admin | Cấu hình bảng giá theo khung giờ và loại sân |
+| | `GET` | `/owner/fields/:fieldId/pricing` | Owner / Admin | Lấy danh sách bảng giá cấu hình của cụm sân |
+| | `PATCH` | `/owner/fields/:fieldId/pricing/:pricingId` | Owner / Admin | Cập nhật khung giá sân |
+| | `DELETE` | `/owner/fields/:fieldId/pricing/:pricingId` | Owner / Admin | Xóa khung giá cấu hình |
+| | `GET` | `/fields/:fieldId/pricing/quote` | Public | Tính toán báo giá tức thời theo loại sân, ngày giờ |
+| | `GET` | `/fields/:fieldId/availability` | Public | Kiểm tra tình trạng trống của các sân con theo khung giờ |
+| | `GET` | `/owner/fields/:fieldId/courts/timeline` | Owner / Admin | Xem timeline trực quan tình trạng đặt/khóa theo ngày |
+| | `GET` | `/owner/fields/:fieldId/courts/:courtId/check-assignment` | Owner / Admin | Kiểm tra tính hợp lệ khi gán sân con cho đơn đặt |
 | **Tìm đối & Bình luận** | `GET` | `/posts` | Public | Lấy danh sách bài đăng tìm đối công khai |
 | | `GET` | `/posts/me` | User / Active | Lấy danh sách bài đăng tìm đối của chính mình |
 | | `GET` | `/posts/:id` | Public | Lấy chi tiết một bài đăng tìm đối |
@@ -397,6 +405,104 @@ Tài liệu chi tiết toàn bộ các API HTTP REST và WebSocket Gateway của
   - **Response (`200 OK`):** Mảng danh sách khung giờ bị khóa của sân con.
 - **Mở khóa sân con (`DELETE /owner/fields/:fieldId/courts/:courtId/blocked-slots/:slotId`):**
   - **Response (`200 OK` - `BlockedSlotResponseDto`):** Xóa bản ghi khóa lịch thành công.
+
+---
+
+#### 3.2.13. Quản lý bảng giá & Tình trạng sân (Pricing & Availability - PRICE-01, PRICE-02, AVAIL-01, AVAIL-02, AVAIL-03)
+
+- **Cấu hình bảng giá sân con (`POST /owner/fields/:fieldId/pricing`):**
+  - **Quyền truy cập:** `owner`, `admin`
+  - **Request Body (`CreateFieldPricingDto`):**
+    ```json
+    {
+      "courtType": "5",
+      "dayType": "weekday",
+      "startTime": "06:00",
+      "endTime": "17:00",
+      "price": 200000
+    }
+    ```
+  - **Response (`201 Created` - `FieldPricingResponseDto`)**
+  - **Chống chồng chéo quy tắc giá:**
+    - Cùng `fieldId`, `courtType`, `dayType` không được giao khoảng thời gian: `existing.startTime < new.endTime AND existing.endTime > new.startTime`.
+    - Trùng lặp trả về `PRICING_SLOT_OVERLAP` (409 Conflict).
+    - Tiếp xúc biên (`06:00 - 17:00` và `17:00 - 22:00`) hợp lệ.
+
+- **Lấy danh sách bảng giá (`GET /owner/fields/:fieldId/pricing`):**
+  - **Query Parameters:** `courtType` ('5' | '7' | '11'), `dayType` ('weekday' | 'weekend' | 'holiday').
+  - **Response (`200 OK`):** Mảng các quy tắc giá `FieldPricingResponseDto[]`.
+
+- **Cập nhật quy tắc giá (`PATCH /owner/fields/:fieldId/pricing/:pricingId`):**
+  - **Request Body (`UpdateFieldPricingDto`):** Cho phép cập nhật từng phần (`courtType`, `dayType`, `startTime`, `endTime`, `price`).
+
+- **Xóa quy tắc giá (`DELETE /owner/fields/:fieldId/pricing/:pricingId`):**
+  - **Response (`200 OK`):** `{ "success": true }`.
+
+- **Tính toán báo giá đặt sân (`GET /fields/:fieldId/pricing/quote`):**
+  - **Quyền truy cập:** Public
+  - **Query Parameters:** `courtType` (bắt buộc), `date` (YYYY-MM-DD), `startTime` (HH:mm), `endTime` (HH:mm).
+  - **Response (`200 OK` - `PriceQuoteResponseDto`):**
+    ```json
+    {
+      "fieldId": "uuid",
+      "courtType": "5",
+      "date": "2026-10-26",
+      "dayType": "weekday",
+      "startTime": "16:00",
+      "endTime": "18:00",
+      "totalDurationHours": 2,
+      "totalPrice": 500000,
+      "breakdowns": [
+        {
+          "startTime": "16:00",
+          "endTime": "17:00",
+          "durationHours": 1,
+          "hourlyPrice": 200000,
+          "subtotal": 200000
+        },
+        {
+          "startTime": "17:00",
+          "endTime": "18:00",
+          "durationHours": 1,
+          "hourlyPrice": 300000,
+          "subtotal": 300000
+        }
+      ]
+    }
+    ```
+  - **Quy tắc tính toán:**
+    - Tự động xác định `dayType` theo ngày trong tuần (Thứ 2 - Thứ 6 là `weekday`, Thứ 7 - CN là `weekend`).
+    - Kiểm tra nằm trọn trong giờ mở cửa của sân (`OUTSIDE_OPENING_HOURS` nếu vi phạm).
+    - Chia nhỏ khung giờ qua các mốc giá khác nhau và tính tổng tiền chính xác. Báo lỗi `PRICE_CONFIGURATION_MISSING` nếu thiếu khung giá.
+
+- **Kiểm tra tình trạng trống của sân (`GET /fields/:fieldId/availability`):**
+  - **Quyền truy cập:** Public
+  - **Query Parameters:** `courtType` (bắt buộc), `date` (YYYY-MM-DD), `startTime` (HH:mm), `endTime` (HH:mm).
+  - **Response (`200 OK` - `FieldAvailabilityResponseDto`):**
+    ```json
+    {
+      "fieldId": "uuid",
+      "courtType": "5",
+      "date": "2026-10-26",
+      "startTime": "08:00",
+      "endTime": "10:00",
+      "isAvailable": true,
+      "availableCourtsCount": 1,
+      "totalCourtsCount": 2,
+      "availableCourtIds": ["court-uuid-2"]
+    }
+    ```
+  - **Thuật toán khả dụng:** Sân con khả dụng khi và chỉ khi: sân đang `active` AND không có `blocked_slot` giao nhau AND không có `booking` (khác trạng thái `cancelled`, `rejected`) giao nhau.
+
+- **Xem trực quan timeline sân con của chủ sân (`GET /owner/fields/:fieldId/courts/timeline`):**
+  - **Quyền truy cập:** `owner`, `admin`
+  - **Query Parameters:** `date` (YYYY-MM-DD, mặc định hôm nay).
+  - **Response (`200 OK` - `CourtTimelineResponseDto`):** Trả về danh sách từng sân con kèm các slot bận (đã đặt hoặc bị khóa) trong ngày.
+
+- **Kiểm tra tính hợp lệ khi gán sân con (`GET /owner/fields/:fieldId/courts/:courtId/check-assignment`):**
+  - **Quyền truy cập:** `owner`, `admin`
+  - **Query Parameters:** `courtType`, `date`, `startTime`, `endTime`.
+  - **Response (`200 OK` - `CheckCourtAssignmentResponseDto`):** `{ "courtId": "uuid", "canAssign": true }`.
 
 ---
 

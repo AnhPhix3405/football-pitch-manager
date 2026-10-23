@@ -13,7 +13,17 @@ import { UserEntity } from './user.entity';
 @Index(['userId', 'createdAt'])
 @Index(['fieldId', 'bookingDate'])
 @Index(['fieldCourtId', 'bookingDate'])
-@Index(['fieldCourtId', 'bookingDate', 'startTime', 'endTime'])
+@Index('IDX_bookings_court_date_times', [
+  'fieldCourtId',
+  'bookingDate',
+  'startTime',
+  'endTime',
+])
+@Index('IDX_bookings_court_date_status', [
+  'fieldCourtId',
+  'bookingDate',
+  'status',
+])
 @Check('"start_time" < "end_time"')
 @Check('"total_price" >= 0')
 @Check('"deposit_amount" >= 0')
