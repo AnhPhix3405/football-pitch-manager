@@ -46,5 +46,13 @@
   "priceConfigurationMissing": "Chưa có cấu hình bảng giá bao phủ toàn bộ khoảng thời gian yêu cầu",
   "outsideOpeningHours": "Thời gian yêu cầu nằm ngoài giờ mở cửa của cụm sân",
   "courtNotAvailable": "Sân con không khả dụng trong khoảng thời gian yêu cầu",
-  "invalidCourtAssignment": "Gán sân con không hợp lệ"
+  "invalidCourtAssignment": "Gán sân con không hợp lệ",
+  "bookingNotFound": "Không tìm thấy thông tin đơn đặt sân",
+  "bookingNotInField": "Đơn đặt sân không thuộc về cụm sân này",
+  "courtAlreadyOccupied": "Sân con đã có đơn đặt khác hoặc đang bị khóa trong khoảng thời gian này",
+  "courtTypeMismatch": "Loại sân con được gán không khớp với loại sân yêu cầu",
+  "invalidBookingStatusTransition": "Không thể chuyển trạng thái đơn đặt sân theo yêu cầu",
+  "courtUnavailable": "Không còn sân con nào khả dụng trong khung giờ này",
+  "bookingCannotBeCancelled": "Đơn đặt sân ở trạng thái hiện tại không thể hủy",
+  "serviceNotBelongToField": "Dịch vụ được chọn không thuộc cụm sân này hoặc đã ngừng cung cấp"
 }

@@ -1,3 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+
 /* eslint-disable @typescript-eslint/unbound-method */
 jest.mock('@nestjs/typeorm', () => ({
   InjectRepository: () => () => undefined,
@@ -98,6 +102,104 @@ describe('BookingRepository', () => {
       },
     );
     expect(qb.orderBy).toHaveBeenCalledWith('booking.startTime', 'ASC');
-    expect(result).toHaveLength(1);
+    expect(result).toEqual([{ id: 'b-1', startTime: '08:00' }]);
+  });
+
+  it('finds conflicting booking for court with excludeId', async () => {
+    const qb: any = {
+      where: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+      getOne: jest.fn().mockResolvedValue({ id: 'b-conflict' }),
+    };
+    typeOrmRepository.createQueryBuilder.mockReturnValue(qb);
+
+    const result = await repository.findConflictingBookingForCourt(
+      'court-1',
+      '2026-10-26',
+      '14:00',
+      '16:00',
+      'b-curr',
+    );
+
+    expect(qb.where).toHaveBeenCalledWith('booking.fieldCourtId = :courtId', {
+      courtId: 'court-1',
+    });
+    expect(qb.andWhere).toHaveBeenCalledWith(
+      'booking.id != :excludeBookingId',
+      {
+        excludeBookingId: 'b-curr',
+      },
+    );
+    expect(result).toEqual({ id: 'b-conflict' });
+  });
+
+  it('finds user bookings with pagination and filters', async () => {
+    const qb: any = {
+      leftJoinAndSelect: jest.fn().mockReturnThis(),
+      where: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+      orderBy: jest.fn().mockReturnThis(),
+      skip: jest.fn().mockReturnThis(),
+      take: jest.fn().mockReturnThis(),
+      getManyAndCount: jest.fn().mockResolvedValue([[{ id: 'b-1' }], 1]),
+    };
+    typeOrmRepository.createQueryBuilder.mockReturnValue(qb);
+
+    const result = await repository.findUserBookings('user-1', {
+      status: 'pending',
+      bookingDate: '2026-10-26',
+      page: 1,
+      limit: 10,
+    });
+
+    expect(qb.where).toHaveBeenCalledWith('booking.userId = :userId', {
+      userId: 'user-1',
+    });
+    expect(qb.andWhere).toHaveBeenCalledWith('booking.status = :status', {
+      status: 'pending',
+    });
+    expect(result).toEqual([[{ id: 'b-1' }], 1]);
+  });
+
+  it('finds owner bookings with filters', async () => {
+    const qb: any = {
+      leftJoinAndSelect: jest.fn().mockReturnThis(),
+      where: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+      orderBy: jest.fn().mockReturnThis(),
+      skip: jest.fn().mockReturnThis(),
+      take: jest.fn().mockReturnThis(),
+      getManyAndCount: jest.fn().mockResolvedValue([[{ id: 'b-owner' }], 1]),
+    };
+    typeOrmRepository.createQueryBuilder.mockReturnValue(qb);
+
+    const result = await repository.findOwnerBookings('f-1', {
+      courtType: '5',
+      courtId: 'c-1',
+    });
+
+    expect(qb.where).toHaveBeenCalledWith('booking.fieldId = :fieldId', {
+      fieldId: 'f-1',
+    });
+    expect(qb.andWhere).toHaveBeenCalledWith(
+      'booking.requestedCourtType = :courtType',
+      { courtType: '5' },
+    );
+    expect(result).toEqual([[{ id: 'b-owner' }], 1]);
+  });
+
+  it('finds detail by id with all relations', async () => {
+    const qb: any = {
+      leftJoinAndSelect: jest.fn().mockReturnThis(),
+      where: jest.fn().mockReturnThis(),
+      orderBy: jest.fn().mockReturnThis(),
+      getOne: jest.fn().mockResolvedValue({ id: 'b-detail' }),
+    };
+    typeOrmRepository.createQueryBuilder.mockReturnValue(qb);
+
+    const result = await repository.findDetailById('b-1');
+
+    expect(qb.where).toHaveBeenCalledWith('booking.id = :id', { id: 'b-1' });
+    expect(result).toEqual({ id: 'b-detail' });
   });
 });

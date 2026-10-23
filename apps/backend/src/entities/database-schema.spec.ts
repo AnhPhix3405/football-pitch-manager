@@ -15,6 +15,7 @@ const EXPECTED_TABLES = [
   'field_blocked_slots',
   'bookings',
   'booking_services',
+  'booking_status_histories',
   'posts',
   'post_comments',
   'conversations',
@@ -41,7 +42,7 @@ describe('database schema metadata', () => {
       .map((table) => table.name)
       .sort();
 
-    expect(DATABASE_ENTITIES).toHaveLength(29);
+    expect(DATABASE_ENTITIES).toHaveLength(30);
     expect(tables).toEqual(EXPECTED_TABLES);
   });
 
@@ -182,6 +183,16 @@ describe('database schema metadata', () => {
       )
       .map((u) => u.name);
     expect(serviceUniques).toContain('UQ_field_services_field_id_name');
+
+    const bookingChecks = storage.checks
+      .filter(
+        ({ target }) =>
+          typeof target === 'function' && target.name === 'BookingEntity',
+      )
+      .map((c) => c.name);
+    expect(bookingChecks).toContain('CHK_bookings_status');
+    expect(bookingChecks).toContain('CHK_bookings_court_type');
+    expect(bookingChecks).toContain('CHK_bookings_payment_status');
   });
 });
 

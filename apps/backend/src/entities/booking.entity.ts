@@ -1,5 +1,16 @@
-import { Check, Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
+import {
+  Check,
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+  VersionColumn,
+} from 'typeorm';
 import { UuidEntity } from '../core/entities/uuid.entity';
+import { BookingServiceEntity } from './booking-service.entity';
+import { BookingStatusHistoryEntity } from './booking-status-history.entity';
 import { FieldCourtEntity } from './field-court.entity';
 import { FieldEntity } from './field.entity';
 import { UserEntity } from './user.entity';
@@ -24,9 +35,20 @@ import { UserEntity } from './user.entity';
   'bookingDate',
   'status',
 ])
+@Index('IDX_bookings_field_date_status', ['fieldId', 'bookingDate', 'status'])
+@Index('IDX_bookings_user_status', ['userId', 'status'])
 @Check('"start_time" < "end_time"')
 @Check('"total_price" >= 0')
 @Check('"deposit_amount" >= 0')
+@Check(
+  'CHK_bookings_status',
+  `"status" IN ('pending', 'confirmed', 'rejected', 'cancelled', 'completed')`,
+)
+@Check('CHK_bookings_court_type', `"requested_court_type" IN ('5', '7', '11')`)
+@Check(
+  'CHK_bookings_payment_status',
+  `"payment_status" IN ('unpaid', 'pending', 'paid', 'refunded', 'failed')`,
+)
 export class BookingEntity extends UuidEntity {
   @Column({ name: 'user_id', type: 'uuid' })
   userId!: string;
@@ -103,4 +125,13 @@ export class BookingEntity extends UuidEntity {
 
   @Column({ name: 'cancel_reason', type: 'text', nullable: true })
   cancelReason!: string | null;
+
+  @VersionColumn({ name: 'version', default: 1 })
+  version!: number;
+
+  @OneToMany(() => BookingServiceEntity, (service) => service.booking)
+  services!: BookingServiceEntity[];
+
+  @OneToMany(() => BookingStatusHistoryEntity, (history) => history.booking)
+  statusHistories!: BookingStatusHistoryEntity[];
 }

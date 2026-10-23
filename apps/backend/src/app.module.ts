@@ -4,8 +4,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { I18nModule } from 'nestjs-i18n';
 import { AdminApprovalModule } from './components/admin-approval/admin-approval.module';
 import { AuthModule } from './components/auth/auth.module';
-import { FieldModule } from './components/field/field.module';
+import { BookingModule } from './components/booking/booking.module';
 import { ChatModule } from './components/chat/chat.module';
+import { FieldModule } from './components/field/field.module';
 import { HealthModule } from './components/health/health.module';
 import { OwnerProfileModule } from './components/owner-profile/owner-profile.module';
 import { PostModule } from './components/post/post.module';
@@ -31,6 +32,7 @@ import { typeOrmDataSourceOptions } from './database/config/typeorm.options';
     OwnerProfileModule,
     AdminApprovalModule,
     FieldModule,
+    BookingModule,
     ChatModule,
     PostModule,
   ],

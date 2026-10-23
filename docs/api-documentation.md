@@ -58,6 +58,16 @@ Tài liệu chi tiết toàn bộ các API HTTP REST và WebSocket Gateway của
 | | `GET` | `/fields/:fieldId/availability` | Public | Kiểm tra tình trạng trống của các sân con theo khung giờ |
 | | `GET` | `/owner/fields/:fieldId/courts/timeline` | Owner / Admin | Xem timeline trực quan tình trạng đặt/khóa theo ngày |
 | | `GET` | `/owner/fields/:fieldId/courts/:courtId/check-assignment` | Owner / Admin | Kiểm tra tính hợp lệ khi gán sân con cho đơn đặt |
+| **Quản lý Đặt Sân & Vòng Đời** | `POST` | `/bookings` | User / Active | Tạo yêu cầu đặt sân (kèm dịch vụ & snapshot giá) |
+| | `GET` | `/bookings/me` | User / Active | Xem danh sách đơn đặt sân của cá nhân |
+| | `GET` | `/bookings/:id` | User / Active | Xem chi tiết đơn đặt sân kèm lịch sử trạng thái |
+| | `POST` | `/bookings/:id/cancel` | User / Active | Người đặt hủy đơn sân đang chờ hoặc đã xác nhận |
+| | `GET` | `/owner/fields/:fieldId/bookings` | Owner / Admin | Xem danh sách đơn đặt sân tại cụm sân |
+| | `GET` | `/owner/fields/:fieldId/bookings/:bookingId` | Owner / Admin | Xem chi tiết đơn đặt sân thuộc cụm sân |
+| | `POST` | `/owner/fields/:fieldId/bookings/:bookingId/confirm` | Owner / Admin | Xác nhận đơn và gán sân con (Khóa bi quan chống double-booking) |
+| | `POST` | `/owner/fields/:fieldId/bookings/:bookingId/reject` | Owner / Admin | Từ chối đơn đặt sân đang chờ |
+| | `POST` | `/owner/fields/:fieldId/bookings/:bookingId/cancel` | Owner / Admin | Chủ sân hủy đơn sân kèm lý do |
+| | `POST` | `/owner/fields/:fieldId/bookings/:bookingId/complete` | Owner / Admin | Đánh dấu hoàn tất trận đấu |
 | **Tìm đối & Bình luận** | `GET` | `/posts` | Public | Lấy danh sách bài đăng tìm đối công khai |
 | | `GET` | `/posts/me` | User / Active | Lấy danh sách bài đăng tìm đối của chính mình |
 | | `GET` | `/posts/:id` | Public | Lấy chi tiết một bài đăng tìm đối |
@@ -655,7 +665,127 @@ Tài liệu chi tiết toàn bộ các API HTTP REST và WebSocket Gateway của
 
 ---
 
-### 3.4. Hồ Sơ & Đăng Ký Chủ Sân (Owner Profile & Registration)
+### 3.4. Quản lý Đặt Sân & Vòng Đời Booking (Booking Lifecycle & Concurrency)
+
+#### 3.4.1. Ma trận chuyển đổi trạng thái đơn đặt sân (State Machine Matrix)
+- `pending` -> `confirmed` (Owner/Admin) | `rejected` (Owner/Admin) | `cancelled` (User/Owner/Admin)
+- `confirmed` -> `cancelled` (User/Owner/Admin) | `completed` (Owner/Admin)
+- `rejected`, `cancelled`, `completed`: Trạng thái kết thúc (Terminal states), không cho phép chuyển tiếp.
+
+#### 3.4.2. Tạo yêu cầu đặt sân (`POST /bookings`)
+- **Quyền truy cập:** User đã đăng nhập (`active`)
+- **Mô tả:** Khách hàng tạo yêu cầu đặt sân cho một loại sân (`courtType`: `5` | `7` | `11`) trong khung giờ cụ thể, đính kèm dịch vụ tùy chọn. Hệ thống tự động kiểm tra giờ mở cửa, tính tổng tiền, tiền cọc (30%), tạo snapshot giá dịch vụ, ghi nhận bản ghi `booking_status_histories` ban đầu (`toStatus: 'pending'`) và để `fieldCourtId = NULL`.
+- **Request Body (`CreateBookingDto`):**
+  ```json
+  {
+    "fieldId": "92bc0fa7-3798-4a7d-921d-9dae94090613",
+    "courtType": "5",
+    "bookingDate": "2026-10-26",
+    "startTime": "08:00",
+    "endTime": "10:00",
+    "services": [
+      {
+        "serviceId": "b1b72e39-d3e9-4672-91f8-0909c0909c09",
+        "quantity": 2
+      }
+    ]
+  }
+  ```
+- **Response (`201 Created`):**
+  ```json
+  {
+    "success": true,
+    "data": {
+      "id": "c81d2977-4768-4870-a033-dcc3cca73f4d",
+      "fieldId": "92bc0fa7-3798-4a7d-921d-9dae94090613",
+      "requestedCourtType": "5",
+      "fieldCourtId": null,
+      "bookingDate": "2026-10-26",
+      "startTime": "08:00",
+      "endTime": "10:00",
+      "status": "pending",
+      "totalPrice": 440000,
+      "depositAmount": 132000,
+      "paymentStatus": "unpaid",
+      "services": [
+        {
+          "serviceId": "b1b72e39-d3e9-4672-91f8-0909c0909c09",
+          "quantity": 2,
+          "priceSnapshot": 20000,
+          "subtotal": 40000
+        }
+      ]
+    }
+  }
+  ```
+
+#### 3.4.3. Xem danh sách đơn đặt của tôi (`GET /bookings/me`)
+- **Quyền truy cập:** User đã đăng nhập (`active`)
+- **Query Parameters:** `status`, `bookingDate`, `page`, `limit`.
+- **Response (`200 OK`):** Danh sách đơn đặt kèm phân trang.
+
+#### 3.4.4. Xem chi tiết đơn đặt sân (`GET /bookings/:id`)
+- **Quyền truy cập:** User (Chính chủ đơn)
+- **Response (`200 OK`):** Chi tiết đơn đặt kèm mảng `statusHistories` theo dòng thời gian (timeline).
+
+#### 3.4.5. Khách hàng hủy đơn đặt sân (`POST /bookings/:id/cancel`)
+- **Quyền truy cập:** User (Chính chủ đơn)
+- **Request Body (`CancelBookingDto`):**
+  ```json
+  {
+    "reason": "Có việc bận đột xuất"
+  }
+  ```
+- **Response (`200 OK`):** Chi tiết đơn đặt sân chuyển sang trạng thái `cancelled`.
+
+#### 3.4.6. Chủ sân xem danh sách đơn đặt tại cụm sân (`GET /owner/fields/:fieldId/bookings`)
+- **Quyền truy cập:** Owner (Chủ cụm sân) / Admin
+- **Query Parameters:** `status`, `courtType`, `courtId`, `bookingDate`, `page`, `limit`.
+
+#### 3.4.7. Chủ sân xem chi tiết đơn đặt (`GET /owner/fields/:fieldId/bookings/:bookingId`)
+- **Quyền truy cập:** Owner (Chủ cụm sân) / Admin
+
+#### 3.4.8. Chủ sân xác nhận và gán sân con (`POST /owner/fields/:fieldId/bookings/:bookingId/confirm`)
+- **Quyền truy cập:** Owner (Chủ cụm sân) / Admin
+- **Mô tả:** Sử dụng khóa bi quan (`pessimistic_write`) trong transaction TypeORM để ngăn chặn tuyệt đối tình trạng double-booking. Kiểm tra loại sân tương thích (`COURT_TYPE_MISMATCH`), xung đột lịch với các đơn đã `confirmed` hoặc các khung giờ bị khóa (`COURT_ALREADY_OCCUPIED`).
+- **Request Body (`ConfirmBookingDto`):**
+  ```json
+  {
+    "fieldCourtId": "730d0e4b-cf4f-4288-a8ad-6c92f51774b0",
+    "note": "Sân 5A chuẩn bị sẵn bóng và nước"
+  }
+  ```
+- **Response (`200 OK`):** Trạng thái chuyển thành `confirmed`, gán `fieldCourtId`.
+
+#### 3.4.9. Chủ sân từ chối đơn đặt (`POST /owner/fields/:fieldId/bookings/:bookingId/reject`)
+- **Quyền truy cập:** Owner (Chủ cụm sân) / Admin
+- **Request Body (`RejectBookingDto`):**
+  ```json
+  {
+    "reason": "Sân đang bảo trì mặt cỏ đột xuất"
+  }
+  ```
+- **Response (`200 OK`):** Trạng thái chuyển thành `rejected`.
+
+#### 3.4.10. Chủ sân hủy đơn đặt (`POST /owner/fields/:fieldId/bookings/:bookingId/cancel`)
+- **Quyền truy cập:** Owner (Chủ cụm sân) / Admin
+- **Request Body (`CancelBookingDto`):**
+  ```json
+  {
+    "reason": "Hủy theo yêu cầu của ban quản lý sân"
+  }
+  ```
+- **Response (`200 OK`):** Trạng thái chuyển thành `cancelled`.
+
+#### 3.4.11. Đánh dấu hoàn tất trận đấu (`POST /owner/fields/:fieldId/bookings/:bookingId/complete`)
+- **Quyền truy cập:** Owner (Chủ cụm sân) / Admin
+- **Mô tả:** Chuyển trạng thái đơn từ `confirmed` sang `completed` sau khi trận đấu kết thúc.
+- **Request Body:** `{}`
+- **Response (`200 OK`):** Trạng thái chuyển thành `completed`.
+
+---
+
+### 3.5. Hồ Sơ & Đăng Ký Chủ Sân (Owner Profile & Registration)
 
 #### 3.4.1. Nộp đơn đăng ký làm chủ sân (`POST /owner-registration`)
 - **Quyền truy cập:** Đã đăng nhập (Active)
@@ -750,7 +880,7 @@ Tài liệu chi tiết toàn bộ các API HTTP REST và WebSocket Gateway của
 
 ---
 
-### 3.5. Phê Duyệt Quản Trị (Admin Approvals)
+### 3.6. Phê Duyệt Quản Trị (Admin Approvals)
 
 #### 3.5.1. Lấy danh sách duyệt hồ sơ chủ sân (`GET /admin/owner-approvals`)
 - **Quyền truy cập:** `admin` (Active)

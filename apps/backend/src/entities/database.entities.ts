@@ -2,6 +2,7 @@ import { AiUsageLogEntity } from './ai-usage-log.entity';
 import { ApprovalRequestEntity } from './approval-request.entity';
 import { AuthSessionEntity } from './auth-session.entity';
 import { BookingServiceEntity } from './booking-service.entity';
+import { BookingStatusHistoryEntity } from './booking-status-history.entity';
 import { BookingEntity } from './booking.entity';
 import { ConversationMemberEntity } from './conversation-member.entity';
 import { ConversationEntity } from './conversation.entity';
@@ -42,6 +43,7 @@ export const DATABASE_ENTITIES: Array<new () => object> = [
   FieldBlockedSlotEntity,
   BookingEntity,
   BookingServiceEntity,
+  BookingStatusHistoryEntity,
   PostEntity,
   PostCommentEntity,
   ConversationEntity,

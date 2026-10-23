@@ -46,5 +46,13 @@
   "priceConfigurationMissing": "No pricing configuration covers the entire requested duration",
   "outsideOpeningHours": "Requested time range is outside the opening hours of the pitch",
   "courtNotAvailable": "The sub-court is not available during the requested time",
-  "invalidCourtAssignment": "Invalid sub-court assignment"
+  "invalidCourtAssignment": "Invalid sub-court assignment",
+  "bookingNotFound": "Booking not found",
+  "bookingNotInField": "Booking does not belong to this field",
+  "courtAlreadyOccupied": "The sub-court is already occupied or blocked in this time range",
+  "courtTypeMismatch": "Assigned court type does not match requested court type",
+  "invalidBookingStatusTransition": "Invalid booking status transition",
+  "courtUnavailable": "No courts are available in this time range",
+  "bookingCannotBeCancelled": "Booking cannot be cancelled in its current status",
+  "serviceNotBelongToField": "Selected service does not belong to this field or is inactive"
 }
