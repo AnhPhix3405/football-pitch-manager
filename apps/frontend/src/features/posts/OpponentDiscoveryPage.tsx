@@ -33,10 +33,10 @@ export function OpponentDiscoveryPage() {
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           <Button icon={<ReloadOutlined />} onClick={() => refetch()} loading={loading}>
-            {t('common.refresh', { defaultValue: 'Làm mới' })}
+            {t('common.refresh')}
           </Button>
           <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsModalOpen(true)}>
-            {t('posts.createPost', { defaultValue: 'Đăng yêu cầu' })}
+            {t('posts.createPost')}
           </Button>
         </div>
       </header>
@@ -45,7 +45,7 @@ export function OpponentDiscoveryPage() {
         <Input
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder={t('posts.searchPlaceholder', { defaultValue: 'Tìm đội, khu vực...' })}
+          placeholder={t('posts.searchPlaceholder')}
           prefix={<FilterOutlined />}
           allowClear
         />
@@ -53,7 +53,7 @@ export function OpponentDiscoveryPage() {
           value={level}
           onChange={setLevel}
           options={[
-            { value: 'all', label: t('posts.allSkills', { defaultValue: 'Mọi trình độ' }) },
+            { value: 'all', label: t('posts.allSkills') },
             ...['Phong trào', 'Trung bình khá', 'Khá', 'Bán chuyên'].map((value) => ({
               value,
               label: value,
@@ -61,7 +61,7 @@ export function OpponentDiscoveryPage() {
           ]}
         />
         <DatePicker
-          placeholder={t('booking.flow.matchDate', { defaultValue: 'Chọn ngày thi đấu' })}
+          placeholder={t('booking.flow.matchDate')}
           value={selectedDate}
           onChange={setSelectedDate}
         />
@@ -72,7 +72,7 @@ export function OpponentDiscoveryPage() {
             setSelectedDate(null)
           }}
         >
-          {t('common.reset', { defaultValue: 'Đặt lại' })}
+          {t('common.reset')}
         </Button>
       </div>
 
@@ -87,7 +87,7 @@ export function OpponentDiscoveryPage() {
           ))}
         </div>
       ) : (
-        <Empty description={t('posts.empty', { defaultValue: 'Chưa tìm thấy kèo phù hợp. Hãy thử thay đổi bộ lọc hoặc tạo bài đăng mới.' })} />
+        <Empty description={t('posts.empty')} />
       )}
 
       <CreatePostModal

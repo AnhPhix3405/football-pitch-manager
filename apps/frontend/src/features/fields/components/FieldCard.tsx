@@ -13,7 +13,7 @@ export function FieldCard({
   compact?: boolean
 }) {
   const { t } = useTranslation()
-  const fieldLink = `/app/fields/${field.id}`
+  const fieldLink = `/fields/${field.id}`
 
   return (
     <article className={`field-card${compact ? ' field-card--compact' : ''}`}>

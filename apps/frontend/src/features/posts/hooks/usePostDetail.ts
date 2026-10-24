@@ -3,10 +3,12 @@ import {
   acceptMatch,
   applyMatch,
   createPostComment,
+  deletePost,
   getPostComments,
   getPostDetail,
   getPostMatches,
   rejectMatch,
+  updatePost,
 } from '../service/post.service'
 import type { BackendPost, BackendPostComment, BackendPostMatch } from '../interface/post.types'
 
@@ -92,6 +94,27 @@ export function usePostDetail(postId: string) {
     }
   }
 
+  const changeStatus = async (newStatus: 'open' | 'matched' | 'closed') => {
+    try {
+      setActionLoading(true)
+      await updatePost(postId, { status: newStatus })
+      await loadData()
+      return true
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  const deleteCurrentPost = async () => {
+    try {
+      setActionLoading(true)
+      await deletePost(postId)
+      return true
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
   return {
     postData,
     matches,
@@ -104,5 +127,7 @@ export function usePostDetail(postId: string) {
     acceptMatchApplicant,
     rejectMatchApplicant,
     sendComment,
+    changeStatus,
+    deleteCurrentPost,
   }
 }

@@ -2,21 +2,27 @@ import {
   CalendarOutlined,
   CheckOutlined,
   CloseOutlined,
+  DeleteOutlined,
+  DownOutlined,
   EnvironmentOutlined,
   SendOutlined,
   TeamOutlined,
   UserOutlined,
 } from '@ant-design/icons'
-import { Avatar, Button, Input, Modal, Spin, Tag, message } from 'antd'
+import { Avatar, Button, Dropdown, Input, Spin, Tag, message } from 'antd'
 import { useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useAppSelector } from '../../app/hooks'
+import { useConfirmModal } from '../../hooks'
 import { matchPosts, type MatchPost } from '../user/user.data'
 import { mapBackendPostToMatchPost } from './hooks/usePublicPosts'
 import { usePostDetail } from './hooks/usePostDetail'
 import type { BackendPostMatch } from './interface/post.types'
 
 export function PostDetailPage() {
+  const { t } = useTranslation()
+  const navigate = useNavigate()
   const { postId = '' } = useParams()
   const currentUser = useAppSelector((state) => state.auth.user)
   const {
@@ -29,7 +35,10 @@ export function PostDetailPage() {
     acceptMatchApplicant,
     rejectMatchApplicant,
     sendComment,
+    changeStatus,
+    deleteCurrentPost,
   } = usePostDetail(postId)
+  const { showConfirm, ConfirmDialog } = useConfirmModal()
 
   const [commentText, setCommentText] = useState('')
   const [messageApi, contextHolder] = message.useMessage()
@@ -57,26 +66,66 @@ export function PostDetailPage() {
     }
   }
 
+  const handleStatusChange = async (newStatus: 'open' | 'matched' | 'closed') => {
+    if (!post || newStatus === post.status) return
+    try {
+      await changeStatus(newStatus)
+      messageApi.success(t('posts.statusUpdateSuccess'))
+    } catch (err: unknown) {
+      messageApi.error(
+        err instanceof Error ? err.message : t('posts.statusUpdateError'),
+      )
+    }
+  }
+
+  const handleDeletePost = () => {
+    showConfirm({
+      title: t('posts.deleteModal.title'),
+      content: t('posts.deleteModal.content'),
+      okText: t('posts.deleteModal.confirm'),
+      danger: true,
+      onOk: async () => {
+        try {
+          await deleteCurrentPost()
+          messageApi.success(t('posts.deleteModal.success'))
+          setTimeout(() => {
+            navigate('/posts')
+          }, 400)
+        } catch (err: unknown) {
+          messageApi.error(
+            err instanceof Error ? err.message : t('posts.deleteModal.error'),
+          )
+        }
+      },
+    })
+  }
+
   const handleDecide = (match: BackendPostMatch, accept: boolean) => {
     const applicantName = match.applicant?.fullName || match.applicant?.email || 'Đội bạn'
-    Modal.confirm({
-      title: accept ? `Chấp nhận ${applicantName}?` : `Từ chối ${applicantName}?`,
+    showConfirm({
+      title: accept
+        ? t('posts.applicantModal.acceptTitle', { name: applicantName })
+        : t('posts.applicantModal.rejectTitle', { name: applicantName }),
       content: accept
-        ? 'Trận đấu sẽ được chốt kèo và chuyển sang trạng thái ĐÃ GHÉP.'
-        : 'Ứng viên này sẽ bị từ chối.',
-      okText: accept ? 'Chấp nhận' : 'Từ chối',
-      cancelText: 'Hủy',
+        ? t('posts.applicantModal.acceptContent')
+        : t('posts.applicantModal.rejectContent'),
+      okText: accept
+        ? t('posts.applicantModal.acceptBtn')
+        : t('posts.applicantModal.rejectBtn'),
+      danger: !accept,
       onOk: async () => {
         try {
           if (accept) {
             await acceptMatchApplicant(match.id)
-            messageApi.success(`Đã ghép đội thành công với ${applicantName}!`)
+            messageApi.success(t('posts.applicantModal.acceptSuccess', { name: applicantName }))
           } else {
             await rejectMatchApplicant(match.id)
-            messageApi.info(`Đã từ chối ${applicantName}.`)
+            messageApi.info(t('posts.applicantModal.rejectSuccess', { name: applicantName }))
           }
         } catch (err: unknown) {
-          messageApi.error(err instanceof Error ? err.message : 'Thao tác thất bại.')
+          messageApi.error(
+            err instanceof Error ? err.message : t('posts.applicantModal.actionError'),
+          )
         }
       },
     })
@@ -108,7 +157,7 @@ export function PostDetailPage() {
   if (!post) {
     return (
       <section className="user-page">
-        Không tìm thấy bài đăng. <Link to="/app/posts">Quay lại danh sách</Link>
+        Không tìm thấy bài đăng. <Link to="/posts">Quay lại danh sách</Link>
       </section>
     )
   }
@@ -116,7 +165,7 @@ export function PostDetailPage() {
   return (
     <section className="user-page">
       {contextHolder}
-      <Link className="back-link" to="/app/posts">
+      <Link className="back-link" to="/posts">
         ← Trở lại danh sách bài đăng
       </Link>
 
@@ -157,13 +206,56 @@ export function PostDetailPage() {
           )}
         </article>
 
-        <aside className="applicant-panel">
-          <header>
-            <h2>Ứng viên xin bắt đối</h2>
-            <Tag color={matches.filter((m) => m.status === 'pending').length > 0 ? 'green' : 'default'}>
-              {matches.filter((m) => m.status === 'pending').length} PENDING
-            </Tag>
-          </header>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20, alignSelf: 'start' }}>
+          {isOwner && (
+            <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+              <Dropdown
+                menu={{
+                  items: [
+                    { key: 'open', label: t('posts.status.open') },
+                    { key: 'matched', label: t('posts.status.matched') },
+                    { key: 'closed', label: t('posts.status.closed') },
+                  ],
+                  onClick: ({ key }) => handleStatusChange(key as 'open' | 'matched' | 'closed'),
+                }}
+                disabled={actionLoading}
+              >
+                <Button
+                  style={{
+                    flex: 1,
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                  }}
+                >
+                  <span>
+                    {post.status === 'open'
+                      ? t('posts.status.open')
+                      : post.status === 'matched'
+                        ? t('posts.status.matched')
+                        : t('posts.status.closed')}
+                  </span>
+                  <DownOutlined />
+                </Button>
+              </Dropdown>
+              <Button
+                danger
+                icon={<DeleteOutlined />}
+                loading={actionLoading}
+                onClick={handleDeletePost}
+              >
+                {t('posts.ownerControls.deleteBtn')}
+              </Button>
+            </div>
+          )}
+
+          <aside className="applicant-panel">
+            <header>
+              <h2>Ứng viên xin bắt đối</h2>
+              <Tag color={matches.filter((m) => m.status === 'pending').length > 0 ? 'green' : 'default'}>
+                {matches.filter((m) => m.status === 'pending').length} PENDING
+              </Tag>
+            </header>
 
           {matches.length === 0 ? (
             <p style={{ color: '#888', fontStyle: 'italic', padding: '16px 0' }}>
@@ -208,6 +300,7 @@ export function PostDetailPage() {
             ))
           )}
         </aside>
+      </div>
 
         <section className="discussion">
           <h2>Thảo luận ({comments.length})</h2>
@@ -251,6 +344,7 @@ export function PostDetailPage() {
           </div>
         </section>
       </div>
+      {ConfirmDialog}
     </section>
   )
 }

@@ -13,7 +13,7 @@ import { useFieldDetail } from './hooks/useFieldDetail'
 
 export function FieldDetailPage() {
   const { fieldId = '' } = useParams()
-  const backLink = '/app/fields'
+  const backLink = '/fields'
   const { field, loading } = useFieldDetail(fieldId)
   const [bookingOpen, setBookingOpen] = useState(false)
   const [activeImage, setActiveImage] = useState(0)

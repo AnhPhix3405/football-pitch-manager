@@ -11,5 +11,6 @@
   "updateFieldSuccess": "Cập nhật cụm sân thành công",
   "deactivateFieldSuccess": "Ngưng hoạt động cụm sân thành công",
   "fieldApprovalApproved": "Phê duyệt cụm sân thành công",
-  "fieldApprovalRejected": "Từ chối yêu cầu phê duyệt cụm sân thành công"
+  "fieldApprovalRejected": "Từ chối yêu cầu phê duyệt cụm sân thành công",
+  "updateProfileSuccess": "Cập nhật thông tin hồ sơ thành công"
 }

@@ -1,23 +1,38 @@
 import { PlusOutlined, ReloadOutlined } from '@ant-design/icons'
-import { Button, Empty, Segmented, Spin } from 'antd'
+import { Button, Empty, Segmented, Spin, message } from 'antd'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { matchPosts, type MatchPost } from '../user/user.data'
 import { CreatePostModal } from './components/CreatePostModal'
 import { PostCard } from './components/PostCard'
 import { useMyPosts } from './hooks/useMyPosts'
+import { deletePost } from './service/post.service'
 
 export function MyPostsPage() {
   const { t } = useTranslation()
   const [status, setStatus] = useState<MatchPost['status']>('open')
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [messageApi, contextHolder] = message.useMessage()
   const { apiPosts, loading, refetch } = useMyPosts(status)
 
   const visible =
     apiPosts.length > 0 ? apiPosts : matchPosts.filter((post) => post.status === status)
 
+  const handleDeletePost = async (postId: string) => {
+    try {
+      await deletePost(postId)
+      messageApi.success(t('posts.deleteSuccess'))
+      refetch()
+    } catch (err: unknown) {
+      messageApi.error(
+        err instanceof Error ? err.message : t('posts.deleteModal.error'),
+      )
+    }
+  }
+
   return (
     <section className="user-page">
+      {contextHolder}
       <header className="user-page__head">
         <div>
           <span className="eyebrow">MY MATCH SIGNALS</span>
@@ -26,10 +41,10 @@ export function MyPostsPage() {
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           <Button icon={<ReloadOutlined />} onClick={() => refetch()} loading={loading}>
-            {t('common.refresh', { defaultValue: 'Làm mới' })}
+            {t('common.refresh')}
           </Button>
           <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsModalOpen(true)}>
-            {t('posts.createPost', { defaultValue: 'Tạo yêu cầu mới' })}
+            {t('posts.createPost')}
           </Button>
         </div>
       </header>
@@ -38,9 +53,9 @@ export function MyPostsPage() {
         value={status}
         onChange={(val) => setStatus(val as MatchPost['status'])}
         options={[
-          { value: 'open', label: 'Đang mở' },
-          { value: 'matched', label: 'Đã ghép' },
-          { value: 'closed', label: 'Đã đóng' },
+          { value: 'open', label: t('posts.status.open') },
+          { value: 'matched', label: t('posts.status.matched') },
+          { value: 'closed', label: t('posts.status.closed') },
         ]}
       />
 
@@ -51,11 +66,11 @@ export function MyPostsPage() {
       ) : visible.length ? (
         <div className="post-grid">
           {visible.map((post) => (
-            <PostCard post={post} manage key={post.id} />
+            <PostCard post={post} manage key={post.id} onDelete={handleDeletePost} />
           ))}
         </div>
       ) : (
-        <Empty description={t('posts.empty', { defaultValue: 'Không có bài đăng ở trạng thái này.' })} />
+        <Empty description={t('posts.empty')} />
       )}
 
       <CreatePostModal

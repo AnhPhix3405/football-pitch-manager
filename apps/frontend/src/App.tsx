@@ -5,6 +5,7 @@ import { store } from './app/store'
 import { env } from './config/env'
 import './config/i18n'
 import { AppRouter } from './routes/AppRouter'
+import { TargetCursor } from './components/TargetCursor'
 
 const appTheme = {
   algorithm: theme.darkAlgorithm,
@@ -25,6 +26,13 @@ function App() {
     <Provider store={store}>
       <GoogleOAuthProvider clientId={env.googleClientId}>
         <ConfigProvider theme={appTheme}>
+          <TargetCursor
+            targetSelector="a, button, .spotlight-card, .match-card, .quick-reserve-card, .field-card, .navbar-pill-cta, .cursor-target"
+            cursorColor="#ffffff"
+            cursorColorOnTarget="#ffffff"
+            spinDuration={2}
+            hoverDuration={0.2}
+          />
           <AppRouter />
         </ConfigProvider>
       </GoogleOAuthProvider>

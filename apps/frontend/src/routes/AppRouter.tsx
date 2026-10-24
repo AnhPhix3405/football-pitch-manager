@@ -1,4 +1,14 @@
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Navigate, Route, Routes, useParams } from 'react-router-dom'
+
+function RedirectFieldDetail() {
+  const { fieldId } = useParams()
+  return <Navigate to={`/fields/${fieldId}`} replace />
+}
+
+function RedirectPostDetail() {
+  const { postId } = useParams()
+  return <Navigate to={`/posts/${postId}`} replace />
+}
 import { AuthPage } from '../features/auth/AuthPage'
 import { AdminApprovalsPage } from '../features/admin/AdminApprovalsPage'
 import { AdminDashboardPage } from '../features/admin/AdminDashboardPage'
@@ -22,7 +32,6 @@ import { OpponentDiscoveryPage } from '../features/posts/OpponentDiscoveryPage'
 import { PostDetailPage } from '../features/posts/PostDetailPage'
 import { ProfileSettingsPage } from '../features/profile/ProfileSettingsPage'
 import { AdminLayout } from './layouts/AdminLayout'
-import { DashboardLayout } from './layouts/DashboardLayout'
 import { OwnerLayout } from './layouts/OwnerLayout'
 import { PublicLayout } from './layouts/PublicLayout'
 import { ProtectedRoute, RoleRoute } from './guards'
@@ -32,24 +41,37 @@ export function AppRouter() {
     <BrowserRouter>
       <Routes>
         <Route path="/auth/:mode" element={<AuthPage />} />
+
+        {/* Public & User routes under the modern floating Navbar layout */}
         <Route element={<PublicLayout />}>
           <Route index element={<HomePage />} />
-          <Route path="fields" element={<Navigate to="/app/fields" replace />} />
-          <Route path="opponents" element={<Navigate to="/app/opponents" replace />} />
-        </Route>
-        <Route element={<ProtectedRoute />}>
-          <Route path="app" element={<DashboardLayout />}>
-            <Route index element={<Navigate to="fields" replace />} />
-            <Route path="fields" element={<FieldDiscoveryPage />} />
-            <Route path="fields/:fieldId" element={<FieldDetailPage />} />
+          <Route path="fields" element={<FieldDiscoveryPage />} />
+          <Route path="fields/:fieldId" element={<FieldDetailPage />} />
+          <Route path="opponents" element={<OpponentDiscoveryPage />} />
+          <Route path="posts" element={<MyPostsPage />} />
+          <Route path="posts/:postId" element={<PostDetailPage />} />
+
+          {/* Protected user routes with new Navbar layout */}
+          <Route element={<ProtectedRoute />}>
             <Route path="bookings" element={<MyBookingsPage />} />
-            <Route path="opponents" element={<OpponentDiscoveryPage />} />
-            <Route path="posts" element={<MyPostsPage />} />
-            <Route path="posts/:postId" element={<PostDetailPage />} />
             <Route path="messages" element={<MessagesPage />} />
             <Route path="settings" element={<ProfileSettingsPage />} />
             <Route path="profile" element={<ProfileSettingsPage />} />
           </Route>
+        </Route>
+
+        {/* Backward-compatibility redirects for /app/* */}
+        <Route path="app">
+          <Route index element={<Navigate to="/fields" replace />} />
+          <Route path="fields" element={<Navigate to="/fields" replace />} />
+          <Route path="fields/:fieldId" element={<RedirectFieldDetail />} />
+          <Route path="bookings" element={<Navigate to="/bookings" replace />} />
+          <Route path="opponents" element={<Navigate to="/opponents" replace />} />
+          <Route path="posts" element={<Navigate to="/posts" replace />} />
+          <Route path="posts/:postId" element={<RedirectPostDetail />} />
+          <Route path="messages" element={<Navigate to="/messages" replace />} />
+          <Route path="settings" element={<Navigate to="/profile" replace />} />
+          <Route path="profile" element={<Navigate to="/profile" replace />} />
         </Route>
         <Route element={<RoleRoute allowedRoles={['owner']} />}>
           <Route path="owner" element={<OwnerLayout />}>

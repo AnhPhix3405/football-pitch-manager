@@ -10,6 +10,7 @@ import { PostRepository } from '~/repositories/post.repository';
 import { PostCommentController } from './controllers/post-comment.controller';
 import { PostMatchController } from './controllers/post-match.controller';
 import { PostController } from './controllers/post.controller';
+import { PostCleanupService } from './services/post-cleanup.service';
 import { PostCommentService } from './services/post-comment.service';
 import { PostMatchService } from './services/post-match.service';
 import { PostService } from './services/post.service';
@@ -24,10 +25,16 @@ import { PostService } from './services/post.service';
     PostService,
     PostMatchService,
     PostCommentService,
+    PostCleanupService,
     PostRepository,
     PostMatchRepository,
     PostCommentRepository,
   ],
-  exports: [PostService, PostMatchService, PostCommentService],
+  exports: [
+    PostService,
+    PostMatchService,
+    PostCommentService,
+    PostCleanupService,
+  ],
 })
 export class PostModule {}

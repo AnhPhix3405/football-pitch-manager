@@ -81,6 +81,8 @@ Tài liệu chi tiết toàn bộ các API HTTP REST và WebSocket Gateway của
 | | `DELETE` | `/posts/:id/matches/me` | User / Active | Người xin ghép đối tự rút lại yêu cầu |
 | | `GET` | `/posts/:id/comments` | Public | Lấy danh sách bình luận dưới bài đăng |
 | | `POST` | `/posts/:id/comments` | User / Active | Gửi bình luận vào bài đăng |
+| **Hồ sơ cá nhân** | `GET` | `/user-profiles/me` | User / Active | Lấy thông tin hồ sơ của tài khoản đang đăng nhập |
+| | `PATCH` | `/user-profiles/me` | User / Active | Cập nhật thông tin hồ sơ cá nhân |
 | **Hồ sơ & Đăng ký chủ sân** | `POST` | `/owner-registration` | User / Active | Gửi đơn đăng ký trở thành chủ sân |
 | | `GET` | `/owner-registration/status` | User / Active | Kiểm tra tiến trình phê duyệt hồ sơ chủ sân |
 | | `GET` | `/owner-profiles/me` | User / Active | Lấy hồ sơ chủ sân của tài khoản hiện tại |
@@ -881,8 +883,51 @@ Tài liệu chi tiết toàn bộ các API HTTP REST và WebSocket Gateway của
 ---
 
 ### 3.6. Phê Duyệt Quản Trị (Admin Approvals)
+### 3.5. Hồ Sơ Cá Nhân (User Profile)
 
-#### 3.5.1. Lấy danh sách duyệt hồ sơ chủ sân (`GET /admin/owner-approvals`)
+#### 3.5.1. Xem hồ sơ cá nhân (`GET /user-profiles/me`)
+- **Quyền truy cập:** Đã đăng nhập (Active)
+- **Response (`200 OK` - `UserProfileResponseDto`):**
+  ```json
+  {
+    "id": "e0a9d1fc-3d23-45f8-b3d2-a7d9f78bc412",
+    "userId": "9175df40-fc7c-4d50-b07e-a35417a2eef2",
+    "email": "user@pitchmaster.vn",
+    "phone": "0901234567",
+    "role": "user",
+    "status": "active",
+    "fullName": "Nguyễn Văn A",
+    "avatarUrl": "https://example.com/avatar.jpg",
+    "bio": "Đam mê bóng đá",
+    "skillLevel": "Trung bình",
+    "birthday": "1995-10-20",
+    "gender": "male",
+    "createdAt": "2026-10-19T10:00:00.000Z",
+    "updatedAt": "2026-10-19T12:00:00.000Z"
+  }
+  ```
+
+#### 3.5.2. Cập nhật hồ sơ cá nhân (`PATCH /user-profiles/me`)
+- **Quyền truy cập:** Đã đăng nhập (Active)
+- **Request Body (`UpdateUserProfileDto`):**
+  ```json
+  {
+    "fullName": "Nguyễn Văn A",
+    "bio": "Đam mê bóng đá, thích đá vị trí tiền vệ",
+    "phone": "0901234567",
+    "avatarUrl": "https://example.com/avatar.jpg",
+    "skillLevel": "Trung bình",
+    "birthday": "1995-10-20",
+    "gender": "male"
+  }
+  ```
+- **Response (`200 OK` - `UserProfileResponseDto`):** Chi tiết hồ sơ cá nhân sau cập nhật.
+
+---
+
+### 3.6. Phê Duyệt Quản Trị (Admin Approvals)
+
+#### 3.6.1. Lấy danh sách duyệt hồ sơ chủ sân (`GET /admin/owner-approvals`)
 - **Quyền truy cập:** `admin` (Active)
 - **Query Parameters (`AdminOwnerApprovalQueryDto`):**
   - `status` *(enum: `pending`, `approved`, `rejected`, `all`, default: `pending`)*

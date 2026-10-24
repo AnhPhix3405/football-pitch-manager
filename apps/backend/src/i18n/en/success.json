@@ -11,5 +11,6 @@
   "updateFieldSuccess": "Field complex updated successfully",
   "deactivateFieldSuccess": "Field complex deactivated successfully",
   "fieldApprovalApproved": "Field complex approved successfully",
-  "fieldApprovalRejected": "Field complex request rejected successfully"
+  "fieldApprovalRejected": "Field complex request rejected successfully",
+  "updateProfileSuccess": "Profile updated successfully"
 }

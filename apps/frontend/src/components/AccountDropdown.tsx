@@ -16,11 +16,13 @@ import { logout } from '../features/auth/service/auth.service'
 interface AccountDropdownProps {
   placement?: DropdownProps['placement']
   variant?: 'header' | 'sidebar'
+  showName?: boolean
 }
 
 export function AccountDropdown({
   placement = 'bottomRight',
   variant = 'header',
+  showName = false,
 }: AccountDropdownProps) {
   const { t } = useTranslation()
   const user = useAppSelector((state) => state.auth.user)
@@ -40,10 +42,10 @@ export function AccountDropdown({
 
   const displayName =
     user?.name?.trim() || user?.email?.split('@')[0] || t('auth.guest', { defaultValue: 'Khách' })
-  const initials = displayName.slice(0, 2).toUpperCase()
+  const initials = displayName.slice(0, 1).toUpperCase()
 
   const portalPath =
-    user?.role === 'admin' ? '/admin' : user?.role === 'owner' ? '/owner' : '/app/bookings'
+    user?.role === 'admin' ? '/admin' : user?.role === 'owner' ? '/owner' : '/bookings'
   const portalLabel =
     user?.role === 'admin'
       ? t('auth.portalAdmin', { defaultValue: 'Cổng quản trị' })
@@ -58,8 +60,10 @@ export function AccountDropdown({
       disabled: true,
       label: (
         <div className="account-dropdown__info">
-          <b className="account-dropdown__name">{displayName}</b>
-          <span className="account-dropdown__email">{user?.email}</span>
+          <div className="account-dropdown__user-details">
+            <b className="account-dropdown__name">{displayName}</b>
+            <span className="account-dropdown__email">{user?.email}</span>
+          </div>
           <span className="account-dropdown__badge">{user?.role?.toUpperCase()}</span>
         </div>
       ),
@@ -78,7 +82,7 @@ export function AccountDropdown({
       key: 'settings',
       icon: <SettingOutlined />,
       label: (
-        <Link to="/app/settings">
+        <Link to="/profile">
           {t('auth.profileSettings', { defaultValue: 'Cài đặt & Hồ sơ' })}
         </Link>
       ),
@@ -119,7 +123,8 @@ export function AccountDropdown({
         <Dropdown
           menu={{ items: guestMenuItems }}
           placement="topCenter"
-          arrow
+          arrow={false}
+          rootClassName="custom-account-dropdown"
           trigger={['click']}
         >
           <Button type="primary" block className="sidebar-auth-btn">
@@ -131,7 +136,13 @@ export function AccountDropdown({
     }
 
     return (
-      <Dropdown menu={{ items: guestMenuItems }} placement={placement} arrow trigger={['click']}>
+      <Dropdown
+        menu={{ items: guestMenuItems }}
+        placement={placement}
+        arrow={false}
+        rootClassName="custom-account-dropdown"
+        trigger={['click']}
+      >
         <Button type="primary" className="header-auth-btn">
           {t('auth.login', { defaultValue: 'Đăng nhập' })}{' '}
           <DownOutlined style={{ fontSize: 10, marginLeft: 4 }} />
@@ -145,7 +156,8 @@ export function AccountDropdown({
       <Dropdown
         menu={{ items: authenticatedMenuItems }}
         placement="topLeft"
-        arrow
+        arrow={false}
+        rootClassName="custom-account-dropdown"
         trigger={['click']}
       >
         <div className="sidebar-account" role="button" tabIndex={0}>
@@ -164,11 +176,17 @@ export function AccountDropdown({
     <Dropdown
       menu={{ items: authenticatedMenuItems }}
       placement={placement}
-      arrow
+      arrow={false}
+      rootClassName="custom-account-dropdown"
       trigger={['click']}
     >
-      <div className="account account--clickable" role="button" tabIndex={0}>
-        <span>{displayName}</span>
+      <div
+        className="account account--clickable"
+        role="button"
+        tabIndex={0}
+        aria-label={displayName}
+      >
+        {showName && <span>{displayName}</span>}
         <b>{initials}</b>
         <DownOutlined className="account__arrow" />
       </div>

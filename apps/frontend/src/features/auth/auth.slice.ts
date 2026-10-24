@@ -28,8 +28,25 @@ const authSlice = createSlice({
   reducers: {
     signedIn: (state, action: PayloadAction<AuthUser>) => { state.user = action.payload },
     signedOut: (state) => { state.user = null },
+    profileUpdated: (state, action: PayloadAction<{ name?: string }>) => {
+      if (state.user) {
+        if (action.payload.name) {
+          state.user.name = action.payload.name
+        }
+        try {
+          const stored = window.localStorage.getItem(authSessionKey)
+          if (stored) {
+            window.localStorage.setItem(authSessionKey, JSON.stringify(state.user))
+          } else {
+            window.sessionStorage.setItem(authSessionKey, JSON.stringify(state.user))
+          }
+        } catch {
+          // ignore
+        }
+      }
+    },
   },
 })
 
-export const { signedIn, signedOut } = authSlice.actions
+export const { signedIn, signedOut, profileUpdated } = authSlice.actions
 export const authReducer = authSlice.reducer

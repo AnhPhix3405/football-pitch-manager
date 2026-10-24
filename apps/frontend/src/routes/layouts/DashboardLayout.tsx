@@ -41,7 +41,7 @@ function Navigation({ close, mode }: { close?: () => void; mode: 'user' | 'owner
     { to: '/owner/services', label: t('nav.services', { defaultValue: 'Dịch vụ & giá' }), icon: <DollarOutlined /> },
     { to: '/owner/bookings', label: t('nav.bookings', { defaultValue: 'Booking' }), icon: <CalendarOutlined /> },
     { to: '/owner/subscription', label: t('nav.subscription', { defaultValue: 'Gói & giao dịch' }), icon: <CreditCardOutlined /> },
-    { to: '/app/messages', label: t('nav.messages', { defaultValue: 'Tin nhắn' }), icon: <MessageOutlined /> },
+    { to: '/messages', label: t('nav.messages', { defaultValue: 'Tin nhắn' }), icon: <MessageOutlined /> },
   ]
 
   const adminNavItems = [

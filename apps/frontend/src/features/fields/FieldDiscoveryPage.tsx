@@ -120,7 +120,7 @@ export function FieldDiscoveryPage() {
             </span>
             {results.map((field) => (
               <Link
-                to={`/app/fields/${field.id}`}
+                to={`/fields/${field.id}`}
                 key={field.id}
                 className="map-pin"
                 style={{ left: `${field.coordinates.x}%`, top: `${field.coordinates.y}%` }}

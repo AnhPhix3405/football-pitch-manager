@@ -38,7 +38,9 @@
     "search": "Tìm kiếm",
     "filter": "Bộ lọc",
     "empty": "Không có dữ liệu.",
-    "all": "Tất cả"
+    "all": "Tất cả",
+    "refresh": "Làm mới",
+    "reset": "Đặt lại"
   },
   "chat": {
     "eyebrow": "COMMS_LINK",
@@ -134,21 +136,42 @@
     "heroDescription": "Nền tảng hợp nhất giúp bạn tìm sân chất lượng, đặt lịch thi đấu và kết nối cộng đồng bóng đá chỉ trong vài thao tác.",
     "findPitchesBtn": "Tìm sân ngay",
     "findOpponentsBtn": "Tìm đối thủ",
+    "coreCapabilities": "TÍNH NĂNG NỔI BẬT",
+    "coreTitle": "Trải nghiệm bóng đá hiện đại",
+    "coreSubtitle": "Hệ sinh thái số hóa toàn diện từ tìm sân, ghép đội đến tự động hóa vận hành.",
     "f1Title": "Bản đồ sân chính xác",
     "f1Desc": "Tìm sân phù hợp qua bộ lọc kỹ thuật, vị trí và lịch trống theo thời gian thực.",
+    "f1Tag": "GPS · Bán kính 5km",
+    "f1Stat": "12 sân sẵn sàng",
     "f2Title": "Kết nối đối thủ",
     "f2Desc": "Tìm đội cùng trình độ và phát tín hiệu thách đấu trong mạng lưới cộng đồng.",
+    "f2Tag": "Ghép đội tức thì",
+    "f2Stat": "Cộng đồng 500+ đội",
     "f3Title": "Quản lý thông minh",
     "f3Desc": "Giải pháp toàn diện từ đặt chỗ, xếp lịch đến tự động hóa doanh thu sân.",
+    "f3Tag": "Tự động hóa 100%",
+    "f3Stat": "Tối ưu 94% công suất",
     "featuredPitches": "Sân nổi bật",
     "featuredSubtitle": "Các cụm sân chất lượng cao được cộng đồng đánh giá tốt nhất.",
     "viewAllPitches": "Xem tất cả sân",
-    "openMatches": "Kèo bóng đang mở",
+    "openMatches": "Ghép trận",
     "openMatchesSubtitle": "Tìm đối giao lưu hoặc ghép đội thi đấu ngay hôm nay.",
+    "challengeBtn": "Thách đấu",
+    "detailsBtn": "Chi tiết",
     "viewMatchBoard": "Xem bảng kèo",
     "ctaTitle": "Bạn là chủ sân bóng?",
     "ctaDesc": "Tối ưu công suất khai thác, giảm tỷ lệ sân trống và tự động hóa toàn bộ quy trình vận hành.",
-    "registerOwner": "Đăng ký quản lý sân"
+    "registerOwner": "Đăng ký ngay",
+    "heroRating": "4.9",
+    "heroReviews": "từ hơn 2.500+ trận đấu",
+    "reserveBadge": "Sân 7 · Cỏ đạt chuẩn",
+    "reserveCheckIn": "Khung giờ",
+    "reserveCheckInValue": "19:00 - 20:30",
+    "reserveDuration": "Thời lượng",
+    "reserveDurationValue": "90 phút",
+    "reservePriceUnit": "/ trận",
+    "reserveActionBtn": "Giữ sân ngay",
+    "bookPitch": "Đặt sân ngay"
   },
   "fields": {
     "eyebrow": "FIELD NETWORK",
@@ -187,9 +210,48 @@
       "time": "Thời gian thi đấu",
       "skill": "Trình độ",
       "description": "Mô tả / Ghi chú",
+      "slotLabel": "KHUNG GIỜ THI ĐẤU",
+      "slotRequired": "Vui lòng chọn khung giờ thi đấu.",
+      "morningSlots": "CA SÁNG",
+      "afternoonEveningSlots": "CA CHIỀU & TỐI",
       "submit": "Đăng bài",
       "cancel": "Hủy",
       "success": "Đăng bài thành công!"
+    },
+    "ownerControls": {
+      "eyebrow": "QUẢN LÝ BÀI ĐĂNG",
+      "hint": "Cập nhật trạng thái trận đấu hoặc xóa bài đăng khi không còn nhu cầu.",
+      "status": "TRẠNG THÁI:",
+      "deleteBtn": "Xóa bài đăng"
+    },
+    "status": {
+      "open": "Đang mở",
+      "matched": "Đã ghép",
+      "closed": "Đã đóng"
+    },
+    "statusUpdateSuccess": "Đã cập nhật trạng thái bài đăng!",
+    "statusUpdateError": "Không thể cập nhật trạng thái bài đăng.",
+    "deleteModal": {
+      "title": "Xác nhận xóa bài đăng?",
+      "content": "Bài đăng sẽ bị xóa và không còn hiển thị cho người khác nữa. Thao tác này không thể hoàn tác.",
+      "confirm": "Xóa bài",
+      "cancel": "Hủy",
+      "success": "Đã xóa bài đăng thành công!",
+      "error": "Không thể xóa bài đăng."
+    },
+    "deleteConfirmTitle": "Xóa bài đăng?",
+    "deleteConfirmDesc": "Bạn có chắc chắn muốn xóa bài đăng này không?",
+    "deleteSuccess": "Đã xóa bài đăng thành công!",
+    "applicantModal": {
+      "acceptTitle": "Chấp nhận {{name}}?",
+      "rejectTitle": "Từ chối {{name}}?",
+      "acceptContent": "Trận đấu sẽ được chốt kèo và chuyển sang trạng thái ĐÃ GHÉP.",
+      "rejectContent": "Ứng viên này sẽ bị từ chối.",
+      "acceptBtn": "Chấp nhận",
+      "rejectBtn": "Từ chối",
+      "acceptSuccess": "Đã ghép đội thành công với {{name}}!",
+      "rejectSuccess": "Đã từ chối {{name}}.",
+      "actionError": "Thao tác thất bại."
     }
   },
   "owner": {
@@ -222,7 +284,29 @@
   },
   "profile": {
     "title": "Cài đặt & Hồ sơ",
-    "subtitle": "Quản lý thông tin cá nhân và thiết lập tài khoản."
+    "identity": "PLAYER IDENTITY",
+    "changeAvatar": "Đổi ảnh đại diện",
+    "changePassword": "Đổi mật khẩu",
+    "tabs": {
+      "bookings": "Đặt sân",
+      "posts": "Bài đăng",
+      "editProfile": "Chỉnh sửa hồ sơ",
+      "preferences": "Tùy chọn"
+    },
+    "stats": {
+      "bookings": "Lịch đặt",
+      "posts": "Bài đăng",
+      "rating": "Đánh giá"
+    },
+    "history": {
+      "noBookings": "Chưa có lịch đặt sân nào.",
+      "noPosts": "Chưa có bài đăng nào."
+    },
+    "updateSuccess": "Hồ sơ đã được cập nhật thành công.",
+    "updateError": "Cập nhật hồ sơ thất bại. Vui lòng thử lại.",
+    "nameRequired": "Vui lòng nhập tên hiển thị.",
+    "phoneLabel": "SỐ ĐIỆN THOẠI",
+    "phonePlaceholder": "Nhập số điện thoại liên hệ"
   },
   "language": {
     "vi": "Tiếng Việt",

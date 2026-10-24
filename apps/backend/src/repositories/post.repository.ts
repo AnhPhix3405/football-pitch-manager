@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import dayjs from 'dayjs';
 import { Repository } from 'typeorm';
 import { BaseRepository } from '~/core/base/base-repositories';
 import { PostEntity } from '~/entities/post.entity';
@@ -31,11 +32,18 @@ export class PostRepository extends BaseRepository<PostEntity> {
     const limit = Math.max(1, Math.min(50, Number(options.limit) || 10));
     const skip = (page - 1) * limit;
 
+    const today = dayjs().format('YYYY-MM-DD');
+    const nowTime = dayjs().format('HH:mm:ss');
+
     const qb = this.repository
       .createQueryBuilder('post')
       .leftJoinAndSelect('post.user', 'user')
       .where('post.deletedAt IS NULL')
-      .andWhere('post.status = :status', { status: 'open' });
+      .andWhere('post.status = :status', { status: 'open' })
+      .andWhere(
+        '(post.playDate > :today OR (post.playDate = :today AND COALESCE(post.endTime, post.startTime) > :nowTime))',
+        { today, nowTime },
+      );
 
     if (options.search?.trim()) {
       const search = `%${options.search.trim().toLowerCase()}%`;
@@ -107,5 +115,53 @@ export class PostRepository extends BaseRepository<PostEntity> {
       .where('post.id = :id', { id })
       .andWhere('post.deletedAt IS NULL')
       .getOne();
+  }
+
+  async closeExpiredPostsToday(
+    today: string,
+    currentTime: string,
+  ): Promise<number> {
+    const result = await this.repository
+      .createQueryBuilder()
+      .update(PostEntity)
+      .set({
+        status: 'closed',
+      })
+      .where('"deleted_at" IS NULL')
+      .andWhere('"status" = :openStatus', { openStatus: 'open' })
+      .andWhere('"play_date" = :today', { today })
+      .andWhere('COALESCE("end_time", "start_time") <= :currentTime', {
+        currentTime,
+      })
+      .execute();
+
+    return result.affected ?? 0;
+  }
+
+  async softDeleteExpiredPosts(currentDate: string): Promise<number> {
+    const result = await this.repository
+      .createQueryBuilder()
+      .update(PostEntity)
+      .set({
+        deletedAt: new Date(),
+        status: 'closed',
+      })
+      .where('"deleted_at" IS NULL')
+      .andWhere('"play_date" < :currentDate', { currentDate })
+      .execute();
+
+    return result.affected ?? 0;
+  }
+
+  async hardDeleteExpiredPosts(cutoffDate: Date): Promise<number> {
+    const result = await this.repository
+      .createQueryBuilder()
+      .delete()
+      .from(PostEntity)
+      .where('"deleted_at" IS NOT NULL')
+      .andWhere('"deleted_at" <= :cutoffDate', { cutoffDate })
+      .execute();
+
+    return result.affected ?? 0;
   }
 }
