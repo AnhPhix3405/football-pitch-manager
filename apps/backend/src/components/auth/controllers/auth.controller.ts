@@ -205,7 +205,7 @@ export class AuthController {
 
     await this.logoutService.execute(token);
 
-    clearRefreshTokenCookie(reply, cookieName, '/api/auth');
+    clearRefreshTokenCookie(reply, cookieName, '/');
 
     return {
       messageKey: 'success.logoutSuccess',

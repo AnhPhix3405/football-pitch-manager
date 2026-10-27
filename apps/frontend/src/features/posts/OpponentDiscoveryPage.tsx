@@ -1,8 +1,9 @@
 import { FilterOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons'
-import { Button, DatePicker, Empty, Input, Select, Spin } from 'antd'
+import { DatePicker, Empty, Input, Select, Spin } from 'antd'
 import type { Dayjs } from 'dayjs'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { PillButton } from '../../components/PillButton'
 import { matchPosts } from '../user/user.data'
 import { CreatePostModal } from './components/CreatePostModal'
 import { PostCard } from './components/PostCard'
@@ -31,13 +32,20 @@ export function OpponentDiscoveryPage() {
           <h1>{t('posts.title')}</h1>
           <p>{t('posts.subtitle')}</p>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <Button icon={<ReloadOutlined />} onClick={() => refetch()} loading={loading}>
-            {t('common.refresh')}
-          </Button>
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsModalOpen(true)}>
-            {t('posts.createPost')}
-          </Button>
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+          <PillButton
+            variant="secondary"
+            icon={<ReloadOutlined />}
+            onClick={() => refetch()}
+            loading={loading}
+            text={t('common.refresh')}
+          />
+          <PillButton
+            variant="primary"
+            icon={<PlusOutlined />}
+            onClick={() => setIsModalOpen(true)}
+            text={t('posts.createPost')}
+          />
         </div>
       </header>
 
@@ -65,15 +73,16 @@ export function OpponentDiscoveryPage() {
           value={selectedDate}
           onChange={setSelectedDate}
         />
-        <Button
+        <PillButton
+          variant="secondary"
+          size="sm"
           onClick={() => {
             setQuery('')
             setLevel('all')
             setSelectedDate(null)
           }}
-        >
-          {t('common.reset')}
-        </Button>
+          text={t('common.reset')}
+        />
       </div>
 
       {loading ? (

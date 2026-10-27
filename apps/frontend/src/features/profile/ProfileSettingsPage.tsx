@@ -38,6 +38,7 @@ import { PostCard } from '../posts/components/PostCard'
 import { BookingCard } from '../bookings/components/BookingCard'
 import { CreatePostModal } from '../posts/components/CreatePostModal'
 import { BlurCircle } from '../../components/BlurCircle'
+import { PillButton } from '../../components/PillButton'
 import profilePanelBg from '../../assets/profile_panel.jpg'
 
 interface ProfileForm {
@@ -174,9 +175,11 @@ export function ProfileSettingsPage() {
           ]}
         />
         <Link to="/fields">
-          <Button type="primary" icon={<PlusOutlined />}>
-            {t('booking.newBooking', { defaultValue: 'Đặt sân mới' })}
-          </Button>
+          <PillButton
+            variant="primary"
+            icon={<PlusOutlined />}
+            text={t('booking.newBooking', { defaultValue: 'Đặt sân mới' })}
+          />
         </Link>
       </div>
 
@@ -209,13 +212,20 @@ export function ProfileSettingsPage() {
             { value: 'closed', label: t('posts.status.closed', { defaultValue: 'Đã đóng' }) },
           ]}
         />
-        <div style={{ display: 'flex', gap: 8 }}>
-          <Button icon={<ReloadOutlined />} onClick={() => refetchPosts()} loading={postsLoading}>
-            {t('common.refresh', { defaultValue: 'Làm mới' })}
-          </Button>
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsCreatePostOpen(true)}>
-            {t('posts.createPost', { defaultValue: 'Tạo bài đăng' })}
-          </Button>
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+          <PillButton
+            variant="secondary"
+            icon={<ReloadOutlined />}
+            onClick={() => refetchPosts()}
+            loading={postsLoading}
+            text={t('common.refresh', { defaultValue: 'Làm mới' })}
+          />
+          <PillButton
+            variant="primary"
+            icon={<PlusOutlined />}
+            onClick={() => setIsCreatePostOpen(true)}
+            text={t('posts.createPost', { defaultValue: 'Tạo bài đăng' })}
+          />
         </div>
       </div>
 
@@ -276,9 +286,12 @@ export function ProfileSettingsPage() {
           <Form.Item label="GIỚI THIỆU" name="bio" rules={[{ max: 240, message: 'Giới thiệu tối đa 240 ký tự.' }]}>
             <Input.TextArea rows={4} showCount maxLength={240} />
           </Form.Item>
-          <Button type="primary" htmlType="submit" loading={profileUpdating}>
-            {t('common.save', { defaultValue: 'Lưu thay đổi' })}
-          </Button>
+          <PillButton
+            type="submit"
+            variant="primary"
+            loading={profileUpdating}
+            text={t('common.save', { defaultValue: 'Lưu thay đổi' })}
+          />
         </Form>
       </Spin>
     </div>
@@ -308,9 +321,11 @@ export function ProfileSettingsPage() {
           </div>
           <Switch checked={notifications} onChange={setNotifications} />
         </div>
-        <Button type="primary" onClick={() => messageApi.success('Đã lưu tùy chọn.')}>
-          {t('common.save', { defaultValue: 'Lưu tùy chọn' })}
-        </Button>
+        <PillButton
+          variant="primary"
+          onClick={() => messageApi.success('Đã lưu tùy chọn.')}
+          text={t('common.save', { defaultValue: 'Lưu tùy chọn' })}
+        />
       </div>
     </div>
   )

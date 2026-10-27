@@ -71,6 +71,27 @@ export async function loginGoogle(idToken: string): Promise<AuthUser> {
   }
 }
 
+export async function refreshTokenApi(): Promise<string> {
+  const response = await apiClient.post<ApiResponse<LoginResponseData>>('/auth/refresh')
+  const { accessToken, user } = response.data.data
+  window.localStorage.setItem(ACCESS_TOKEN_KEY, accessToken)
+  if (user) {
+    const authUser: AuthUser = {
+      id: user.id,
+      name: user.fullName || user.email.split('@')[0],
+      email: user.email,
+      role: (user.role as UserRole) || 'user',
+    }
+    const sessionKey = 'pitchmaster.authUser'
+    if (window.localStorage.getItem(sessionKey)) {
+      window.localStorage.setItem(sessionKey, JSON.stringify(authUser))
+    } else {
+      window.sessionStorage.setItem(sessionKey, JSON.stringify(authUser))
+    }
+  }
+  return accessToken
+}
+
 export async function logout(): Promise<void> {
   try {
     await apiClient.post('/auth/logout')

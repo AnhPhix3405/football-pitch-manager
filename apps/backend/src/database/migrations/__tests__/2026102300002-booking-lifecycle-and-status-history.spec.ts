@@ -78,7 +78,9 @@ describe('BookingLifecycleAndStatusHistory2026102300002 Migration', () => {
       'bookings',
       'CHK_bookings_status',
     );
-    expect(queryRunner.dropTable).toHaveBeenCalledWith('booking_status_histories');
+    expect(queryRunner.dropTable).toHaveBeenCalledWith(
+      'booking_status_histories',
+    );
     expect(queryRunner.dropColumn).toHaveBeenCalledWith('bookings', 'version');
   });
 });

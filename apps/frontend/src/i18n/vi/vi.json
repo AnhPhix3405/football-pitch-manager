@@ -42,18 +42,6 @@
     "refresh": "Làm mới",
     "reset": "Đặt lại"
   },
-  "chat": {
-    "eyebrow": "COMMS_LINK",
-    "title": "Tin nhắn",
-    "searchPlaceholder": "Tìm hội thoại...",
-    "fieldChannel": "Kênh liên hệ sân bóng",
-    "teamChannel": "Trưởng nhóm đối thủ",
-    "infoAria": "Thông tin hội thoại",
-    "attachAria": "Đính kèm tệp",
-    "inputPlaceholder": "Nhập tin nhắn...",
-    "sendAria": "Gửi tin nhắn",
-    "emptyPrompt": "Chọn một cuộc trò chuyện để bắt đầu."
-  },
   "auth": {
     "login": "Đăng nhập",
     "register": "Tạo tài khoản mới",
@@ -78,7 +66,7 @@
     "eyebrow": "RESERVATION LOG",
     "title": "Lịch đặt sân của tôi",
     "subtitle": "Quản lý trận sắp tới và xem lại lịch sử sử dụng sân.",
-    "newBooking": "Đặt sân mới",
+    "newBooking": "Đặt sân",
     "status": {
       "confirmed": "ĐÃ XÁC NHẬN",
       "pending": "CHỜ ĐẶT CỌC",
@@ -195,7 +183,7 @@
     "eyebrow": "MATCHMAKING HUB",
     "title": "Tìm đối thủ giao lưu",
     "subtitle": "Bắt kèo thi đấu, kết nối giao lưu với các câu lạc bộ phong trào.",
-    "createPost": "Tạo bài tìm đối",
+    "createPost": "Đăng bài",
     "myPosts": "Bài đăng của tôi",
     "myPostsSubtitle": "Quản lý các bài tìm đối và lời thách đấu bạn đã tạo.",
     "empty": "Chưa có bài đăng nào.",
@@ -251,7 +239,8 @@
       "rejectBtn": "Từ chối",
       "acceptSuccess": "Đã ghép đội thành công với {{name}}!",
       "rejectSuccess": "Đã từ chối {{name}}.",
-      "actionError": "Thao tác thất bại."
+      "actionError": "Thao tác thất bại.",
+      "chatReadyPrompt": "Cuộc trò chuyện đã được tạo. Bạn có thể vào mục Đoạn chat để trao đổi chi tiết."
     }
   },
   "owner": {
@@ -307,6 +296,38 @@
     "nameRequired": "Vui lòng nhập tên hiển thị.",
     "phoneLabel": "SỐ ĐIỆN THOẠI",
     "phonePlaceholder": "Nhập số điện thoại liên hệ"
+  },
+  "notifications": {
+    "title": "Thông báo",
+    "markAllRead": "Đánh dấu đã đọc",
+    "all": "Tất cả",
+    "unread": "Chưa đọc",
+    "empty": "Không có thông báo nào",
+    "viewAll": "Xem tất cả thông báo"
+  },
+  "chat": {
+    "eyebrow": "COMMS_LINK",
+    "title": "Đoạn chat",
+    "searchPlaceholder": "Tìm hội thoại...",
+    "fieldChannel": "Kênh liên hệ sân bóng",
+    "teamChannel": "Trưởng nhóm đối thủ",
+    "infoAria": "Thông tin hội thoại",
+    "attachAria": "Đính kèm tệp",
+    "inputPlaceholder": "Nhập tin nhắn...",
+    "sendAria": "Gửi tin nhắn",
+    "emptyPrompt": "Chọn một cuộc trò chuyện để bắt đầu.",
+    "noConversations": "Chưa có hội thoại nào",
+    "noMessagesYet": "Chưa có tin nhắn nào",
+    "startConversationPrompt": "Gửi tin nhắn đầu tiên để bắt đầu cuộc trò chuyện.",
+    "sendMessage": "Nhắn tin",
+    "recalled": "Đã thu hồi",
+    "edited": "Đã chỉnh sửa",
+    "edit": "Chỉnh sửa",
+    "recall": "Thu hồi",
+    "recallConfirm": "Bạn có chắc chắn muốn thu hồi tin nhắn này không?",
+    "editMessageTitle": "Chỉnh sửa tin nhắn",
+    "cancelEdit": "Hủy chỉnh sửa",
+    "saveEdit": "Lưu chỉnh sửa"
   },
   "language": {
     "vi": "Tiếng Việt",

@@ -39,7 +39,4 @@ export class ConversationMemberEntity {
 
   @Column({ name: 'last_read_at', type: 'timestamptz', nullable: true })
   lastReadAt!: Date | null;
-
-  @Column({ name: 'last_delivered_at', type: 'timestamptz', nullable: true })
-  lastDeliveredAt!: Date | null;
 }

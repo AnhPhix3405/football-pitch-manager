@@ -1,7 +1,8 @@
 import { PlusOutlined } from '@ant-design/icons'
-import { Button, Empty, Modal, Segmented, message } from 'antd'
+import { Empty, Modal, Segmented, message } from 'antd'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
+import { PillButton } from '../../components/PillButton'
 import { useBookings, type BookingFilterType } from './hooks/useBookings'
 import { BookingCard } from './components/BookingCard'
 
@@ -33,9 +34,11 @@ export function MyBookingsPage() {
           <p>{t('booking.subtitle')}</p>
         </div>
         <Link to="/fields">
-          <Button type="primary" icon={<PlusOutlined />}>
-            {t('booking.newBooking')}
-          </Button>
+          <PillButton
+            variant="primary"
+            icon={<PlusOutlined />}
+            text={t('booking.newBooking')}
+          />
         </Link>
       </header>
 

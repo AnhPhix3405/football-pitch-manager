@@ -1,8 +1,9 @@
 import { ClockCircleOutlined } from '@ant-design/icons'
-import { Button, DatePicker, Form, Input, InputNumber, Modal, Radio, Select, message } from 'antd'
+import { DatePicker, Form, Input, InputNumber, Modal, Radio, Select, message } from 'antd'
 import dayjs from 'dayjs'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { PillButton } from '../../../components/PillButton'
 import { createPost } from '../service/post.service'
 import type { CreatePostPayload } from '../interface/post.types'
 
@@ -235,10 +236,13 @@ export function CreatePostModal({
           </Form.Item>
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 24 }}>
-            <Button onClick={onClose}>{t('common.cancel')}</Button>
-            <Button type="primary" htmlType="submit" loading={loading}>
-              {t('posts.createModal.submit')}
-            </Button>
+            <PillButton variant="secondary" onClick={onClose} text={t('common.cancel')} />
+            <PillButton
+              variant="primary"
+              type="submit"
+              loading={loading}
+              text={t('posts.createModal.submit')}
+            />
           </div>
         </Form>
       </Modal>

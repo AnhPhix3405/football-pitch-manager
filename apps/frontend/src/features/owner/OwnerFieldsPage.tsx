@@ -2,6 +2,7 @@ import { EditOutlined, EnvironmentOutlined, MoreOutlined, PlusOutlined, ReloadOu
 import { Button, Dropdown, Empty, Spin, Tag, message } from 'antd'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
+import { PillButton } from '../../components/PillButton'
 import { formatPrice } from '../fields/field.data'
 import { ownerFields } from './owner.data'
 import { useOwnerFields } from './hooks/useOwnerFields'
@@ -32,14 +33,20 @@ export function OwnerFieldsPage() {
           <h1>{t('owner.myFieldsTitle', { defaultValue: 'Sân của tôi' })}</h1>
           <p>{t('owner.myFieldsSubtitle', { defaultValue: 'Quản lý trạng thái, thông tin và lịch vận hành.' })}</p>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <Button icon={<ReloadOutlined />} onClick={() => refetch()} loading={loading}>
-            {t('common.refresh', { defaultValue: 'Làm mới' })}
-          </Button>
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+          <PillButton
+            variant="secondary"
+            icon={<ReloadOutlined />}
+            onClick={() => refetch()}
+            loading={loading}
+            text={t('common.refresh', { defaultValue: 'Làm mới' })}
+          />
           <Link to="/owner/fields/new">
-            <Button type="primary" icon={<PlusOutlined />}>
-              {t('owner.addNewPitch', { defaultValue: 'Thêm sân mới' })}
-            </Button>
+            <PillButton
+              variant="primary"
+              icon={<PlusOutlined />}
+              text={t('owner.addNewPitch', { defaultValue: 'Thêm sân mới' })}
+            />
           </Link>
         </div>
       </header>

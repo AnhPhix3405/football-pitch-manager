@@ -42,18 +42,6 @@
     "refresh": "Refresh",
     "reset": "Reset"
   },
-  "chat": {
-    "eyebrow": "COMMS_LINK",
-    "title": "Messages",
-    "searchPlaceholder": "Search conversations...",
-    "fieldChannel": "Pitch Contact Channel",
-    "teamChannel": "Opponent Team Leader",
-    "infoAria": "Conversation info",
-    "attachAria": "Attach file",
-    "inputPlaceholder": "Type a message...",
-    "sendAria": "Send message",
-    "emptyPrompt": "Select a conversation to start chatting."
-  },
   "auth": {
     "login": "Sign In",
     "register": "Create Account",
@@ -251,7 +239,8 @@
       "rejectBtn": "Reject",
       "acceptSuccess": "Successfully matched with {{name}}!",
       "rejectSuccess": "Rejected {{name}}.",
-      "actionError": "Action failed."
+      "actionError": "Action failed.",
+      "chatReadyPrompt": "Conversation created. You can now chat with your opponent in Messages."
     }
   },
   "owner": {
@@ -307,6 +296,38 @@
     "nameRequired": "Please enter your display name.",
     "phoneLabel": "PHONE NUMBER",
     "phonePlaceholder": "Enter contact phone number"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "markAllRead": "Mark all as read",
+    "all": "All",
+    "unread": "Unread",
+    "empty": "No notifications yet",
+    "viewAll": "View all notifications"
+  },
+  "chat": {
+    "eyebrow": "COMMS_LINK",
+    "title": "Messages",
+    "searchPlaceholder": "Search conversations...",
+    "fieldChannel": "Pitch contact channel",
+    "teamChannel": "Opponent team leader",
+    "infoAria": "Conversation details",
+    "attachAria": "Attach file",
+    "inputPlaceholder": "Type a message...",
+    "sendAria": "Send message",
+    "emptyPrompt": "Select a conversation to start chatting.",
+    "noConversations": "No conversations yet",
+    "noMessagesYet": "No messages yet",
+    "startConversationPrompt": "Send the first message to start the conversation.",
+    "sendMessage": "Message",
+    "recalled": "Message recalled",
+    "edited": "Edited",
+    "edit": "Edit",
+    "recall": "Recall",
+    "recallConfirm": "Are you sure you want to recall this message?",
+    "editMessageTitle": "Edit message",
+    "cancelEdit": "Cancel edit",
+    "saveEdit": "Save edit"
   },
   "language": {
     "vi": "Tiếng Việt",

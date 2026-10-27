@@ -5,6 +5,8 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
+import { ChatGateway } from '~/components/chat/gateways/chat.gateway';
+import { ChatService } from '~/components/chat/services/chat.service';
 import { PostMatchEntity } from '~/entities/post-match.entity';
 import { PostMatchRepository } from '~/repositories/post-match.repository';
 import { PostRepository } from '~/repositories/post.repository';
@@ -14,6 +16,8 @@ export class PostMatchService {
   constructor(
     private readonly postRepository: PostRepository,
     private readonly postMatchRepository: PostMatchRepository,
+    private readonly chatService: ChatService,
+    private readonly chatGateway: ChatGateway,
   ) {}
 
   async applyMatch(
@@ -68,10 +72,7 @@ export class PostMatchService {
     return this.postMatchRepository.save(match);
   }
 
-  async getPostMatches(
-    postId: string,
-    userId: string,
-  ): Promise<PostMatchEntity[]> {
+  async getPostMatches(postId: string): Promise<PostMatchEntity[]> {
     const post = await this.postRepository.findById(postId);
     if (!post || post.deletedAt) {
       throw new NotFoundException('Không tìm thấy bài đăng.');
@@ -102,10 +103,38 @@ export class PostMatchService {
     }
 
     match.status = 'accepted';
+
+    // Tự động tạo hội thoại chat giữa chủ bài và người xin ghép
+    const { conversation, message } =
+      await this.chatService.createMatchConversation(
+        post.id,
+        post.userId,
+        match.applicantId,
+        post.title,
+      );
+
+    match.conversationId = conversation.id;
     await this.postMatchRepository.save(match);
 
     post.status = 'matched';
     await this.postRepository.save(post);
+
+    // Phát sự kiện realtime qua Socket
+    this.chatGateway.emitToConversation(
+      conversation.id,
+      'receive_message',
+      message,
+    );
+    this.chatGateway.emitToUsers(
+      [post.userId, match.applicantId],
+      'match:accepted',
+      {
+        matchId: match.id,
+        postId: post.id,
+        conversationId: conversation.id,
+        postTitle: post.title,
+      },
+    );
 
     return match;
   }
