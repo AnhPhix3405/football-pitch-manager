@@ -1149,5 +1149,62 @@ Tài liệu chi tiết toàn bộ các API HTTP REST và WebSocket Gateway của
   - `message_deleted`: Phát thông báo thu hồi tin nhắn (`{ messageId: "uuid", conversationId: "uuid" }`).
   - `message_read`: Phát thông báo người dùng đã đọc (`{ userId, conversationId }`).
   - `match:accepted`: Phát thông báo bài đăng ghép đối đã được chấp nhận (`{ matchId, postId, conversationId, postTitle }`).
+  - `notification:new`: Phát thông báo mới tức thời cho người dùng qua room `user:${userId}` (`{ id, type, title, content, refId, isRead: false, createdAt, link }`).
+
+---
+
+### 3.9. Thông Báo (Notifications)
+
+#### 3.9.1. Lấy danh sách thông báo (`GET /notifications`)
+- **Quyền truy cập:** Đã đăng nhập (`active`)
+- **Query Parameters:**
+  - `filter`: (Tùy chọn) `all` hoặc `unread` (mặc định: `all`).
+  - `limit`: (Tùy chọn) Số lượng thông báo lấy về (mặc định: 20).
+- **Response (`200 OK`):**
+  ```json
+  {
+    "data": [
+      {
+        "id": "e4b07384-d113-40e1-95b6-75399589d6e4",
+        "type": "match_request",
+        "title": "Yêu cầu ghép trận mới",
+        "content": "Có người muốn bắt đối cho bài viết \"Kèo sân 7 tối thứ 6\".",
+        "refId": "ba26ce3d-6a8a-4f21-ab6a-a5478f044db5",
+        "isRead": false,
+        "createdAt": "2026-10-27T14:30:00.000Z",
+        "link": "/messages"
+      }
+    ]
+  }
+  ```
+
+#### 3.9.2. Lấy số lượng thông báo chưa đọc (`GET /notifications/unread-count`)
+- **Quyền truy cập:** Đã đăng nhập (`active`)
+- **Response (`200 OK`):**
+  ```json
+  {
+    "count": 3
+  }
+  ```
+
+#### 3.9.3. Đánh dấu một thông báo đã đọc (`PATCH /notifications/:id/read`)
+- **Quyền truy cập:** Đã đăng nhập (`active`)
+- **Path Parameters:** `id` (UUID của thông báo)
+- **Response (`200 OK`):**
+  ```json
+  {
+    "success": true
+  }
+  ```
+
+#### 3.9.4. Đánh dấu tất cả thông báo đã đọc (`PATCH /notifications/read-all`)
+- **Quyền truy cập:** Đã đăng nhập (`active`)
+- **Response (`200 OK`):**
+  ```json
+  {
+    "success": true
+  }
+  ```
+
 
 

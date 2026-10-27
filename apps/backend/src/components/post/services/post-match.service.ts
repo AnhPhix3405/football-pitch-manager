@@ -7,6 +7,7 @@ import {
 import { randomUUID } from 'node:crypto';
 import { ChatGateway } from '~/components/chat/gateways/chat.gateway';
 import { ChatService } from '~/components/chat/services/chat.service';
+import { NotificationService } from '~/components/notification/services/notification.service';
 import { PostMatchEntity } from '~/entities/post-match.entity';
 import { PostMatchRepository } from '~/repositories/post-match.repository';
 import { PostRepository } from '~/repositories/post.repository';
@@ -18,6 +19,7 @@ export class PostMatchService {
     private readonly postMatchRepository: PostMatchRepository,
     private readonly chatService: ChatService,
     private readonly chatGateway: ChatGateway,
+    private readonly notificationService: NotificationService,
   ) {}
 
   async applyMatch(
@@ -58,7 +60,16 @@ export class PostMatchService {
       }
       // If rejected or cancelled, re-open as pending
       existingMatch.status = 'pending';
-      return this.postMatchRepository.save(existingMatch);
+      const saved = await this.postMatchRepository.save(existingMatch);
+      await this.notificationService.createAndSend({
+        userId: post.userId,
+        type: 'match_request',
+        title: 'Yêu cầu ghép trận mới',
+        content: `Có người muốn bắt đối cho bài viết "${post.title}".`,
+        refId: saved.id,
+        link: '/messages',
+      });
+      return saved;
     }
 
     const match = this.postMatchRepository.create({
@@ -69,7 +80,17 @@ export class PostMatchService {
       conversationId: null,
     });
 
-    return this.postMatchRepository.save(match);
+    const saved = await this.postMatchRepository.save(match);
+    await this.notificationService.createAndSend({
+      userId: post.userId,
+      type: 'match_request',
+      title: 'Yêu cầu ghép trận mới',
+      content: `Có người muốn bắt đối cho bài viết "${post.title}".`,
+      refId: saved.id,
+      link: '/messages',
+    });
+
+    return saved;
   }
 
   async getPostMatches(postId: string): Promise<PostMatchEntity[]> {
@@ -135,6 +156,16 @@ export class PostMatchService {
         postTitle: post.title,
       },
     );
+
+    // Gửi thông báo realtime cho người được duyệt ghép trận
+    await this.notificationService.createAndSend({
+      userId: match.applicantId,
+      type: 'match_confirmed',
+      title: 'Ghép trận thành công',
+      content: `Yêu cầu ghép trận cho bài viết "${post.title}" đã được chấp thuận.`,
+      refId: conversation.id,
+      link: '/messages',
+    });
 
     return match;
   }

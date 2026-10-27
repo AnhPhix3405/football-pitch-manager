@@ -1,6 +1,5 @@
 import {
   AuditOutlined,
-  BellOutlined,
   CalendarOutlined,
   CheckSquareOutlined,
   CreditCardOutlined,
@@ -21,6 +20,7 @@ import { NavLink, Outlet } from 'react-router-dom'
 import { AccountDropdown } from '../../components/AccountDropdown'
 import { BrandMark } from '../../components/BrandMark'
 import { LanguageSwitch } from '../../components/LanguageSwitch'
+import { NotificationDropdown } from '../../features/notifications'
 
 function Navigation({ close, mode }: { close?: () => void; mode: 'user' | 'owner' | 'admin' }) {
   const { t } = useTranslation()
@@ -88,11 +88,7 @@ export function DashboardLayout({ mode = 'user' }: { mode?: 'user' | 'owner' | '
           </span>
           <div className="header-actions">
             <LanguageSwitch />
-            <Button
-              type="text"
-              icon={<BellOutlined />}
-              aria-label={t('common.notifications')}
-            />
+            <NotificationDropdown />
             <AccountDropdown variant="header" placement="bottomRight" />
           </div>
         </header>

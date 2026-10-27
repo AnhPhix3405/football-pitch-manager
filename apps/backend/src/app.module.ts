@@ -9,6 +9,7 @@ import { BookingModule } from './components/booking/booking.module';
 import { ChatModule } from './components/chat/chat.module';
 import { FieldModule } from './components/field/field.module';
 import { HealthModule } from './components/health/health.module';
+import { NotificationModule } from './components/notification/notification.module';
 import { OwnerProfileModule } from './components/owner-profile/owner-profile.module';
 import { PostModule } from './components/post/post.module';
 import { UserProfileModule } from './components/user-profile/user-profile.module';
@@ -39,6 +40,7 @@ import { typeOrmDataSourceOptions } from './database/config/typeorm.options';
     BookingModule,
     ChatModule,
     PostModule,
+    NotificationModule,
   ],
 })
 export class AppModule {}

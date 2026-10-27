@@ -53,7 +53,9 @@ export function NotificationDropdown() {
             {t('notifications.title', { defaultValue: 'Thông báo' })}
           </span>
           {unreadCount > 0 && (
-            <span className="notification-dropdown__badge">{unreadCount} mới</span>
+            <span className="notification-dropdown__badge">
+              {unreadCount} {t('notifications.new', { defaultValue: 'mới' })}
+            </span>
           )}
         </div>
         {unreadCount > 0 && (

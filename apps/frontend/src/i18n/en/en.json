@@ -303,7 +303,8 @@
     "all": "All",
     "unread": "Unread",
     "empty": "No notifications yet",
-    "viewAll": "View all notifications"
+    "viewAll": "View all notifications",
+    "new": "new"
   },
   "chat": {
     "eyebrow": "COMMS_LINK",

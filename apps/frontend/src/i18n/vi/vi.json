@@ -303,7 +303,8 @@
     "all": "Tất cả",
     "unread": "Chưa đọc",
     "empty": "Không có thông báo nào",
-    "viewAll": "Xem tất cả thông báo"
+    "viewAll": "Xem tất cả thông báo",
+    "new": "mới"
   },
   "chat": {
     "eyebrow": "COMMS_LINK",
