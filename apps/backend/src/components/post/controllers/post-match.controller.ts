@@ -35,11 +35,8 @@ export class PostMatchController {
   @Get()
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Xem danh sách các đội/ứng viên xin bắt đối' })
-  async getPostMatches(
-    @Param('id') postId: string,
-    @CurrentUser('id') userId: string,
-  ) {
-    return this.postMatchService.getPostMatches(postId, userId);
+  async getPostMatches(@Param('id') postId: string) {
+    return this.postMatchService.getPostMatches(postId);
   }
 
   @Patch(':matchId/accept')

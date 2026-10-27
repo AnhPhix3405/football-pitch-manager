@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from '~/components/auth/auth.module';
+import { ChatModule } from '~/components/chat/chat.module';
 import { PostCommentEntity } from '~/entities/post-comment.entity';
 import { PostMatchEntity } from '~/entities/post-match.entity';
 import { PostEntity } from '~/entities/post.entity';
@@ -19,6 +20,7 @@ import { PostService } from './services/post.service';
   imports: [
     TypeOrmModule.forFeature([PostEntity, PostMatchEntity, PostCommentEntity]),
     AuthModule,
+    ChatModule,
   ],
   controllers: [PostController, PostMatchController, PostCommentController],
   providers: [

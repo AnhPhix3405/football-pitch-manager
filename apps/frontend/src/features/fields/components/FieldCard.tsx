@@ -1,7 +1,8 @@
 import { EnvironmentOutlined, StarFilled } from '@ant-design/icons'
-import { Button, Tag } from 'antd'
+import { Tag } from 'antd'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
+import { PillButton } from '../../../components/PillButton'
 import { formatPrice } from '../field.data'
 import type { FootballField } from '../interface/field.types'
 
@@ -50,9 +51,11 @@ export function FieldCard({
             </strong>
           </div>
           <Link to={fieldLink}>
-            <Button type="primary">
-              {t('fields.viewField')}
-            </Button>
+            <PillButton
+              variant="primary"
+              size="sm"
+              text={t('fields.viewField')}
+            />
           </Link>
         </div>
       </div>

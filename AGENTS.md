@@ -36,3 +36,4 @@
 - **Thư mục components chỉ chứa các UI chung nhất**
 - **Giao tiếp với api cần tạo hooks riêng trong thư mục src/hooks:** Không nhét logic gọi api vào chung với giao diện
 - **Trong features tạo folder riêng cho mỗi lớp xử lí:** Ví dụ features/posts/interface, features/posts/service,
+- **Khai báo types/constants độc lập:** Tuyệt đối không khai báo type, enum, code phân loại hoặc constant trực tiếp trong file UI/components; tất cả phải được khai báo trong thư mục `constants` (hoặc `interface`) để giữ component thuần UI, dễ bảo trì và đồng bộ với Backend.

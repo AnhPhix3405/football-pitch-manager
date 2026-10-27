@@ -5,6 +5,7 @@ import {
   DeleteOutlined,
   DownOutlined,
   EnvironmentOutlined,
+  MessageOutlined,
   SendOutlined,
   TeamOutlined,
   UserOutlined,
@@ -15,6 +16,7 @@ import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useAppSelector } from '../../app/hooks'
 import { useConfirmModal } from '../../hooks'
+import { PillButton } from '../../components/PillButton'
 import { matchPosts, type MatchPost } from '../user/user.data'
 import { mapBackendPostToMatchPost } from './hooks/usePublicPosts'
 import { usePostDetail } from './hooks/usePostDetail'
@@ -118,6 +120,13 @@ export function PostDetailPage() {
           if (accept) {
             await acceptMatchApplicant(match.id)
             messageApi.success(t('posts.applicantModal.acceptSuccess', { name: applicantName }))
+            messageApi.info(
+              t('posts.applicantModal.chatReadyPrompt', {
+                defaultValue:
+                  'Cuộc trò chuyện đã được tạo. Bạn có thể vào mục Đoạn chat để trao đổi chi tiết.',
+              }),
+              6,
+            )
           } else {
             await rejectMatchApplicant(match.id)
             messageApi.info(t('posts.applicantModal.rejectSuccess', { name: applicantName }))
@@ -193,15 +202,14 @@ export function PostDetailPage() {
 
           {!isOwner && post.status === 'open' && (
             <div style={{ marginTop: 24 }}>
-              <Button
-                type="primary"
-                size="large"
+              <PillButton
+                variant="primary"
+                size="lg"
                 loading={actionLoading}
                 disabled={hasApplied}
                 onClick={handleApply}
-              >
-                {hasApplied ? 'Đã gửi yêu cầu bắt đối' : 'Bắt đối / Xin giao lưu ngay'}
-              </Button>
+                text={hasApplied ? 'Đã gửi yêu cầu bắt đối' : 'Bắt đối / Xin giao lưu ngay'}
+              />
             </div>
           )}
         </article>
@@ -296,6 +304,17 @@ export function PostDetailPage() {
                     </Button>
                   </div>
                 )}
+
+                {item.status === 'accepted' && (isOwner || item.applicantId === currentUser?.id) && (
+                  <Button
+                    type="primary"
+                    icon={<MessageOutlined />}
+                    size="small"
+                    onClick={() => navigate('/messages')}
+                  >
+                    {t('chat.sendMessage', { defaultValue: 'Nhắn tin' })}
+                  </Button>
+                )}
               </div>
             ))
           )}
@@ -333,14 +352,13 @@ export function PostDetailPage() {
               onPressEnter={handleSendComment}
               placeholder="Thêm câu hỏi hoặc thảo luận về trận đấu..."
             />
-            <Button
-              type="primary"
+            <PillButton
+              variant="primary"
               icon={<SendOutlined />}
               loading={actionLoading}
               onClick={handleSendComment}
-            >
-              Gửi
-            </Button>
+              text="Gửi"
+            />
           </div>
         </section>
       </div>

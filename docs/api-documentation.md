@@ -98,6 +98,9 @@ Tài liệu chi tiết toàn bộ các API HTTP REST và WebSocket Gateway của
 | | `POST` | `/admin/field-approvals/:id/reject` | Admin | Từ chối phê duyệt sân bóng |
 | **Hệ thống** | `GET` | `/` | Public | Kiểm tra tình trạng hoạt động backend (Health check) |
 | **Real-time Chat** | `WS` | `/chat` | Đã đăng nhập (JWT) | WebSocket Gateway nhắn tin trực tiếp |
+| | `GET` | `/chat/conversations` | Đã đăng nhập (JWT) | Lấy danh sách cuộc trò chuyện của tôi |
+| | `POST` | `/chat/conversations` | Đã đăng nhập (JWT) | Bắt đầu hoặc lấy cuộc trò chuyện |
+| | `GET` | `/chat/conversations/:id/messages` | Đã đăng nhập (JWT) | Lấy lịch sử tin nhắn (hỗ trợ phân trang limit/before) |
 
 ---
 
@@ -621,7 +624,8 @@ Tài liệu chi tiết toàn bộ các API HTTP REST và WebSocket Gateway của
 #### 3.3.9. Chấp nhận đội bắt đối (`PATCH /posts/:id/matches/:matchId/accept`)
 - **Quyền truy cập:** Đã đăng nhập (Chính chủ bài đăng)
 - **Path Parameters:** `id` (Post ID), `matchId` (Match ID).
-- **Response (`200 OK`):** Đối tượng `PostMatchEntity` với `status: "accepted"`, bài đăng tự động chuyển `status: "matched"`.
+- **Mô tả:** Chấp nhận ghép trận với đội ứng tuyển. Hệ thống tự động kiểm tra: nếu đã tồn tại cuộc trò chuyện từ trước giữa 2 người dùng thì tái sử dụng cuộc trò chuyện đó, nếu chưa có thì tạo mới; đồng thời tự động gửi tin nhắn xác nhận ghép trận vào phòng chat và phát WebSocket event `receive_message` cùng `match:accepted`.
+- **Response (`200 OK`):** Đối tượng `PostMatchEntity` với `status: "accepted"`, liên kết `conversationId`, bài đăng tự động chuyển `status: "matched"`.
 
 #### 3.3.10. Từ chối đội bắt đối (`PATCH /posts/:id/matches/:matchId/reject`)
 - **Quyền truy cập:** Đã đăng nhập (Chính chủ bài đăng)
@@ -1043,6 +1047,7 @@ Tài liệu chi tiết toàn bộ các API HTTP REST và WebSocket Gateway của
 | Sự kiện (Event Name) | Payload | Mô tả |
 | :--- | :--- | :--- |
 | `join_room` | `{"conversationId": "uuid"}` | Tham gia vào phòng chat của một cuộc trò chuyện |
+| `leave_room` | `{"conversationId": "uuid"}` | Rời khỏi phòng chat của một cuộc trò chuyện |
 | `send_message` | `{"conversationId": "uuid", "content": "string", "messageType": "text"}` | Gửi tin nhắn mới |
 | `mark_as_delivered` | `{"conversationId": "uuid"}` | Đánh dấu tin nhắn đã được nhận |
 | `mark_as_read` | `{"conversationId": "uuid"}` | Đánh dấu tin nhắn đã được đọc |
@@ -1054,7 +1059,95 @@ Tài liệu chi tiết toàn bộ các API HTTP REST và WebSocket Gateway của
 | Sự kiện (Event Name) | Dữ liệu phát về (Payload) | Mô tả |
 | :--- | :--- | :--- |
 | `receive_message` | Đối tượng `Message` đầy đủ | Tin nhắn mới gửi tới phòng chat |
+| `match:accepted` | `{"matchId": "uuid", "postId": "uuid", "conversationId": "uuid", "postTitle": "string"}` | Thông báo ghép trận thành công và phòng chat đã được tạo |
 | `message_delivered` | `{"userId": "uuid", "conversationId": "uuid"}` | Thông báo người nhận đã nhận được tin nhắn |
 | `message_read` | `{"userId": "uuid", "conversationId": "uuid"}` | Thông báo người nhận đã đọc tin nhắn |
 | `message_edited` | Đối tượng `Message` đã cập nhật | Thông báo cập nhật nội dung tin nhắn |
 | `message_deleted` | `{"messageId": "uuid", "conversationId": "uuid"}` | Thông báo tin nhắn đã bị xóa khỏi phòng |
+
+---
+
+### 3.8. Quản Lý Cuộc Trò Chuyện & Lịch Sử Tin Nhắn (Chat REST API)
+
+#### 3.8.1. Lấy danh sách cuộc trò chuyện của tôi (`GET /chat/conversations`)
+- **Quyền truy cập:** Đã đăng nhập (`active`)
+- **Mô tả:** Trả về danh sách tất cả các cuộc trò chuyện của người dùng hiện tại, bao gồm thông tin đối phương (hoặc sân bóng), tin nhắn mới nhất, số lượng tin nhắn chưa đọc và thời gian cập nhật.
+- **Response (`200 OK`):**
+  ```json
+  [
+    {
+      "id": "123e4567-e89b-12d3-a456-426614174000",
+      "type": "direct",
+      "name": "Nguyễn Văn A",
+      "avatarUrl": "https://example.com/avatar.jpg",
+      "online": true,
+      "unreadCount": 2,
+      "kind": "team",
+      "relatedFieldId": null,
+      "relatedPostId": null,
+      "lastMessage": {
+        "id": "223e4567-e89b-12d3-a456-426614174001",
+        "content": "Đội bạn còn cần thêm người không?",
+        "senderId": "323e4567-e89b-12d3-a456-426614174002",
+        "createdAt": "2026-10-25T09:30:00.000Z"
+      },
+      "updatedAt": "2026-10-25T09:30:00.000Z"
+    }
+  ]
+  ```
+
+#### 3.8.2. Bắt đầu hoặc lấy cuộc trò chuyện (`POST /chat/conversations`)
+- **Quyền truy cập:** Đã đăng nhập (`active`)
+- **Mô tả:** Tìm cuộc trò chuyện hiện có hoặc tạo mới nếu chưa tồn tại.
+- **Request Body (`CreateConversationDto`):**
+  ```json
+  {
+    "targetUserId": "323e4567-e89b-12d3-a456-426614174002",
+    "relatedFieldId": null,
+    "relatedPostId": null,
+    "type": "direct"
+  }
+  ```
+- **Response (`200 OK`):** Chi tiết cuộc trò chuyện.
+
+#### 3.8.3. Lấy lịch sử tin nhắn của cuộc trò chuyện (`GET /chat/conversations/:id/messages`)
+- **Quyền truy cập:** Đã đăng nhập (`active`, phải là thành viên trong cuộc trò chuyện)
+- **Mô tả:** Lấy danh sách tin nhắn theo thứ tự thời gian tăng dần và tự động đánh dấu đã đọc (`last_read_at`) cho người dùng hiện tại. Hỗ trợ phân trang cuộn ngược qua `limit` và `before`.
+- **Path Parameters:** `id` (UUID của hội thoại)
+- **Query Parameters:**
+  - `limit`: (Tùy chọn) Số lượng tin nhắn cần lấy (mặc định 20, tối đa 100).
+  - `before`: (Tùy chọn) Mốc thời gian ISO (`createdAt`) để lấy các tin nhắn gửi trước thời điểm này.
+- **Response (`200 OK`):**
+  ```json
+  [
+    {
+      "id": "223e4567-e89b-12d3-a456-426614174001",
+      "conversationId": "123e4567-e89b-12d3-a456-426614174000",
+      "senderId": "323e4567-e89b-12d3-a456-426614174002",
+      "content": "Chào bạn, sân bên bạn còn trống lúc 18h không?",
+      "messageType": "text",
+      "isEdited": false,
+      "deletedAt": null,
+      "createdAt": "2026-10-25T09:15:00.000Z"
+    }
+  ]
+  ```
+
+#### 3.8.4. WebSocket Realtime Events (`/chat` namespace)
+- **Kết nối Socket:** `io("http://localhost:3000/chat", { auth: { token: "<accessToken>" } })`
+- **Sự kiện gửi từ Client lên Server:**
+  - `join_room`: `{ "conversationId": "uuid" }` - Tham gia phòng hội thoại để nhận tin nhắn realtime.
+  - `leave_room`: `{ "conversationId": "uuid" }` - Rời khỏi phòng hội thoại.
+  - `send_message`: `{ "conversationId": "uuid", "content": "string", "messageType": "text" }` - Gửi tin nhắn mới.
+  - `edit_message`: `{ "messageId": "uuid", "content": "string" }` - Chỉnh sửa tin nhắn đã gửi.
+  - `delete_message`: `{ "messageId": "uuid" }` - Thu hồi tin nhắn đã gửi.
+  - `mark_as_read`: `{ "conversationId": "uuid" }` - Đánh dấu đã đọc các tin nhắn trong hội thoại.
+  - `mark_as_delivered`: `{ "conversationId": "uuid" }` - Đánh dấu tin nhắn đã được nhận.
+- **Sự kiện Server phát xuống Client:**
+  - `receive_message`: Phát tin nhắn mới đến tất cả thành viên trong `conversationId`.
+  - `message_edited`: Phát thông tin tin nhắn đã chỉnh sửa (`{ id, conversationId, content, isEdited: true, ... }`).
+  - `message_deleted`: Phát thông báo thu hồi tin nhắn (`{ messageId: "uuid", conversationId: "uuid" }`).
+  - `message_read`: Phát thông báo người dùng đã đọc (`{ userId, conversationId }`).
+  - `match:accepted`: Phát thông báo bài đăng ghép đối đã được chấp nhận (`{ matchId, postId, conversationId, postTitle }`).
+
+

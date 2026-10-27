@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { AccountDropdown } from '../../components/AccountDropdown'
 import { BrandMark } from '../../components/BrandMark'
 import { LanguageSwitch } from '../../components/LanguageSwitch'
+import { NotificationDropdown } from '../../features/notifications'
 
 export function PublicLayout() {
   const { t } = useTranslation()
@@ -40,10 +41,14 @@ export function PublicLayout() {
           <NavLink to="/bookings">
             {t('nav.myBookings', { defaultValue: 'Lịch đặt' })}
           </NavLink>
+          <NavLink to="/messages">
+            {t('nav.messages', { defaultValue: 'Tin nhắn' })}
+          </NavLink>
         </nav>
 
         <div className="public-header__right">
           <LanguageSwitch />
+          <NotificationDropdown />
           <AccountDropdown variant="header" placement="bottomRight" />
           <Link to="/fields" className="navbar-pill-cta">
             <span>{t('home.bookPitch', { defaultValue: 'Đặt sân ngay' })}</span>

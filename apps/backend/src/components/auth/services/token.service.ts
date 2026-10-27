@@ -206,7 +206,7 @@ export class TokenService {
       httpOnly: true,
       secure: this.isProduction,
       sameSite: this.isProduction ? 'strict' : 'lax',
-      path: '/api/auth',
+      path: '/',
       maxAge,
     };
   }

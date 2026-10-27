@@ -19,6 +19,12 @@ import {
 } from '../dto/chat-event.dto';
 import { ChatService } from '../services/chat.service';
 
+interface AuthenticatedSocket extends Socket {
+  data: {
+    userId: string;
+  };
+}
+
 @WebSocketGateway({
   cors: { origin: '*' },
   namespace: '/chat',
@@ -35,9 +41,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   async handleConnection(client: Socket) {
     try {
-      const token =
-        client.handshake.auth?.token ||
-        client.handshake.headers?.authorization?.split(' ')[1];
+      const headers = client.handshake.headers as
+        Record<string, unknown> | undefined;
+      const authHeader = headers?.authorization;
+      const bearerToken =
+        typeof authHeader === 'string' ? authHeader.split(' ')[1] : undefined;
+      const auth = client.handshake.auth as Record<string, unknown> | undefined;
+      const rawToken = auth?.token;
+      const token = typeof rawToken === 'string' ? rawToken : bearerToken;
 
       if (!token) {
         client.disconnect();
@@ -45,29 +56,52 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       }
 
       const decoded = await this.tokenService.verifyAccessToken(token);
-      client.data.userId = decoded.sub;
-    } catch (error) {
+      (client.data as { userId?: string }).userId = decoded.sub;
+      await client.join(`user:${decoded.sub}`);
+    } catch {
       client.disconnect();
     }
   }
 
-  handleDisconnect(client: Socket) {
+  handleDisconnect() {
     // Optionally handle disconnect logic here
   }
 
+  emitToUsers(userIds: string[], event: string, payload: unknown) {
+    if (!this.server) return;
+    for (const userId of userIds) {
+      this.server.to(`user:${userId}`).emit(event, payload);
+    }
+  }
+
+  emitToConversation(conversationId: string, event: string, payload: unknown) {
+    if (!this.server) return;
+    this.server.to(conversationId).emit(event, payload);
+  }
+
   @SubscribeMessage('join_room')
-  handleJoinRoom(
-    @ConnectedSocket() client: Socket,
+  async handleJoinRoom(
+    @ConnectedSocket() client: AuthenticatedSocket,
     @MessageBody() data: { conversationId: string },
   ) {
     if (data.conversationId) {
-      client.join(data.conversationId);
+      await client.join(data.conversationId);
+    }
+  }
+
+  @SubscribeMessage('leave_room')
+  async handleLeaveRoom(
+    @ConnectedSocket() client: AuthenticatedSocket,
+    @MessageBody() data: { conversationId: string },
+  ) {
+    if (data.conversationId) {
+      await client.leave(data.conversationId);
     }
   }
 
   @SubscribeMessage('send_message')
   async handleSendMessage(
-    @ConnectedSocket() client: Socket,
+    @ConnectedSocket() client: AuthenticatedSocket,
     @MessageBody() payload: SendMessageDto,
   ) {
     const userId = client.data.userId;
@@ -77,7 +111,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('mark_as_delivered')
   async handleMarkAsDelivered(
-    @ConnectedSocket() client: Socket,
+    @ConnectedSocket() client: AuthenticatedSocket,
     @MessageBody() payload: MarkAsDeliveredDto,
   ) {
     const userId = client.data.userId;
@@ -90,7 +124,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('mark_as_read')
   async handleMarkAsRead(
-    @ConnectedSocket() client: Socket,
+    @ConnectedSocket() client: AuthenticatedSocket,
     @MessageBody() payload: MarkAsReadDto,
   ) {
     const userId = client.data.userId;
@@ -103,7 +137,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('edit_message')
   async handleEditMessage(
-    @ConnectedSocket() client: Socket,
+    @ConnectedSocket() client: AuthenticatedSocket,
     @MessageBody() payload: EditMessageDto,
   ) {
     const userId = client.data.userId;
@@ -113,7 +147,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('delete_message')
   async handleDeleteMessage(
-    @ConnectedSocket() client: Socket,
+    @ConnectedSocket() client: AuthenticatedSocket,
     @MessageBody() payload: DeleteMessageDto,
   ) {
     const userId = client.data.userId;

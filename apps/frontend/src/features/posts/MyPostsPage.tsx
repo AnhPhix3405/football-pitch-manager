@@ -1,7 +1,8 @@
 import { PlusOutlined, ReloadOutlined } from '@ant-design/icons'
-import { Button, Empty, Segmented, Spin, message } from 'antd'
+import { Empty, Segmented, Spin, message } from 'antd'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { PillButton } from '../../components/PillButton'
 import { matchPosts, type MatchPost } from '../user/user.data'
 import { CreatePostModal } from './components/CreatePostModal'
 import { PostCard } from './components/PostCard'
@@ -39,13 +40,20 @@ export function MyPostsPage() {
           <h1>{t('posts.myPosts')}</h1>
           <p>{t('posts.myPostsSubtitle')}</p>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <Button icon={<ReloadOutlined />} onClick={() => refetch()} loading={loading}>
-            {t('common.refresh')}
-          </Button>
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsModalOpen(true)}>
-            {t('posts.createPost')}
-          </Button>
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+          <PillButton
+            variant="secondary"
+            icon={<ReloadOutlined />}
+            onClick={() => refetch()}
+            loading={loading}
+            text={t('common.refresh')}
+          />
+          <PillButton
+            variant="primary"
+            icon={<PlusOutlined />}
+            onClick={() => setIsModalOpen(true)}
+            text={t('posts.createPost')}
+          />
         </div>
       </header>
 

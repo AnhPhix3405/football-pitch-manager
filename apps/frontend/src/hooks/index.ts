@@ -6,5 +6,6 @@ export * from './useConfirmModal'
 export * from '../features/auth/hooks/useAuthActions'
 export * from '../features/owner/hooks/useOwnerFields'
 export * from '../features/admin/hooks/useAdminApprovals'
-export * from '../features/chat/hooks/useChatSocket'
-export * from '../features/chat/hooks/useChatConversations'
+export * from './useChatSocket'
+export * from './useChatConversations'
+
