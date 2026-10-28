@@ -22,6 +22,12 @@ export const environmentValidationSchema = Joi.object({
   LOG_LEVEL: Joi.string()
     .valid('fatal', 'error', 'warn', 'log', 'debug', 'verbose')
     .default('log'),
+  SUPABASE_URL: Joi.string().uri().allow('').default(''),
+  SUPABASE_SERVICE_ROLE_KEY: Joi.string().allow('').default(''),
+  SUPABASE_ANON_KEY: Joi.string().allow('').default(''),
+  SUPABASE_STORAGE_BUCKET: Joi.string()
+    .trim()
+    .default('football-pitch-manager'),
 }).unknown(true);
 
 export const validateEnvironment = (config: Record<string, unknown>) => {

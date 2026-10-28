@@ -39,6 +39,7 @@
     "@nestjs/typeorm": "^12.0.1",
     "@nestjs/websockets": "^11.2.7",
     "@sqltools/formatter": "^1.2.5",
+    "@supabase/supabase-js": "^2.118.0",
     "@types/bcrypt": "^6.0.0",
     "@types/big.js": "^7.0.0",
     "@types/lodash": "^4.17.25",
