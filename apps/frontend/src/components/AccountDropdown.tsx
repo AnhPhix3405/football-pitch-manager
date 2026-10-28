@@ -6,7 +6,7 @@ import {
   SettingOutlined,
   UserAddOutlined,
 } from '@ant-design/icons'
-import { Button, Dropdown, type DropdownProps, type MenuProps } from 'antd'
+import { Avatar, Button, Dropdown, type DropdownProps, type MenuProps } from 'antd'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '../app/hooks'
@@ -60,11 +60,18 @@ export function AccountDropdown({
       disabled: true,
       label: (
         <div className="account-dropdown__info">
+          <Avatar
+            src={user?.avatarUrl || undefined}
+            size={36}
+            className="account-dropdown__avatar"
+          >
+            {initials}
+          </Avatar>
           <div className="account-dropdown__user-details">
             <b className="account-dropdown__name">{displayName}</b>
             <span className="account-dropdown__email">{user?.email}</span>
+            <span className="account-dropdown__badge">{user?.role?.toUpperCase()}</span>
           </div>
-          <span className="account-dropdown__badge">{user?.role?.toUpperCase()}</span>
         </div>
       ),
     },
@@ -161,7 +168,13 @@ export function AccountDropdown({
         trigger={['click']}
       >
         <div className="sidebar-account" role="button" tabIndex={0}>
-          <span className="sidebar-account__avatar">{initials}</span>
+          <Avatar
+            src={user.avatarUrl || undefined}
+            size={32}
+            className="sidebar-account__avatar"
+          >
+            {initials}
+          </Avatar>
           <div className="sidebar-account__meta">
             <span className="sidebar-account__name">{displayName}</span>
             <small className="sidebar-account__role">{user.role || 'Member'}</small>
@@ -187,7 +200,13 @@ export function AccountDropdown({
         aria-label={displayName}
       >
         {showName && <span>{displayName}</span>}
-        <b>{initials}</b>
+        <Avatar
+          src={user.avatarUrl || undefined}
+          size={32}
+          className="account__avatar"
+        >
+          {initials}
+        </Avatar>
         <DownOutlined className="account__arrow" />
       </div>
     </Dropdown>

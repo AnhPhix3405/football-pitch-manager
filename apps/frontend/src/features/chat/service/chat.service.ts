@@ -39,3 +39,21 @@ export async function createConversationApi(
     preview: conv?.lastMessage?.content || '',
   }
 }
+
+export async function uploadImageApi(
+  file: File,
+): Promise<{ url: string; path: string }> {
+  const formData = new FormData()
+  formData.append('file', file)
+  const response = await apiClient.post<ApiResponse<{ url: string; path: string }>>(
+    '/upload/image',
+    formData,
+    {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    },
+  )
+  return response.data?.data
+}
+

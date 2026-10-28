@@ -1,5 +1,11 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsDateString, IsOptional, IsString, MaxLength } from 'class-validator';
+import {
+  IsDateString,
+  IsNumber,
+  IsOptional,
+  IsString,
+  MaxLength,
+} from 'class-validator';
 
 export class UpdateUserProfileDto {
   @ApiPropertyOptional({
@@ -67,4 +73,20 @@ export class UpdateUserProfileDto {
   @IsString()
   @MaxLength(32)
   phone?: string;
+
+  @ApiPropertyOptional({
+    description: 'Vĩ độ vị trí người dùng',
+    example: 10.762622,
+  })
+  @IsOptional()
+  @IsNumber()
+  lat?: number;
+
+  @ApiPropertyOptional({
+    description: 'Kinh độ vị trí người dùng',
+    example: 106.660172,
+  })
+  @IsOptional()
+  @IsNumber()
+  lng?: number;
 }

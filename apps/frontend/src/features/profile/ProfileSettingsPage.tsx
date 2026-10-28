@@ -1,6 +1,8 @@
 import {
   CalendarOutlined,
   CameraOutlined,
+  CompassOutlined,
+  EnvironmentOutlined,
   LockOutlined,
   MailOutlined,
   PhoneOutlined,
@@ -24,7 +26,7 @@ import {
   Tabs,
   message,
 } from 'antd'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { useAppSelector } from '../../app/hooks'
@@ -40,29 +42,28 @@ import { CreatePostModal } from '../posts/components/CreatePostModal'
 import { BlurCircle } from '../../components/BlurCircle'
 import { PillButton } from '../../components/PillButton'
 import profilePanelBg from '../../assets/profile_panel.jpg'
-
-interface ProfileForm {
-  name: string
-  email: string
-  phone?: string
-  bio: string
-}
-
-interface PasswordForm {
-  current: string
-  next: string
-  confirm: string
-}
+import { ALLOWED_AVATAR_TYPES, MAX_AVATAR_SIZE } from './constants/profile.constant'
+import type { PasswordForm, ProfileForm } from './interface/profile.types'
 
 export function ProfileSettingsPage() {
   const { t, i18n } = useTranslation()
   const user = useAppSelector((state) => state.auth.user)
-  const { profile, loading: profileLoading, updating: profileUpdating, updateProfile } = useUserProfile()
+  const {
+    profile,
+    loading: profileLoading,
+    updating: profileUpdating,
+    uploadingAvatar,
+    updatingLocation,
+    updateProfile,
+    uploadAvatar,
+    updateLocation,
+  } = useUserProfile()
   const [form] = Form.useForm<ProfileForm>()
   const [passwordForm] = Form.useForm<PasswordForm>()
   const [messageApi, contextHolder] = message.useMessage()
   const [notifications, setNotifications] = useState(true)
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false)
+  const avatarInputRef = useRef<HTMLInputElement>(null)
 
   // Booking history state & hook
   const { filter: bookingFilter, setFilter: setBookingFilter, visible: visibleBookings, cancel: cancelBooking } = useBookings()
@@ -86,6 +87,8 @@ export function ProfileSettingsPage() {
         email: profile.email || user?.email || '',
         phone: profile.phone || '',
         bio: profile.bio || 'Thành viên cộng đồng bóng đá PitchMaster.',
+        lat: profile.lat ?? undefined,
+        lng: profile.lng ?? undefined,
       })
     } else if (user) {
       form.setFieldsValue({
@@ -93,6 +96,8 @@ export function ProfileSettingsPage() {
         email: user.email,
         phone: '',
         bio: 'Thành viên cộng đồng bóng đá PitchMaster.',
+        lat: undefined,
+        lng: undefined,
       })
     }
   }, [profile, user, form])
@@ -103,6 +108,14 @@ export function ProfileSettingsPage() {
         fullName: values.name.trim(),
         phone: values.phone?.trim() || undefined,
         bio: values.bio?.trim() || undefined,
+        lat:
+          values.lat !== undefined && values.lat !== null && !isNaN(Number(values.lat))
+            ? Number(values.lat)
+            : undefined,
+        lng:
+          values.lng !== undefined && values.lng !== null && !isNaN(Number(values.lng))
+            ? Number(values.lng)
+            : undefined,
       })
       if (user?.role === 'owner') {
         await updateMyProfile({ businessName: values.name.trim() })
@@ -113,8 +126,86 @@ export function ProfileSettingsPage() {
     }
   }
 
+  const handleAvatarSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    e.target.value = ''
+
+    if (!ALLOWED_AVATAR_TYPES.includes(file.type)) {
+      messageApi.error(
+        t('chat.invalidImageFormat', {
+          defaultValue: 'Chỉ chấp nhận file ảnh (JPG, PNG, WEBP, GIF)',
+        }),
+      )
+      return
+    }
+    if (file.size > MAX_AVATAR_SIZE) {
+      messageApi.error(
+        t('chat.imageSizeLimit', {
+          defaultValue: 'Dung lượng ảnh tối đa là 10MB',
+        }),
+      )
+      return
+    }
+
+    try {
+      await uploadAvatar(file)
+      messageApi.success(
+        t('profile.avatarUploadSuccess', {
+          defaultValue: 'Cập nhật ảnh đại diện thành công.',
+        }),
+      )
+    } catch {
+      messageApi.error(
+        t('profile.avatarUploadFailed', {
+          defaultValue: 'Tải ảnh đại diện thất bại. Vui lòng thử lại.',
+        }),
+      )
+    }
+  }
+
+  const handleGetCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      messageApi.error(
+        t('profile.location.notSupported', {
+          defaultValue: 'Trình duyệt không hỗ trợ Geolocation.',
+        }),
+      )
+      return
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        try {
+          const { latitude, longitude } = pos.coords
+          await updateLocation(latitude, longitude)
+          form.setFieldsValue({ lat: latitude, lng: longitude })
+          messageApi.success(
+            t('profile.location.updateSuccess', {
+              defaultValue: 'Cập nhật vị trí thành công.',
+            }),
+          )
+        } catch {
+          messageApi.error(
+            t('profile.location.updateError', {
+              defaultValue: 'Không thể lấy vị trí hiện tại của bạn.',
+            }),
+          )
+        }
+      },
+      () => {
+        messageApi.error(
+          t('profile.location.updateError', {
+            defaultValue: 'Không thể lấy vị trí hiện tại của bạn.',
+          }),
+        )
+      },
+      { enableHighAccuracy: true, timeout: 10000 },
+    )
+  }
+
   const handlePasswordChange = async () => {
-    messageApi.success('Mật khẩu đã được thay đổi thành công.')
+    messageApi.success(t('profile.passwordChanged', { defaultValue: 'Mật khẩu đã được thay đổi thành công.' }))
     setIsPasswordModalOpen(false)
     passwordForm.resetFields()
   }
@@ -286,6 +377,39 @@ export function ProfileSettingsPage() {
           <Form.Item label="GIỚI THIỆU" name="bio" rules={[{ max: 240, message: 'Giới thiệu tối đa 240 ký tự.' }]}>
             <Input.TextArea rows={4} showCount maxLength={240} />
           </Form.Item>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <Form.Item
+              label={t('profile.location.lat', { defaultValue: 'Vĩ độ (Lat)' })}
+              name="lat"
+            >
+              <Input
+                type="number"
+                step="0.000001"
+                prefix={<EnvironmentOutlined />}
+                placeholder="10.762622"
+              />
+            </Form.Item>
+            <Form.Item
+              label={t('profile.location.lng', { defaultValue: 'Kinh độ (Lng)' })}
+              name="lng"
+            >
+              <Input
+                type="number"
+                step="0.000001"
+                prefix={<EnvironmentOutlined />}
+                placeholder="106.660172"
+              />
+            </Form.Item>
+          </div>
+          <div style={{ marginBottom: 20 }}>
+            <Button
+              icon={<CompassOutlined />}
+              loading={updatingLocation}
+              onClick={handleGetCurrentLocation}
+            >
+              {t('profile.location.getCurrent', { defaultValue: 'Lấy vị trí hiện tại' })}
+            </Button>
+          </div>
           <PillButton
             type="submit"
             variant="primary"
@@ -351,9 +475,16 @@ export function ProfileSettingsPage() {
             {/* Circular Avatar */}
             <div className="profile-hero-card__avatar-box">
               <div className="profile-hero-card__avatar-circle">
-                <Avatar size={156} shape="circle" className="profile-hero-card__avatar">
-                  {initials}
-                </Avatar>
+                <Spin spinning={uploadingAvatar}>
+                  <Avatar
+                    size={156}
+                    shape="circle"
+                    src={profile?.avatarUrl || undefined}
+                    className="profile-hero-card__avatar"
+                  >
+                    {initials}
+                  </Avatar>
+                </Spin>
               </div>
             </div>
 
@@ -370,17 +501,19 @@ export function ProfileSettingsPage() {
               </p>
 
               <div className="profile-hero-card__actions">
+                <input
+                  type="file"
+                  ref={avatarInputRef}
+                  accept={ALLOWED_AVATAR_TYPES.join(',')}
+                  style={{ display: 'none' }}
+                  onChange={handleAvatarSelect}
+                />
                 <Button
                   type="primary"
                   icon={<CameraOutlined />}
+                  loading={uploadingAvatar}
                   className="profile-btn-primary"
-                  onClick={() =>
-                    messageApi.info(
-                      t('profile.avatarNotice', {
-                        defaultValue: 'Tính năng tải ảnh đại diện sẽ sớm ra mắt.',
-                      }),
-                    )
-                  }
+                  onClick={() => avatarInputRef.current?.click()}
                 >
                   {t('profile.changeAvatar', { defaultValue: 'Đổi ảnh đại diện' })}
                 </Button>

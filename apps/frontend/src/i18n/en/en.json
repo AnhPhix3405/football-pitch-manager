@@ -293,9 +293,24 @@
     },
     "updateSuccess": "Profile updated successfully.",
     "updateError": "Failed to update profile. Please try again.",
+    "uploadingAvatar": "Uploading avatar...",
+    "avatarUploadSuccess": "Avatar updated successfully.",
+    "avatarUploadFailed": "Failed to upload avatar. Please try again.",
+    "avatarNotice": "Avatar upload feature coming soon.",
+    "passwordChanged": "Password changed successfully.",
     "nameRequired": "Please enter your display name.",
     "phoneLabel": "PHONE NUMBER",
-    "phonePlaceholder": "Enter contact phone number"
+    "phonePlaceholder": "Enter contact phone number",
+    "location": {
+      "title": "LOCATION COORDINATES",
+      "lat": "Latitude (Lat)",
+      "lng": "Longitude (Lng)",
+      "getCurrent": "Get current location",
+      "gettingCurrent": "Locating...",
+      "updateSuccess": "Location updated successfully.",
+      "updateError": "Unable to retrieve your current location.",
+      "notSupported": "Geolocation is not supported by your browser."
+    }
   },
   "notifications": {
     "title": "Notifications",
@@ -328,7 +343,13 @@
     "recallConfirm": "Are you sure you want to recall this message?",
     "editMessageTitle": "Edit message",
     "cancelEdit": "Cancel edit",
-    "saveEdit": "Save edit"
+    "saveEdit": "Save edit",
+    "attachImage": "Attach image",
+    "removeImage": "Remove image",
+    "uploadingImage": "Uploading image...",
+    "imageUploadFailed": "Failed to upload image. Please try again.",
+    "invalidImageFormat": "Only image files (JPG, PNG, WEBP, GIF) are accepted",
+    "imageSizeLimit": "Maximum image size is 10MB"
   },
   "language": {
     "vi": "Tiếng Việt",

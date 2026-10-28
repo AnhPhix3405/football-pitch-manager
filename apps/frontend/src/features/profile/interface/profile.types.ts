@@ -11,6 +11,8 @@ export interface UserProfile {
   skillLevel: string | null
   birthday: string | null
   gender: string | null
+  lat: number | null
+  lng: number | null
   createdAt: string
   updatedAt: string
 }
@@ -23,4 +25,28 @@ export interface UpdateUserProfilePayload {
   skillLevel?: string
   birthday?: string
   gender?: string
+  lat?: number
+  lng?: number
 }
+
+export interface UpdateUserLocationPayload {
+  lat: number
+  lng: number
+}
+
+export interface ProfileForm {
+  name: string
+  email: string
+  phone?: string
+  bio: string
+  lat?: number
+  lng?: number
+}
+
+export interface PasswordForm {
+  current: string
+  next: string
+  confirm: string
+}
+
+

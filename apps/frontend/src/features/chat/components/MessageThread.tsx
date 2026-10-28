@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef } from 'react'
 import { DeleteOutlined, EditOutlined } from '@ant-design/icons'
-import { Empty, Spin, Tooltip } from 'antd'
+import { Empty, Image, Spin, Tooltip } from 'antd'
 import { useTranslation } from 'react-i18next'
 import { useConfirmModal } from '~/hooks'
 import type { ChatMessage } from '../interface/chat.types'
@@ -141,19 +141,34 @@ export function MessageThread({
           className={`${msg.sender === 'me' ? 'mine' : ''} ${msg.isDeleted ? 'recalled' : ''}`}
         >
           <div className="message-bubble-wrapper">
-            <p>{msg.isDeleted ? t('chat.recalled', { defaultValue: 'Đã thu hồi' }) : msg.body}</p>
+            {msg.isDeleted ? (
+              <p>{t('chat.recalled', { defaultValue: 'Đã thu hồi' })}</p>
+            ) : msg.messageType === 'image' ? (
+              <div className="message-image-bubble">
+                <Image
+                  src={msg.body}
+                  alt="attachment"
+                  className="message-attachment-image"
+                  placeholder={<Spin size="small" />}
+                />
+              </div>
+            ) : (
+              <p>{msg.body}</p>
+            )}
             {msg.sender === 'me' && !msg.isDeleted && (
               <div className="message-actions">
-                <Tooltip title={t('chat.edit', { defaultValue: 'Chỉnh sửa' })}>
-                  <button
-                    type="button"
-                    className="message-action-btn"
-                    onClick={() => onStartEditMessage?.(msg)}
-                    aria-label={t('chat.edit', { defaultValue: 'Chỉnh sửa' })}
-                  >
-                    <EditOutlined />
-                  </button>
-                </Tooltip>
+                {msg.messageType !== 'image' && (
+                  <Tooltip title={t('chat.edit', { defaultValue: 'Chỉnh sửa' })}>
+                    <button
+                      type="button"
+                      className="message-action-btn"
+                      onClick={() => onStartEditMessage?.(msg)}
+                      aria-label={t('chat.edit', { defaultValue: 'Chỉnh sửa' })}
+                    >
+                      <EditOutlined />
+                    </button>
+                  </Tooltip>
+                )}
                 <Tooltip title={t('chat.recall', { defaultValue: 'Thu hồi' })}>
                   <button
                     type="button"

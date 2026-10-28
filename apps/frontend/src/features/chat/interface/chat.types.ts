@@ -33,6 +33,7 @@ export interface ChatMessage {
   createdAt?: string
   isEdited?: boolean
   isDeleted?: boolean
+  messageType?: string
 }
 
 export interface RawBackendMessage {

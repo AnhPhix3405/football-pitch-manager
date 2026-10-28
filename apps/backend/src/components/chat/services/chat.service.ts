@@ -1,15 +1,19 @@
 import {
   BadRequestException,
   ForbiddenException,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
+import { STORAGE_SERVICE_TOKEN } from '~/common/storage/constants/storage.constant';
+import type { IStorageService } from '~/common/storage/interfaces/storage-service.interface';
 import { ConversationMemberRepository } from '~/repositories/conversation-member.repository';
 import { ConversationRepository } from '~/repositories/conversation.repository';
 import { FieldRepository } from '~/repositories/field.repository';
 import { MessageRepository } from '~/repositories/message.repository';
 import { PostRepository } from '~/repositories/post.repository';
+import { CONVERSATION_TYPE, MESSAGE_TYPE } from '../constants/chat.constant';
 import { EditMessageDto, SendMessageDto } from '../dto/chat-event.dto';
 import { CreateConversationDto } from '../dto/create-conversation.dto';
 
@@ -21,6 +25,8 @@ export class ChatService {
     private readonly conversationRepository: ConversationRepository,
     private readonly fieldRepository: FieldRepository,
     private readonly postRepository: PostRepository,
+    @Inject(STORAGE_SERVICE_TOKEN)
+    private readonly storageService: IStorageService,
   ) {}
 
   async getUserConversations(userId: string) {
@@ -76,7 +82,7 @@ export class ChatService {
       );
       if (!conv) {
         conv = await this.conversationRepository.createWithMembers({
-          type: 'field',
+          type: CONVERSATION_TYPE.FIELD,
           relatedFieldId: field.id,
           memberUserIds: Array.from(new Set([userId, field.ownerId])),
         });
@@ -96,7 +102,7 @@ export class ChatService {
       );
       if (!conv) {
         conv = await this.conversationRepository.createWithMembers({
-          type: 'post',
+          type: CONVERSATION_TYPE.POST,
           relatedPostId: post.id,
           memberUserIds: Array.from(new Set([userId, post.userId])),
         });
@@ -117,7 +123,7 @@ export class ChatService {
       );
       if (!conv) {
         conv = await this.conversationRepository.createWithMembers({
-          type: 'direct',
+          type: CONVERSATION_TYPE.DIRECT,
           memberUserIds: [userId, dto.targetUserId],
         });
       }
@@ -144,7 +150,7 @@ export class ChatService {
     // 2. Nếu chưa có, tạo cuộc trò chuyện mới
     if (!conv) {
       conv = await this.conversationRepository.createWithMembers({
-        type: 'post',
+        type: CONVERSATION_TYPE.POST,
         relatedPostId: postId,
         memberUserIds: Array.from(new Set([hostUserId, applicantId])),
       });
@@ -153,7 +159,7 @@ export class ChatService {
     const message = await this.saveMessage(hostUserId, {
       conversationId: conv.id,
       content: `Chào bạn! Đội mình đã đồng ý ghép trận cho bài đăng "${postTitle}". Hãy trao đổi chi tiết tại đây nhé!`,
-      messageType: 'text',
+      messageType: MESSAGE_TYPE.TEXT,
     });
 
     return { conversation: conv, message };
@@ -166,7 +172,7 @@ export class ChatService {
         conversationId: payload.conversationId,
         senderId: userId,
         content: payload.content || null,
-        messageType: payload.messageType || 'text',
+        messageType: payload.messageType || MESSAGE_TYPE.TEXT,
         isEdited: false,
       }),
     );
@@ -207,11 +213,41 @@ export class ChatService {
       throw new NotFoundException('Message not found or unauthorized');
     }
 
+    if (message.messageType === MESSAGE_TYPE.IMAGE && message.content) {
+      try {
+        const storagePath = this.extractStoragePath(message.content);
+        if (storagePath) {
+          await this.storageService.deleteFile(storagePath);
+        }
+      } catch (err: unknown) {
+        // Log error but proceed with message soft deletion
+        console.error('Failed to delete image from Supabase storage:', err);
+      }
+    }
+
     const deletedAt = new Date();
     await this.messageRepository.updateMessage(messageId, {
       deletedAt,
+      content: null,
     });
 
-    return { ...message, deletedAt };
+    return { ...message, content: null, deletedAt };
+  }
+
+  private extractStoragePath(url: string): string | null {
+    try {
+      const urlObj = new URL(url);
+      const chatIndex = urlObj.pathname.indexOf('chat/');
+      if (chatIndex !== -1) {
+        return urlObj.pathname.substring(chatIndex);
+      }
+      return null;
+    } catch {
+      const chatIndex = url.indexOf('chat/');
+      if (chatIndex !== -1) {
+        return url.substring(chatIndex).split('?')[0];
+      }
+      return null;
+    }
   }
 }

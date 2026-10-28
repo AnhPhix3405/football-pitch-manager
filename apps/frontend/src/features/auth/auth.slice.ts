@@ -28,10 +28,16 @@ const authSlice = createSlice({
   reducers: {
     signedIn: (state, action: PayloadAction<AuthUser>) => { state.user = action.payload },
     signedOut: (state) => { state.user = null },
-    profileUpdated: (state, action: PayloadAction<{ name?: string }>) => {
+    profileUpdated: (
+      state,
+      action: PayloadAction<{ name?: string; avatarUrl?: string | null }>,
+    ) => {
       if (state.user) {
-        if (action.payload.name) {
+        if (action.payload.name !== undefined) {
           state.user.name = action.payload.name
+        }
+        if (action.payload.avatarUrl !== undefined) {
+          state.user.avatarUrl = action.payload.avatarUrl
         }
         try {
           const stored = window.localStorage.getItem(authSessionKey)

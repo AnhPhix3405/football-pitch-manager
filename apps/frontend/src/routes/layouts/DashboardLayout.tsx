@@ -21,6 +21,7 @@ import { AccountDropdown } from '../../components/AccountDropdown'
 import { BrandMark } from '../../components/BrandMark'
 import { LanguageSwitch } from '../../components/LanguageSwitch'
 import { NotificationDropdown } from '../../features/notifications'
+import { useSyncAuthProfile } from '../../hooks/useSyncAuthProfile'
 
 function Navigation({ close, mode }: { close?: () => void; mode: 'user' | 'owner' | 'admin' }) {
   const { t } = useTranslation()
@@ -68,6 +69,7 @@ function Navigation({ close, mode }: { close?: () => void; mode: 'user' | 'owner
 export function DashboardLayout({ mode = 'user' }: { mode?: 'user' | 'owner' | 'admin' }) {
   const [open, setOpen] = useState(false)
   const { t } = useTranslation()
+  useSyncAuthProfile()
 
   return (
     <div className="dashboard-shell">

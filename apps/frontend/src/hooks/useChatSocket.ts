@@ -31,6 +31,7 @@ function mapRawToChatMessage(raw: RawBackendMessage, currentUserId?: string): Ch
     createdAt: raw.createdAt,
     isEdited: Boolean(raw.isEdited),
     isDeleted,
+    messageType: raw.messageType || 'text',
   }
 }
 
@@ -186,7 +187,7 @@ export function useChatSocket(activeId: string) {
 
   // 3. Send message
   const sendMessage = useCallback(
-    (body: string) => {
+    (body: string, messageType: 'text' | 'image' = 'text') => {
       if (!body.trim() || !activeId) return
 
       try {
@@ -195,7 +196,7 @@ export function useChatSocket(activeId: string) {
           socket.emit('send_message', {
             conversationId: activeId,
             content: body.trim(),
-            messageType: 'text',
+            messageType,
           })
         }
       } catch {

@@ -82,6 +82,20 @@ export class UserProfileResponseDto {
   })
   gender!: string | null;
 
+  @ApiPropertyOptional({
+    description: 'Vĩ độ vị trí người dùng',
+    example: 10.762622,
+    nullable: true,
+  })
+  lat!: number | null;
+
+  @ApiPropertyOptional({
+    description: 'Kinh độ vị trí người dùng',
+    example: 106.660172,
+    nullable: true,
+  })
+  lng!: number | null;
+
   @ApiProperty({
     description: 'Thời điểm tạo hồ sơ',
     example: '2026-01-01T10:00:00.000Z',
@@ -111,6 +125,10 @@ export class UserProfileResponseDto {
     dto.skillLevel = profile?.skillLevel ?? null;
     dto.birthday = profile?.birthday ?? null;
     dto.gender = profile?.gender ?? null;
+    dto.lat =
+      user.lat !== null && user.lat !== undefined ? Number(user.lat) : null;
+    dto.lng =
+      user.lng !== null && user.lng !== undefined ? Number(user.lng) : null;
     dto.createdAt = profile?.createdAt ?? user.createdAt;
     dto.updatedAt = profile?.updatedAt ?? user.updatedAt;
     return dto;

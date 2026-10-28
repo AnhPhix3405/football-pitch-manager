@@ -6,10 +6,12 @@ import { AccountDropdown } from '../../components/AccountDropdown'
 import { BrandMark } from '../../components/BrandMark'
 import { LanguageSwitch } from '../../components/LanguageSwitch'
 import { NotificationDropdown } from '../../features/notifications'
+import { useSyncAuthProfile } from '../../hooks/useSyncAuthProfile'
 
 export function PublicLayout() {
   const { t } = useTranslation()
   const [isScrolled, setIsScrolled] = useState(false)
+  useSyncAuthProfile()
 
   useEffect(() => {
     const handleScroll = () => {

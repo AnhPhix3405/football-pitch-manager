@@ -1,4 +1,5 @@
 import { IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
+import { MESSAGE_TYPE } from '../constants/chat.constant';
 
 export class SendMessageDto {
   @IsUUID()
@@ -11,7 +12,7 @@ export class SendMessageDto {
 
   @IsString()
   @IsOptional()
-  messageType?: string = 'text';
+  messageType?: string = MESSAGE_TYPE.TEXT;
 }
 
 export class MarkAsDeliveredDto {

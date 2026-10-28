@@ -5,6 +5,7 @@ import {
   NestFastifyApplication,
 } from '@nestjs/platform-fastify';
 import { IoAdapter } from '@nestjs/platform-socket.io';
+import fastifyMultipart from '@fastify/multipart';
 import { AppModule } from './app.module';
 import { configureApplication } from './common/configure-application';
 import { configureSwagger } from './config/swagger.config';
@@ -13,6 +14,14 @@ async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
     new FastifyAdapter(),
+  );
+  await app.register(
+    fastifyMultipart as unknown as Parameters<typeof app.register>[0],
+    {
+      limits: {
+        fileSize: 10 * 1024 * 1024, // 10MB
+      },
+    },
   );
   app.useWebSocketAdapter(new IoAdapter(app));
   configureApplication(app);

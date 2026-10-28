@@ -31,7 +31,8 @@ describe('SupabaseStorageService', () => {
 
     configService = {
       get: jest.fn((key: string) => {
-        if (key === 'storage.supabaseUrl') return 'https://test-project.supabase.co';
+        if (key === 'storage.supabaseUrl')
+          return 'https://test-project.supabase.co';
         if (key === 'storage.supabaseKey') return 'test-service-role-key';
         if (key === 'storage.supabaseBucket') return 'test-bucket';
         return undefined;
@@ -44,11 +45,17 @@ describe('SupabaseStorageService', () => {
   describe('uploadFile', () => {
     it('uploads file successfully and returns publicUrl', async () => {
       mockUpload.mockResolvedValue({
-        data: { path: 'fields/pitch1.png', fullPath: 'test-bucket/fields/pitch1.png' },
+        data: {
+          path: 'fields/pitch1.png',
+          fullPath: 'test-bucket/fields/pitch1.png',
+        },
         error: null,
       });
       mockGetPublicUrl.mockReturnValue({
-        data: { publicUrl: 'https://test-project.supabase.co/storage/v1/object/public/test-bucket/fields/pitch1.png' },
+        data: {
+          publicUrl:
+            'https://test-project.supabase.co/storage/v1/object/public/test-bucket/fields/pitch1.png',
+        },
       });
 
       const buffer = Buffer.from('test-image-content');
@@ -123,12 +130,16 @@ describe('SupabaseStorageService', () => {
   describe('createSignedUrl', () => {
     it('generates signed url successfully', async () => {
       mockCreateSignedUrl.mockResolvedValue({
-        data: { signedUrl: 'https://supabase.co/storage/signed/file.jpg?token=abc' },
+        data: {
+          signedUrl: 'https://supabase.co/storage/signed/file.jpg?token=abc',
+        },
         error: null,
       });
 
       const signedUrl = await service.createSignedUrl('private/file.jpg', 3600);
-      expect(signedUrl).toBe('https://supabase.co/storage/signed/file.jpg?token=abc');
+      expect(signedUrl).toBe(
+        'https://supabase.co/storage/signed/file.jpg?token=abc',
+      );
     });
 
     it('throws ApplicationException if createSignedUrl fails', async () => {
@@ -137,9 +148,9 @@ describe('SupabaseStorageService', () => {
         error: { message: 'File not found' },
       });
 
-      await expect(service.createSignedUrl('private/file.jpg', 3600)).rejects.toThrow(
-        ApplicationException,
-      );
+      await expect(
+        service.createSignedUrl('private/file.jpg', 3600),
+      ).rejects.toThrow(ApplicationException);
     });
   });
 
@@ -148,7 +159,9 @@ describe('SupabaseStorageService', () => {
       const emptyConfigService = {
         get: jest.fn(() => undefined),
       } as unknown as ConfigService;
-      const unconfiguredService = new SupabaseStorageService(emptyConfigService);
+      const unconfiguredService = new SupabaseStorageService(
+        emptyConfigService,
+      );
 
       await expect(
         unconfiguredService.uploadFile({

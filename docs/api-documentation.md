@@ -82,7 +82,8 @@ Tài liệu chi tiết toàn bộ các API HTTP REST và WebSocket Gateway của
 | | `GET` | `/posts/:id/comments` | Public | Lấy danh sách bình luận dưới bài đăng |
 | | `POST` | `/posts/:id/comments` | User / Active | Gửi bình luận vào bài đăng |
 | **Hồ sơ cá nhân** | `GET` | `/user-profiles/me` | User / Active | Lấy thông tin hồ sơ của tài khoản đang đăng nhập |
-| | `PATCH` | `/user-profiles/me` | User / Active | Cập nhật thông tin hồ sơ cá nhân |
+| | `PATCH` | `/user-profiles/me` | User / Active | Cập nhật thông tin hồ sơ cá nhân và vị trí |
+| | `PATCH` | `/user-profiles/me/location` | User / Active | Cập nhật nhanh tọa độ vị trí người dùng (lat, lng) |
 | **Hồ sơ & Đăng ký chủ sân** | `POST` | `/owner-registration` | User / Active | Gửi đơn đăng ký trở thành chủ sân |
 | | `GET` | `/owner-registration/status` | User / Active | Kiểm tra tiến trình phê duyệt hồ sơ chủ sân |
 | | `GET` | `/owner-profiles/me` | User / Active | Lấy hồ sơ chủ sân của tài khoản hiện tại |
@@ -101,6 +102,7 @@ Tài liệu chi tiết toàn bộ các API HTTP REST và WebSocket Gateway của
 | | `GET` | `/chat/conversations` | Đã đăng nhập (JWT) | Lấy danh sách cuộc trò chuyện của tôi |
 | | `POST` | `/chat/conversations` | Đã đăng nhập (JWT) | Bắt đầu hoặc lấy cuộc trò chuyện |
 | | `GET` | `/chat/conversations/:id/messages` | Đã đăng nhập (JWT) | Lấy lịch sử tin nhắn (hỗ trợ phân trang limit/before) |
+| **Tải lên tệp (Upload)** | `POST` | `/upload/image` | User / Active | Tải lên hình ảnh lên Supabase Storage |
 
 ---
 
@@ -1205,6 +1207,83 @@ Tài liệu chi tiết toàn bộ các API HTTP REST và WebSocket Gateway của
     "success": true
   }
   ```
+
+---
+
+### 3.10. Tải Lên Tệp (Upload)
+
+#### 3.10.1. Tải lên hình ảnh (`POST /upload/image`)
+- **Quyền truy cập:** Đã đăng nhập (`active`)
+- **Query Parameters:**
+  - `folder` (optional, string): Thư mục lưu trữ trên Supabase Storage. Ví dụ: `avatars` (lưu vào `avatars/{userId}/{uuid}.ext`) hoặc `chat` (lưu vào `chat/{userId}/{uuid}.ext`). Mặc định: `chat`.
+- **Content-Type:** `multipart/form-data`
+- **Request Body (FormData):**
+  - `file`: File hình ảnh (chấp nhận `image/jpeg`, `image/png`, `image/webp`, `image/gif`, dung lượng tối đa 10MB)
+- **Response (`200 OK`):**
+  ```json
+  {
+    "url": "https://edpwyenilpultbnxfent.supabase.co/storage/v1/object/public/football-pitch-manager/avatars/userid/uuid.jpg",
+    "path": "avatars/userid/uuid.jpg"
+  }
+  ```
+
+---
+
+### 3.11. Hồ Sơ Cá Nhân (User Profiles)
+
+#### 3.11.1. Lấy thông tin hồ sơ của tài khoản đang đăng nhập (`GET /user-profiles/me`)
+- **Quyền truy cập:** Đã đăng nhập (`active`)
+- **Response (`200 OK`):**
+  ```json
+  {
+    "id": "e0a9d1fc-3d23-45f8-b3d2-a7d9f78bc412",
+    "userId": "9175df40-fc7c-4d50-b07e-a35417a2eef2",
+    "email": "user@pitchmaster.vn",
+    "phone": "0901234567",
+    "role": "user",
+    "status": "active",
+    "fullName": "Nguyễn Văn A",
+    "avatarUrl": "https://edpwyenilpultbnxfent.supabase.co/storage/v1/object/public/football-pitch-manager/avatars/userid/uuid.jpg",
+    "bio": "Đam mê bóng đá",
+    "skillLevel": "Trung bình",
+    "birthday": "1995-10-20",
+    "gender": "male",
+    "lat": 10.762622,
+    "lng": 106.660172,
+    "createdAt": "2026-01-01T10:00:00.000Z",
+    "updatedAt": "2026-01-01T10:30:00.000Z"
+  }
+  ```
+
+#### 3.11.2. Cập nhật thông tin hồ sơ (`PATCH /user-profiles/me`)
+- **Quyền truy cập:** Đã đăng nhập (`active`)
+- **Lưu ý nghiệp vụ:** Khi cập nhật trường `avatarUrl`, nếu avatar cũ được lưu trữ trên Supabase Storage thì hệ thống sẽ tự động xóa tệp ảnh cũ khỏi bucket Supabase để dọn dẹp dung lượng lưu trữ.
+- **Request Body (JSON):**
+  ```json
+  {
+    "fullName": "Nguyễn Văn B",
+    "avatarUrl": "https://edpwyenilpultbnxfent.supabase.co/storage/v1/object/public/football-pitch-manager/avatars/userid/new-uuid.jpg",
+    "bio": "Đam mê bóng đá, thích đá vị trí tiền vệ",
+    "skillLevel": "Khá",
+    "birthday": "1995-10-20",
+    "gender": "male",
+    "phone": "0909888999",
+    "lat": 10.776889,
+    "lng": 106.700806
+  }
+  ```
+- **Response (`200 OK`):** Trả về đối tượng `UserProfileResponseDto` tương tự 3.11.1.
+
+#### 3.11.3. Cập nhật nhanh vị trí người dùng (`PATCH /user-profiles/me/location`)
+- **Quyền truy cập:** Đã đăng nhập (`active`)
+- **Request Body (JSON):**
+  ```json
+  {
+    "lat": 10.776889,
+    "lng": 106.700806
+  }
+  ```
+- **Response (`200 OK`):** Trả về đối tượng `UserProfileResponseDto` tương tự 3.11.1.
 
 
 

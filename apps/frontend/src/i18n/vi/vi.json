@@ -293,9 +293,24 @@
     },
     "updateSuccess": "Hồ sơ đã được cập nhật thành công.",
     "updateError": "Cập nhật hồ sơ thất bại. Vui lòng thử lại.",
+    "uploadingAvatar": "Đang tải ảnh đại diện lên...",
+    "avatarUploadSuccess": "Cập nhật ảnh đại diện thành công.",
+    "avatarUploadFailed": "Tải ảnh đại diện thất bại. Vui lòng thử lại.",
+    "avatarNotice": "Tính năng tải ảnh đại diện sẽ sớm ra mắt.",
+    "passwordChanged": "Mật khẩu đã được thay đổi thành công.",
     "nameRequired": "Vui lòng nhập tên hiển thị.",
     "phoneLabel": "SỐ ĐIỆN THOẠI",
-    "phonePlaceholder": "Nhập số điện thoại liên hệ"
+    "phonePlaceholder": "Nhập số điện thoại liên hệ",
+    "location": {
+      "title": "TỌA ĐỘ VỊ TRÍ",
+      "lat": "Vĩ độ (Lat)",
+      "lng": "Kinh độ (Lng)",
+      "getCurrent": "Lấy vị trí hiện tại",
+      "gettingCurrent": "Đang lấy vị trí...",
+      "updateSuccess": "Cập nhật vị trí thành công.",
+      "updateError": "Không thể lấy vị trí hiện tại của bạn.",
+      "notSupported": "Trình duyệt không hỗ trợ Geolocation."
+    }
   },
   "notifications": {
     "title": "Thông báo",
@@ -328,7 +343,13 @@
     "recallConfirm": "Bạn có chắc chắn muốn thu hồi tin nhắn này không?",
     "editMessageTitle": "Chỉnh sửa tin nhắn",
     "cancelEdit": "Hủy chỉnh sửa",
-    "saveEdit": "Lưu chỉnh sửa"
+    "saveEdit": "Lưu chỉnh sửa",
+    "attachImage": "Đính kèm hình ảnh",
+    "removeImage": "Gỡ ảnh",
+    "uploadingImage": "Đang tải ảnh lên...",
+    "imageUploadFailed": "Tải ảnh lên thất bại. Vui lòng thử lại.",
+    "invalidImageFormat": "Chỉ chấp nhận file ảnh (JPG, PNG, WEBP, GIF)",
+    "imageSizeLimit": "Dung lượng ảnh tối đa là 10MB"
   },
   "language": {
     "vi": "Tiếng Việt",
