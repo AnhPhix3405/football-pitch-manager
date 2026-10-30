@@ -1,12 +1,10 @@
-import {
-  BadRequestException,
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
+import dayjs from 'dayjs';
 import { randomUUID } from 'node:crypto';
+import { ApplicationException } from '~/common/exceptions/application.exception';
 import { PostEntity } from '~/entities/post.entity';
 import { PostRepository } from '~/repositories/post.repository';
+import { POST_STATUS } from '../constants/post.constant';
 import { CreatePostDto } from '../dto/create-post.dto';
 import { QueryPostDto } from '../dto/query-post.dto';
 import { UpdatePostDto } from '../dto/update-post.dto';
@@ -35,17 +33,32 @@ export class PostService {
 
   async getPostDetail(id: string): Promise<PostEntity> {
     const post = await this.postRepository.findPostDetailById(id);
-    if (!post) {
-      throw new NotFoundException(
-        'Không tìm thấy bài đăng hoặc bài đã bị xóa.',
-      );
+    if (!post || post.deletedAt) {
+      throw new ApplicationException({
+        code: 'POST_NOT_FOUND',
+        messageKey: 'error.postNotFound',
+        status: HttpStatus.NOT_FOUND,
+      });
     }
     return post;
   }
 
   async createPost(userId: string, dto: CreatePostDto): Promise<PostEntity> {
+    const today = dayjs().format('YYYY-MM-DD');
+    if (dayjs(dto.playDate).isBefore(today)) {
+      throw new ApplicationException({
+        code: 'INVALID_PLAY_DATE',
+        messageKey: 'error.invalidPlayDate',
+        status: HttpStatus.BAD_REQUEST,
+      });
+    }
+
     if (dto.endTime && dto.startTime >= dto.endTime) {
-      throw new BadRequestException('Giờ kết thúc phải sau giờ bắt đầu.');
+      throw new ApplicationException({
+        code: 'INVALID_POST_TIME',
+        messageKey: 'error.invalidPostTime',
+        status: HttpStatus.BAD_REQUEST,
+      });
     }
 
     const post = this.postRepository.create({
@@ -57,10 +70,12 @@ export class PostService {
       startTime: dto.startTime,
       endTime: dto.endTime || null,
       skillLevelRequired: dto.skillLevelRequired?.trim() || null,
-      maxPlayers: dto.maxPlayers || 14,
+      maxPlayers: dto.maxPlayers ?? 14,
+      currentPlayers: 0,
+      version: 1,
       lat: dto.lat ? String(dto.lat) : null,
       lng: dto.lng ? String(dto.lng) : null,
-      status: 'open',
+      status: POST_STATUS.OPEN,
       deletedAt: null,
     });
 
@@ -74,18 +89,50 @@ export class PostService {
   ): Promise<PostEntity> {
     const post = await this.postRepository.findById(id);
     if (!post || post.deletedAt) {
-      throw new NotFoundException('Không tìm thấy bài đăng.');
+      throw new ApplicationException({
+        code: 'POST_NOT_FOUND',
+        messageKey: 'error.postNotFound',
+        status: HttpStatus.NOT_FOUND,
+      });
     }
 
     if (post.userId !== userId) {
-      throw new ForbiddenException(
-        'Bạn không có quyền chỉnh sửa bài đăng này.',
-      );
+      throw new ApplicationException({
+        code: 'FORBIDDEN_POST_ACTION',
+        messageKey: 'error.forbiddenPostAction',
+        status: HttpStatus.FORBIDDEN,
+      });
+    }
+
+    if (dto.playDate) {
+      const today = dayjs().format('YYYY-MM-DD');
+      if (dayjs(dto.playDate).isBefore(today)) {
+        throw new ApplicationException({
+          code: 'INVALID_PLAY_DATE',
+          messageKey: 'error.invalidPlayDate',
+          status: HttpStatus.BAD_REQUEST,
+        });
+      }
+      post.playDate = dto.playDate;
+    }
+
+    const effectiveStartTime = dto.startTime || post.startTime;
+    const effectiveEndTime =
+      dto.endTime !== undefined ? dto.endTime : post.endTime;
+    if (
+      effectiveEndTime &&
+      effectiveStartTime &&
+      effectiveStartTime >= effectiveEndTime
+    ) {
+      throw new ApplicationException({
+        code: 'INVALID_POST_TIME',
+        messageKey: 'error.invalidPostTime',
+        status: HttpStatus.BAD_REQUEST,
+      });
     }
 
     if (dto.title !== undefined) post.title = dto.title.trim();
     if (dto.content !== undefined) post.content = dto.content?.trim() || null;
-    if (dto.playDate !== undefined) post.playDate = dto.playDate;
     if (dto.startTime !== undefined) post.startTime = dto.startTime;
     if (dto.endTime !== undefined) post.endTime = dto.endTime || null;
     if (dto.skillLevelRequired !== undefined)
@@ -101,15 +148,23 @@ export class PostService {
   async deletePost(userId: string, id: string): Promise<void> {
     const post = await this.postRepository.findById(id);
     if (!post || post.deletedAt) {
-      throw new NotFoundException('Không tìm thấy bài đăng.');
+      throw new ApplicationException({
+        code: 'POST_NOT_FOUND',
+        messageKey: 'error.postNotFound',
+        status: HttpStatus.NOT_FOUND,
+      });
     }
 
     if (post.userId !== userId) {
-      throw new ForbiddenException('Bạn không có quyền xóa bài đăng này.');
+      throw new ApplicationException({
+        code: 'FORBIDDEN_POST_ACTION',
+        messageKey: 'error.forbiddenPostAction',
+        status: HttpStatus.FORBIDDEN,
+      });
     }
 
     post.deletedAt = new Date();
-    post.status = 'closed';
+    post.status = POST_STATUS.CANCELLED;
     await this.postRepository.save(post);
   }
 }

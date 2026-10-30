@@ -43,10 +43,17 @@ describe('TransactionRepository', () => {
   });
 
   it('finds transaction by refId and type', async () => {
-    const entity = { id: 'tx-1', refId: 'booking-1', type: 'booking_deposit' } as TransactionEntity;
+    const entity = {
+      id: 'tx-1',
+      refId: 'booking-1',
+      type: 'booking_deposit',
+    } as TransactionEntity;
     typeormRepo.findOne.mockResolvedValue(entity);
 
-    const result = await repository.findByRefIdAndType('booking-1', 'booking_deposit');
+    const result = await repository.findByRefIdAndType(
+      'booking-1',
+      'booking_deposit',
+    );
     expect(result).toEqual(entity);
     expect(typeormRepo.findOne).toHaveBeenCalledWith({
       where: { refId: 'booking-1', type: 'booking_deposit' },
@@ -67,7 +74,9 @@ describe('TransactionRepository', () => {
   it('updates status and optional gatewayRef', async () => {
     const entity = { id: 'tx-1', status: 'pending' } as TransactionEntity;
     typeormRepo.findOne.mockResolvedValue(entity);
-    typeormRepo.save.mockImplementation(async (item) => item as TransactionEntity);
+    typeormRepo.save.mockImplementation(
+      async (item) => item as TransactionEntity,
+    );
 
     const result = await repository.updateStatus('tx-1', 'success', 'VNP999');
     expect(result.status).toBe('success');

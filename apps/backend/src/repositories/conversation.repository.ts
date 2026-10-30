@@ -242,7 +242,6 @@ export class ConversationRepository extends BaseRepository<ConversationEntity> {
         'm2.conversation_id = c.id AND m2.user_id = :user2Id AND m2.deleted_at IS NULL',
         { user2Id },
       )
-      .where('c.deleted_at IS NULL')
       .orderBy('c.created_at', 'DESC');
 
     return qb.getOne();

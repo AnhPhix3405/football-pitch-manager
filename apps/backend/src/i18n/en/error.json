@@ -64,5 +64,19 @@
   "paymentAlreadyProcessed": "Payment transaction has already been processed",
   "bookingCannotBeRefunded": "Booking is not eligible for refund",
   "bookingAlreadyRefunded": "Booking has already been refunded",
-  "refundAmountInvalid": "Refund amount is invalid"
+  "refundAmountInvalid": "Refund amount is invalid",
+  "postNotFound": "Post not found or has been deleted",
+  "invalidPostTime": "End time must be after start time",
+  "invalidPlayDate": "Play date cannot be in the past",
+  "forbiddenPostAction": "You do not have permission to modify this post",
+  "commentEmpty": "Comment content cannot be empty",
+  "cannotApplyOwnPost": "You cannot apply to your own post",
+  "postNotOpen": "This post is currently not accepting applications",
+  "alreadyApplied": "You have already applied for this post",
+  "matchNotFound": "Match application not found",
+  "matchCannotCancel": "Cannot cancel application in current status",
+  "maxPlayersReached": "Post has already reached the maximum player limit",
+  "matchAlreadyAccepted": "This match application has already been accepted",
+  "matchAlreadyProcessed": "This match application has already been processed",
+  "forbiddenMatchAction": "Only the post owner has permission to process this request"
 }

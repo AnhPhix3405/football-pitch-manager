@@ -11,17 +11,17 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '~/components/auth/decorators/current-user.decorator';
 import { Public } from '~/components/auth/decorators/public.decorator';
 import { AccountStatusGuard } from '~/components/auth/guards/account-status.guard';
 import { JwtAuthGuard } from '~/components/auth/guards/jwt-auth.guard';
+import { ApiPostDocs } from '../docs/post.doc';
 import { CreatePostDto } from '../dto/create-post.dto';
 import { QueryPostDto } from '../dto/query-post.dto';
 import { UpdatePostDto } from '../dto/update-post.dto';
 import { PostService } from '../services/post.service';
 
-@ApiTags('Posts')
+@ApiPostDocs.controller()
 @Controller('posts')
 export class PostController {
   constructor(private readonly postService: PostService) {}
@@ -29,16 +29,15 @@ export class PostController {
   @Public()
   @Get()
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Lấy danh sách bài đăng tìm đối công khai' })
+  @ApiPostDocs.getPublicPosts()
   async getPublicPosts(@Query() query: QueryPostDto) {
     return this.postService.getPublicPosts(query);
   }
 
   @UseGuards(JwtAuthGuard, AccountStatusGuard)
-  @ApiBearerAuth()
   @Get('me')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Lấy danh sách bài đăng của user hiện tại' })
+  @ApiPostDocs.getMyPosts()
   async getMyPosts(
     @CurrentUser('id') userId: string,
     @Query() query: QueryPostDto,
@@ -49,16 +48,15 @@ export class PostController {
   @Public()
   @Get(':id')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Xem chi tiết bài đăng' })
+  @ApiPostDocs.getPostDetail()
   async getPostDetail(@Param('id') id: string) {
     return this.postService.getPostDetail(id);
   }
 
   @UseGuards(JwtAuthGuard, AccountStatusGuard)
-  @ApiBearerAuth()
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ summary: 'Tạo bài đăng tìm đối mới' })
+  @ApiPostDocs.createPost()
   async createPost(
     @CurrentUser('id') userId: string,
     @Body() dto: CreatePostDto,
@@ -67,10 +65,9 @@ export class PostController {
   }
 
   @UseGuards(JwtAuthGuard, AccountStatusGuard)
-  @ApiBearerAuth()
   @Patch(':id')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Chỉnh sửa bài đăng' })
+  @ApiPostDocs.updatePost()
   async updatePost(
     @CurrentUser('id') userId: string,
     @Param('id') id: string,
@@ -80,11 +77,13 @@ export class PostController {
   }
 
   @UseGuards(JwtAuthGuard, AccountStatusGuard)
-  @ApiBearerAuth()
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Đóng / Xóa bài đăng' })
-  async deletePost(@CurrentUser('id') userId: string, @Param('id') id: string) {
-    return this.postService.deletePost(userId, id);
+  @ApiPostDocs.deletePost()
+  async deletePost(
+    @CurrentUser('id') userId: string,
+    @Param('id') id: string,
+  ): Promise<void> {
+    await this.postService.deletePost(userId, id);
   }
 }

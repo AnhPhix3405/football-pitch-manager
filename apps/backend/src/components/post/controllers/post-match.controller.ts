@@ -9,22 +9,21 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '~/components/auth/decorators/current-user.decorator';
 import { AccountStatusGuard } from '~/components/auth/guards/account-status.guard';
 import { JwtAuthGuard } from '~/components/auth/guards/jwt-auth.guard';
+import { ApiPostMatchDocs } from '../docs/post-match.doc';
 import { PostMatchService } from '../services/post-match.service';
 
-@ApiTags('Post Matches (Matchmaking)')
+@ApiPostMatchDocs.controller()
 @UseGuards(JwtAuthGuard, AccountStatusGuard)
-@ApiBearerAuth()
 @Controller('posts/:id/matches')
 export class PostMatchController {
   constructor(private readonly postMatchService: PostMatchService) {}
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ summary: 'Gửi yêu cầu bắt đối cho bài đăng' })
+  @ApiPostMatchDocs.applyMatch()
   async applyMatch(
     @Param('id') postId: string,
     @CurrentUser('id') applicantId: string,
@@ -34,14 +33,17 @@ export class PostMatchController {
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Xem danh sách các đội/ứng viên xin bắt đối' })
-  async getPostMatches(@Param('id') postId: string) {
-    return this.postMatchService.getPostMatches(postId);
+  @ApiPostMatchDocs.getPostMatches()
+  async getPostMatches(
+    @Param('id') postId: string,
+    @CurrentUser('id') userId: string,
+  ) {
+    return this.postMatchService.getPostMatches(postId, userId);
   }
 
   @Patch(':matchId/accept')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Chấp nhận đội bắt đối (Chuyển bài sang matched)' })
+  @ApiPostMatchDocs.acceptMatch()
   async acceptMatch(
     @Param('id') postId: string,
     @Param('matchId') matchId: string,
@@ -52,7 +54,7 @@ export class PostMatchController {
 
   @Patch(':matchId/reject')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Từ chối đội bắt đối' })
+  @ApiPostMatchDocs.rejectMatch()
   async rejectMatch(
     @Param('id') postId: string,
     @Param('matchId') matchId: string,
@@ -63,11 +65,11 @@ export class PostMatchController {
 
   @Delete('me')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Người dùng rút lại yêu cầu bắt đối' })
+  @ApiPostMatchDocs.cancelMatch()
   async cancelMatch(
     @Param('id') postId: string,
     @CurrentUser('id') applicantId: string,
-  ) {
-    return this.postMatchService.cancelMatch(postId, applicantId);
+  ): Promise<void> {
+    await this.postMatchService.cancelMatch(postId, applicantId);
   }
 }

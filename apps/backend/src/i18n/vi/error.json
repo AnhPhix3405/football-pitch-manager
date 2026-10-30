@@ -64,5 +64,19 @@
   "paymentAlreadyProcessed": "Giao dịch thanh toán đã được xử lý trước đó",
   "bookingCannotBeRefunded": "Đơn đặt sân không đủ điều kiện hoàn tiền",
   "bookingAlreadyRefunded": "Đơn đặt sân đã được hoàn tiền trước đó",
-  "refundAmountInvalid": "Số tiền hoàn không hợp lệ"
+  "refundAmountInvalid": "Số tiền hoàn không hợp lệ",
+  "postNotFound": "Không tìm thấy bài đăng hoặc bài đã bị xóa",
+  "invalidPostTime": "Giờ kết thúc phải sau giờ bắt đầu",
+  "invalidPlayDate": "Ngày thi đấu không được trong quá khứ",
+  "forbiddenPostAction": "Bạn không có quyền thao tác trên bài đăng này",
+  "commentEmpty": "Nội dung bình luận không được để trống",
+  "cannotApplyOwnPost": "Bạn không thể tự ứng tuyển vào bài đăng của chính mình",
+  "postNotOpen": "Bài đăng này hiện không mở nhận ứng tuyển",
+  "alreadyApplied": "Bạn đã gửi yêu cầu ứng tuyển cho bài viết này rồi",
+  "matchNotFound": "Không tìm thấy yêu cầu ứng tuyển",
+  "matchCannotCancel": "Không thể rút lại yêu cầu ứng tuyển ở trạng thái hiện tại",
+  "maxPlayersReached": "Bài đăng đã đủ số người tham gia",
+  "matchAlreadyAccepted": "Yêu cầu ứng tuyển này đã được chấp nhận trước đó",
+  "matchAlreadyProcessed": "Yêu cầu ứng tuyển này đã được xử lý",
+  "forbiddenMatchAction": "Chỉ chủ bài đăng mới có quyền duyệt yêu cầu này"
 }

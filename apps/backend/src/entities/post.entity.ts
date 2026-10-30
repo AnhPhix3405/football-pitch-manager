@@ -1,4 +1,12 @@
-import { Check, Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
+import {
+  Check,
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  ManyToOne,
+  VersionColumn,
+} from 'typeorm';
 import { UuidEntity } from '../core/entities/uuid.entity';
 import { UserEntity } from './user.entity';
 
@@ -9,9 +17,22 @@ import { UserEntity } from './user.entity';
 @Index(['deletedAt'])
 @Index(['status', 'createdAt'])
 @Index(['status', 'playDate'])
+@Index('IDX_posts_status_playdate_deleted', ['status', 'playDate', 'deletedAt'])
+@Index('IDX_posts_user_status_deleted', ['userId', 'status', 'deletedAt'])
 @Index(['lat', 'lng'])
-@Check('"end_time" IS NULL OR "start_time" < "end_time"')
-@Check('"max_players" > 0')
+@Check(
+  'CHK_posts_time_order',
+  '"end_time" IS NULL OR "start_time" < "end_time"',
+)
+@Check('CHK_posts_max_players', '"max_players" > 0')
+@Check(
+  'CHK_posts_players_count',
+  '"current_players" >= 0 AND "current_players" <= "max_players"',
+)
+@Check(
+  'CHK_posts_status',
+  "\"status\" IN ('open', 'matched', 'closed', 'cancelled')",
+)
 export class PostEntity extends UuidEntity {
   @Column({ name: 'user_id', type: 'uuid' })
   userId!: string;
@@ -46,6 +67,12 @@ export class PostEntity extends UuidEntity {
 
   @Column({ name: 'max_players', type: 'int' })
   maxPlayers!: number;
+
+  @Column({ name: 'current_players', type: 'int', default: 0 })
+  currentPlayers!: number;
+
+  @VersionColumn({ default: 1 })
+  version!: number;
 
   @Column({ type: 'varchar', default: 'open' })
   status!: string;

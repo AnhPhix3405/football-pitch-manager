@@ -5,9 +5,7 @@ import {
   TableIndex,
 } from 'typeorm';
 
-export class PaymentTransactionsAndRefundConstraints2026103000001
-  implements MigrationInterface
-{
+export class PaymentTransactionsAndRefundConstraints2026103000001 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     // 1. Check constraints on transactions
     await queryRunner.createCheckConstraint(
@@ -65,14 +63,8 @@ export class PaymentTransactionsAndRefundConstraints2026103000001
       'transactions',
       'IDX_transactions_type_ref_status',
     );
-    await queryRunner.dropIndex(
-      'transactions',
-      'IDX_transactions_user_status',
-    );
-    await queryRunner.dropIndex(
-      'transactions',
-      'IDX_transactions_gateway_ref',
-    );
+    await queryRunner.dropIndex('transactions', 'IDX_transactions_user_status');
+    await queryRunner.dropIndex('transactions', 'IDX_transactions_gateway_ref');
 
     await queryRunner.dropCheckConstraint(
       'transactions',

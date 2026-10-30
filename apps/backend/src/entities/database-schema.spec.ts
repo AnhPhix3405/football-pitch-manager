@@ -216,6 +216,29 @@ describe('database schema metadata', () => {
     expect(transactionIndices).toContain('IDX_transactions_gateway_ref');
     expect(transactionIndices).toContain('IDX_transactions_user_status');
     expect(transactionIndices).toContain('IDX_transactions_type_ref_status');
+
+    const postChecks = storage.checks
+      .filter(
+        ({ target }) =>
+          typeof target === 'function' && target.name === 'PostEntity',
+      )
+      .map((c) => c.name);
+    expect(postChecks).toContain('CHK_posts_time_order');
+    expect(postChecks).toContain('CHK_posts_max_players');
+    expect(postChecks).toContain('CHK_posts_players_count');
+    expect(postChecks).toContain('CHK_posts_status');
+
+    const postMatchChecks = storage.checks
+      .filter(
+        ({ target }) =>
+          typeof target === 'function' && target.name === 'PostMatchEntity',
+      )
+      .map((c) => c.name);
+    expect(postMatchChecks).toContain('CHK_post_matches_status');
+
+    const postIndices = getIndicesForTarget('PostEntity').map((i) => i.name);
+    expect(postIndices).toContain('IDX_posts_status_playdate_deleted');
+    expect(postIndices).toContain('IDX_posts_user_status_deleted');
   });
 });
 

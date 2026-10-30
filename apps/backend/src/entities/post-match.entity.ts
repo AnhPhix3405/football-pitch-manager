@@ -1,4 +1,4 @@
-import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
+import { Check, Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 import { UuidEntity } from '../core/entities/uuid.entity';
 import { ConversationEntity } from './conversation.entity';
 import { PostEntity } from './post.entity';
@@ -9,6 +9,10 @@ import { UserEntity } from './user.entity';
 @Index(['postId'])
 @Index(['applicantId'])
 @Index(['postId', 'status'])
+@Check(
+  'CHK_post_matches_status',
+  "\"status\" IN ('pending', 'accepted', 'rejected', 'cancelled')",
+)
 export class PostMatchEntity extends UuidEntity {
   @Column({ name: 'post_id', type: 'uuid' })
   postId!: string;

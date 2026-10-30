@@ -66,16 +66,18 @@ export class CreatePostDto {
   @IsOptional()
   skillLevelRequired?: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     description:
       'Số người đá mỗi đội hoặc quy mô trận đấu (ví dụ: 10, 14, 5, 7)',
     example: 14,
+    default: 14,
   })
   @Type(() => Number)
   @IsInt()
-  @Min(2, { message: 'Số người tối thiểu là 2' })
+  @IsOptional()
+  @Min(1, { message: 'Số người tối thiểu là 1' })
   @Max(30, { message: 'Số người tối đa là 30' })
-  maxPlayers: number = 14;
+  maxPlayers?: number;
 
   @ApiPropertyOptional({
     description: 'Vĩ độ vị trí sân',

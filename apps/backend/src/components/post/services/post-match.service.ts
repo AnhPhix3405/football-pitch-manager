@@ -1,20 +1,20 @@
-import {
-  BadRequestException,
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
+import { DataSource } from 'typeorm';
+import { ApplicationException } from '~/common/exceptions/application.exception';
 import { ChatGateway } from '~/components/chat/gateways/chat.gateway';
 import { ChatService } from '~/components/chat/services/chat.service';
 import { NotificationService } from '~/components/notification/services/notification.service';
 import { PostMatchEntity } from '~/entities/post-match.entity';
+import { PostEntity } from '~/entities/post.entity';
 import { PostMatchRepository } from '~/repositories/post-match.repository';
 import { PostRepository } from '~/repositories/post.repository';
+import { POST_MATCH_STATUS, POST_STATUS } from '../constants/post.constant';
 
 @Injectable()
 export class PostMatchService {
   constructor(
+    private readonly dataSource: DataSource,
     private readonly postRepository: PostRepository,
     private readonly postMatchRepository: PostMatchRepository,
     private readonly chatService: ChatService,
@@ -28,39 +28,49 @@ export class PostMatchService {
   ): Promise<PostMatchEntity> {
     const post = await this.postRepository.findById(postId);
     if (!post || post.deletedAt) {
-      throw new NotFoundException('Bài đăng không tồn tại hoặc đã bị xóa.');
+      throw new ApplicationException({
+        code: 'POST_NOT_FOUND',
+        messageKey: 'error.postNotFound',
+        status: HttpStatus.NOT_FOUND,
+      });
     }
 
-    if (post.status !== 'open') {
-      throw new BadRequestException(
-        'Bài đăng này đã đóng hoặc đã có đội ghép.',
-      );
+    if (post.status !== POST_STATUS.OPEN) {
+      throw new ApplicationException({
+        code: 'POST_NOT_OPEN',
+        messageKey: 'error.postNotOpen',
+        status: HttpStatus.BAD_REQUEST,
+      });
     }
 
     if (post.userId === applicantId) {
-      throw new BadRequestException(
-        'Bạn không thể tự xin bắt đối vào bài đăng của chính mình.',
-      );
+      throw new ApplicationException({
+        code: 'CANNOT_APPLY_OWN_POST',
+        messageKey: 'error.cannotApplyOwnPost',
+        status: HttpStatus.BAD_REQUEST,
+      });
     }
 
     const existingMatch = await this.postMatchRepository.findByPostAndApplicant(
       postId,
       applicantId,
     );
+
     if (existingMatch) {
-      if (existingMatch.status === 'pending') {
-        throw new BadRequestException(
-          'Bạn đã gửi yêu cầu bắt đối cho bài viết này rồi, vui lòng chờ duyệt.',
-        );
+      if (
+        existingMatch.status === POST_MATCH_STATUS.PENDING ||
+        existingMatch.status === POST_MATCH_STATUS.ACCEPTED
+      ) {
+        throw new ApplicationException({
+          code: 'ALREADY_APPLIED',
+          messageKey: 'error.alreadyApplied',
+          status: HttpStatus.BAD_REQUEST,
+        });
       }
-      if (existingMatch.status === 'accepted') {
-        throw new BadRequestException(
-          'Yêu cầu bắt đối của bạn đã được chấp nhận trước đó.',
-        );
-      }
-      // If rejected or cancelled, re-open as pending
-      existingMatch.status = 'pending';
+
+      existingMatch.status = POST_MATCH_STATUS.PENDING;
       const saved = await this.postMatchRepository.save(existingMatch);
+
       await this.notificationService.createAndSend({
         userId: post.userId,
         type: 'match_request',
@@ -69,6 +79,7 @@ export class PostMatchService {
         refId: saved.id,
         link: '/messages',
       });
+
       return saved;
     }
 
@@ -76,11 +87,12 @@ export class PostMatchService {
       id: randomUUID(),
       postId,
       applicantId,
-      status: 'pending',
+      status: POST_MATCH_STATUS.PENDING,
       conversationId: null,
     });
 
     const saved = await this.postMatchRepository.save(match);
+
     await this.notificationService.createAndSend({
       userId: post.userId,
       type: 'match_request',
@@ -93,13 +105,28 @@ export class PostMatchService {
     return saved;
   }
 
-  async getPostMatches(postId: string): Promise<PostMatchEntity[]> {
+  async getPostMatches(
+    postId: string,
+    userId: string,
+  ): Promise<PostMatchEntity[]> {
     const post = await this.postRepository.findById(postId);
     if (!post || post.deletedAt) {
-      throw new NotFoundException('Không tìm thấy bài đăng.');
+      throw new ApplicationException({
+        code: 'POST_NOT_FOUND',
+        messageKey: 'error.postNotFound',
+        status: HttpStatus.NOT_FOUND,
+      });
     }
 
-    return this.postMatchRepository.findByPostId(postId);
+    if (post.userId === userId) {
+      return this.postMatchRepository.findByPostId(postId);
+    }
+
+    const myMatch = await this.postMatchRepository.findByPostAndApplicant(
+      postId,
+      userId,
+    );
+    return myMatch ? [myMatch] : [];
   }
 
   async acceptMatch(
@@ -107,67 +134,122 @@ export class PostMatchService {
     matchId: string,
     userId: string,
   ): Promise<PostMatchEntity> {
-    const post = await this.postRepository.findById(postId);
-    if (!post || post.deletedAt) {
-      throw new NotFoundException('Không tìm thấy bài đăng.');
-    }
+    const { acceptedMatch, post } = await this.dataSource.transaction(
+      async (manager) => {
+        const p = await manager
+          .getRepository(PostEntity)
+          .createQueryBuilder('post')
+          .setLock('pessimistic_write')
+          .where('post.id = :id', { id: postId })
+          .andWhere('post.deletedAt IS NULL')
+          .getOne();
 
-    if (post.userId !== userId) {
-      throw new ForbiddenException(
-        'Chỉ chủ bài đăng mới có quyền chấp nhận đội bắt đối.',
-      );
-    }
+        if (!p) {
+          throw new ApplicationException({
+            code: 'POST_NOT_FOUND',
+            messageKey: 'error.postNotFound',
+            status: HttpStatus.NOT_FOUND,
+          });
+        }
 
-    const match = await this.postMatchRepository.findById(matchId);
-    if (!match || match.postId !== postId) {
-      throw new NotFoundException('Không tìm thấy yêu cầu bắt đối này.');
-    }
+        if (p.userId !== userId) {
+          throw new ApplicationException({
+            code: 'FORBIDDEN_MATCH_ACTION',
+            messageKey: 'error.forbiddenMatchAction',
+            status: HttpStatus.FORBIDDEN,
+          });
+        }
 
-    match.status = 'accepted';
+        if (p.status !== POST_STATUS.OPEN || p.currentPlayers >= p.maxPlayers) {
+          throw new ApplicationException({
+            code: 'MAX_PLAYERS_REACHED',
+            messageKey: 'error.maxPlayersReached',
+            status: HttpStatus.BAD_REQUEST,
+          });
+        }
 
-    // Tự động tạo hội thoại chat giữa chủ bài và người xin ghép
-    const { conversation, message } =
-      await this.chatService.createMatchConversation(
-        post.id,
-        post.userId,
-        match.applicantId,
-        post.title,
-      );
+        const match = await manager
+          .getRepository(PostMatchEntity)
+          .findOne({ where: { id: matchId, postId } });
 
-    match.conversationId = conversation.id;
-    await this.postMatchRepository.save(match);
+        if (!match) {
+          throw new ApplicationException({
+            code: 'MATCH_NOT_FOUND',
+            messageKey: 'error.matchNotFound',
+            status: HttpStatus.NOT_FOUND,
+          });
+        }
 
-    post.status = 'matched';
-    await this.postRepository.save(post);
+        if (match.status === POST_MATCH_STATUS.ACCEPTED) {
+          throw new ApplicationException({
+            code: 'MATCH_ALREADY_ACCEPTED',
+            messageKey: 'error.matchAlreadyAccepted',
+            status: HttpStatus.BAD_REQUEST,
+          });
+        }
 
-    // Phát sự kiện realtime qua Socket
-    this.chatGateway.emitToConversation(
-      conversation.id,
-      'receive_message',
-      message,
-    );
-    this.chatGateway.emitToUsers(
-      [post.userId, match.applicantId],
-      'match:accepted',
-      {
-        matchId: match.id,
-        postId: post.id,
-        conversationId: conversation.id,
-        postTitle: post.title,
+        if (match.status !== POST_MATCH_STATUS.PENDING) {
+          throw new ApplicationException({
+            code: 'MATCH_ALREADY_PROCESSED',
+            messageKey: 'error.matchAlreadyProcessed',
+            status: HttpStatus.BAD_REQUEST,
+          });
+        }
+
+        match.status = POST_MATCH_STATUS.ACCEPTED;
+        const savedMatch = await manager.save(PostMatchEntity, match);
+
+        p.currentPlayers += 1;
+        if (p.currentPlayers >= p.maxPlayers) {
+          p.status = POST_STATUS.MATCHED;
+        }
+        const savedPost = await manager.save(PostEntity, p);
+
+        return { acceptedMatch: savedMatch, post: savedPost };
       },
     );
 
-    // Gửi thông báo realtime cho người được duyệt ghép trận
-    await this.notificationService.createAndSend({
-      userId: match.applicantId,
-      type: 'match_confirmed',
-      title: 'Ghép trận thành công',
-      content: `Yêu cầu ghép trận cho bài viết "${post.title}" đã được chấp thuận.`,
-      refId: conversation.id,
-      link: '/messages',
-    });
+    try {
+      const { conversation, message } =
+        await this.chatService.createMatchConversation(
+          post.id,
+          post.userId,
+          acceptedMatch.applicantId,
+          post.title,
+        );
 
-    return match;
+      acceptedMatch.conversationId = conversation.id;
+      await this.postMatchRepository.save(acceptedMatch);
+
+      this.chatGateway.emitToConversation(
+        conversation.id,
+        'receive_message',
+        message,
+      );
+      this.chatGateway.emitToUsers(
+        [post.userId, acceptedMatch.applicantId],
+        'match:accepted',
+        {
+          matchId: acceptedMatch.id,
+          postId: post.id,
+          conversationId: conversation.id,
+          postTitle: post.title,
+        },
+      );
+
+      await this.notificationService.createAndSend({
+        userId: acceptedMatch.applicantId,
+        type: 'match_confirmed',
+        title: 'Ghép trận thành công',
+        content: `Yêu cầu ghép trận cho bài viết "${post.title}" đã được chấp thuận.`,
+        refId: conversation.id,
+        link: '/messages',
+      });
+    } catch {
+      // Non-blocking chat/notification fallback
+    }
+
+    return acceptedMatch;
   }
 
   async rejectMatch(
@@ -177,21 +259,31 @@ export class PostMatchService {
   ): Promise<PostMatchEntity> {
     const post = await this.postRepository.findById(postId);
     if (!post || post.deletedAt) {
-      throw new NotFoundException('Không tìm thấy bài đăng.');
+      throw new ApplicationException({
+        code: 'POST_NOT_FOUND',
+        messageKey: 'error.postNotFound',
+        status: HttpStatus.NOT_FOUND,
+      });
     }
 
     if (post.userId !== userId) {
-      throw new ForbiddenException(
-        'Chỉ chủ bài đăng mới có quyền từ chối yêu cầu.',
-      );
+      throw new ApplicationException({
+        code: 'FORBIDDEN_MATCH_ACTION',
+        messageKey: 'error.forbiddenMatchAction',
+        status: HttpStatus.FORBIDDEN,
+      });
     }
 
     const match = await this.postMatchRepository.findById(matchId);
     if (!match || match.postId !== postId) {
-      throw new NotFoundException('Không tìm thấy yêu cầu bắt đối này.');
+      throw new ApplicationException({
+        code: 'MATCH_NOT_FOUND',
+        messageKey: 'error.matchNotFound',
+        status: HttpStatus.NOT_FOUND,
+      });
     }
 
-    match.status = 'rejected';
+    match.status = POST_MATCH_STATUS.REJECTED;
     return this.postMatchRepository.save(match);
   }
 
@@ -201,10 +293,22 @@ export class PostMatchService {
       applicantId,
     );
     if (!match) {
-      throw new NotFoundException('Không tìm thấy yêu cầu bắt đối của bạn.');
+      throw new ApplicationException({
+        code: 'MATCH_NOT_FOUND',
+        messageKey: 'error.matchNotFound',
+        status: HttpStatus.NOT_FOUND,
+      });
     }
 
-    match.status = 'cancelled';
+    if (match.status !== POST_MATCH_STATUS.PENDING) {
+      throw new ApplicationException({
+        code: 'MATCH_CANNOT_CANCEL',
+        messageKey: 'error.matchCannotCancel',
+        status: HttpStatus.BAD_REQUEST,
+      });
+    }
+
+    match.status = POST_MATCH_STATUS.CANCELLED;
     await this.postMatchRepository.save(match);
   }
 }

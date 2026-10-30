@@ -548,6 +548,7 @@ Tài liệu chi tiết toàn bộ các API HTTP REST và WebSocket Gateway của
         "endTime": "20:30",
         "skillLevelRequired": "Trung bình",
         "maxPlayers": 14,
+        "currentPlayers": 0,
         "lat": "10.762622",
         "lng": "106.660172",
         "status": "open",
@@ -626,7 +627,7 @@ Tài liệu chi tiết toàn bộ các API HTTP REST và WebSocket Gateway của
 #### 3.3.9. Chấp nhận đội bắt đối (`PATCH /posts/:id/matches/:matchId/accept`)
 - **Quyền truy cập:** Đã đăng nhập (Chính chủ bài đăng)
 - **Path Parameters:** `id` (Post ID), `matchId` (Match ID).
-- **Mô tả:** Chấp nhận ghép trận với đội ứng tuyển. Hệ thống tự động kiểm tra: nếu đã tồn tại cuộc trò chuyện từ trước giữa 2 người dùng thì tái sử dụng cuộc trò chuyện đó, nếu chưa có thì tạo mới; đồng thời tự động gửi tin nhắn xác nhận ghép trận vào phòng chat và phát WebSocket event `receive_message` cùng `match:accepted`.
+- **Mô tả:** Chấp nhận ghép trận với đội ứng tuyển (sử dụng Pessimistic Write Lock trong Database Transaction chống race condition khi duyệt đồng thời). Tự động tăng `currentPlayers` lên 1; khi đạt `maxPlayers` bài đăng sẽ chuyển `status: "matched"`. Hệ thống tự động kiểm tra: nếu đã tồn tại cuộc trò chuyện từ trước giữa 2 người dùng thì tái sử dụng, nếu chưa có thì tạo mới; đồng thời tự động gửi tin nhắn xác nhận vào phòng chat và phát WebSocket event `receive_message` cùng `match:accepted`.
 - **Response (`200 OK`):** Đối tượng `PostMatchEntity` với `status: "accepted"`, liên kết `conversationId`, bài đăng tự động chuyển `status: "matched"`.
 
 #### 3.3.10. Từ chối đội bắt đối (`PATCH /posts/:id/matches/:matchId/reject`)
