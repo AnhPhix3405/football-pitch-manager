@@ -12,12 +12,14 @@ import { FieldModule } from './components/field/field.module';
 import { HealthModule } from './components/health/health.module';
 import { NotificationModule } from './components/notification/notification.module';
 import { OwnerProfileModule } from './components/owner-profile/owner-profile.module';
+import { PaymentModule } from './components/payment/payment.module';
 import { PostModule } from './components/post/post.module';
 import { UserProfileModule } from './components/user-profile/user-profile.module';
 import { appConfig } from './config/app.config';
 import { validateEnvironment } from './config/environment.validation';
 import { i18nConfig } from './config/i18n.config';
 import { jwtConfig } from './config/jwt.config';
+import { paymentConfig } from './config/payment.config';
 import { storageConfig } from './config/storage.config';
 import { typeOrmDataSourceOptions } from './database/config/typeorm.options';
 
@@ -25,7 +27,7 @@ import { typeOrmDataSourceOptions } from './database/config/typeorm.options';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [appConfig, jwtConfig, storageConfig],
+      load: [appConfig, jwtConfig, storageConfig, paymentConfig],
       validate: validateEnvironment,
     }),
     ScheduleModule.forRoot(),
@@ -41,6 +43,7 @@ import { typeOrmDataSourceOptions } from './database/config/typeorm.options';
     AdminApprovalModule,
     FieldModule,
     BookingModule,
+    PaymentModule,
     ChatModule,
     PostModule,
     NotificationModule,

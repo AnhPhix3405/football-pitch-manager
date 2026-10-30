@@ -9,7 +9,22 @@ import { UserEntity } from './user.entity';
 @Index(['gatewayRef'])
 @Index(['userId', 'createdAt'])
 @Index(['type', 'refId'])
+@Index('IDX_transactions_gateway_ref', ['gateway', 'gatewayRef'])
+@Index('IDX_transactions_user_status', ['userId', 'status'])
+@Index('IDX_transactions_type_ref_status', ['type', 'refId', 'status'])
 @Check('"amount" >= 0')
+@Check(
+  'CHK_transactions_status',
+  `"status" IN ('pending', 'success', 'failed', 'refunded', 'cancelled')`,
+)
+@Check(
+  'CHK_transactions_type',
+  `"type" IN ('booking_deposit', 'subscription', 'refund')`,
+)
+@Check(
+  'CHK_transactions_gateway',
+  `"gateway" IS NULL OR "gateway" IN ('cash', 'vnpay')`,
+)
 export class TransactionEntity extends UuidEntity {
   @Column({ name: 'user_id', type: 'uuid' })
   userId!: string;

@@ -28,6 +28,14 @@ export const environmentValidationSchema = Joi.object({
   SUPABASE_STORAGE_BUCKET: Joi.string()
     .trim()
     .default('football-pitch-manager'),
+  VNPAY_URL: Joi.string()
+    .uri()
+    .default('https://sandbox.vnpayment.vn/paymentv2/vpcpay.html'),
+  VNPAY_TMN_CODE: Joi.string().default('CGXZLS0Z'),
+  VNPAY_HASH_SECRET: Joi.string().default('XNBCJFAKAZQSGTARRLGCHVZWCIOIGSHN'),
+  VNPAY_RETURN_URL: Joi.string()
+    .uri()
+    .default('http://localhost:3000/api/v1/payments/vnpay/return'),
 }).unknown(true);
 
 export const validateEnvironment = (config: Record<string, unknown>) => {

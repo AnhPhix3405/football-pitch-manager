@@ -1287,3 +1287,125 @@ Tài liệu chi tiết toàn bộ các API HTTP REST và WebSocket Gateway của
 
 
 
+
+### 3.12. Nhóm API Thanh toán & Hoàn tiền (Payment & Refund)
+
+#### 3.12.1. Chọn phương thức thanh toán booking (`POST /bookings/:bookingId/payment-method`)
+- **Quyền truy cập:** User (Chính chủ đơn booking)
+- **Mô tả:** Khách hàng lựa chọn hình thức thanh toán (`cash` hoặc `vnpay`). Hệ thống khởi tạo bản ghi `transactions` ở trạng thái `pending` với số tiền cọc hoặc tổng tiền.
+- **Request Body (`SelectPaymentMethodDto`):**
+  ```json
+  {
+    "method": "cash"
+  }
+  ```
+- **Response (`200 OK`):**
+  ```json
+  {
+    "success": true,
+    "data": {
+      "id": "8f0a0d92-23c2-466d-92a0-4592a407e3d1",
+      "userId": "6b6d57a2-19bc-4678-831e-b816a75f0a0e",
+      "type": "booking_deposit",
+      "refId": "c81d2977-4768-4870-a033-dcc3cca73f4d",
+      "amount": "132000.00",
+      "status": "pending",
+      "gateway": "cash",
+      "gatewayRef": null,
+      "createdAt": "2026-10-30T10:00:00.000Z",
+      "updatedAt": "2026-10-30T10:00:00.000Z"
+    }
+  }
+  ```
+
+#### 3.12.2. Chủ sân xác nhận thu tiền mặt (`POST /owner/bookings/:bookingId/confirm-cash`)
+- **Quyền truy cập:** Owner (Chủ cụm sân có đơn) / Admin
+- **Mô tả:** Chủ sân xác nhận khách hàng đã thanh toán tiền mặt thành công. Hệ thống cập nhật `transactions.status = 'success'` và `bookings.payment_status = 'paid'`.
+- **Request Body (`ConfirmCashPaymentDto`):**
+  ```json
+  {
+    "note": "Khách hàng đã thanh toán đủ tiền mặt tại quầy"
+  }
+  ```
+- **Response (`200 OK`):** Trả về đối tượng `PaymentTransactionResponseDto` với `status: "success"`.
+
+#### 3.12.3. Khởi tạo thanh toán VNPay Sandbox (`POST /payments/vnpay/create-url`)
+- **Quyền truy cập:** User đã đăng nhập (`active`)
+- **Mô tả:** Tạo link thanh toán VNPay trực tuyến kèm chữ ký số bảo mật HMAC-SHA512.
+- **Request Body (`CreateVnpayUrlDto`):**
+  ```json
+  {
+    "bookingId": "c81d2977-4768-4870-a033-dcc3cca73f4d",
+    "orderInfo": "Thanh toan tien coc dat san"
+  }
+  ```
+- **Response (`200 OK`):**
+  ```json
+  {
+    "success": true,
+    "data": {
+      "paymentUrl": "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html?vnp_Amount=13200000&vnp_Command=pay&vnp_CreateDate=20261030100000&vnp_CurrCode=VND&vnp_IpAddr=127.0.0.1&vnp_Locale=vn&vnp_OrderInfo=Thanh+toan+tien+coc+dat+san&vnp_OrderType=other&vnp_ReturnUrl=http%3A%2F%2Flocalhost%3A3000%2Fapi%2Fv1%2Fpayments%2Fvnpay%2Freturn&vnp_TmnCode=CGXZLS0Z&vnp_TxnRef=8f0a0d92-23c2-466d-92a0-4592a407e3d1&vnp_Version=2.1.0&vnp_SecureHash=abcdef123456...",
+      "txnRef": "8f0a0d92-23c2-466d-92a0-4592a407e3d1"
+    }
+  }
+  ```
+
+#### 3.12.4. Webhook IPN xử lý kết quả thanh toán từ VNPay (`GET /payments/vnpay/ipn`)
+- **Quyền truy cập:** Cổng thanh toán VNPay (Server-to-Server, Public)
+- **Mô tả:** Webhook nhận thông báo kết quả giao dịch ngầm. Hệ thống kiểm tra checksum HMAC-SHA512, đối soát số tiền `vnp_Amount`, áp dụng cơ chế chống callback lặp (Idempotency). Khi giao dịch thành công (`vnp_ResponseCode = '00'`), tự động cập nhật `bookings.payment_status = 'paid'`.
+- **Response (`200 OK` - Chuẩn VNPay):**
+  ```json
+  {
+    "success": true,
+    "data": {
+      "RspCode": "00",
+      "Message": "Confirm Success"
+    }
+  }
+  ```
+  *(Trường hợp callback lặp: trả về `RspCode: "02" - Order already confirmed` mà không xử lý lại)*.
+
+#### 3.12.5. Trang điều hướng kết quả thanh toán VNPay (`GET /payments/vnpay/return`)
+- **Quyền truy cập:** Public
+- **Mô tả:** Nhận redirect người dùng về từ trang thanh toán VNPay, xác thực chữ ký và cung cấp tóm tắt trạng thái giao dịch cho giao diện.
+- **Response (`200 OK`):**
+  ```json
+  {
+    "success": true,
+    "data": {
+      "isValid": true,
+      "isSuccess": true,
+      "txnRef": "8f0a0d92-23c2-466d-92a0-4592a407e3d1",
+      "transactionNo": "14598201",
+      "amount": 132000,
+      "bankCode": "NCB",
+      "message": "Giao dịch thành công"
+    }
+  }
+  ```
+
+#### 3.12.6. Hoàn tiền giao dịch booking (`POST /payments/bookings/:bookingId/refund`)
+- **Quyền truy cập:** Owner (Chủ cụm sân có đơn) / Admin
+- **Mô tả:** Xử lý hoàn tiền cho các đơn booking đã thanh toán (`payment_status = 'paid'`) nhưng bị hủy hoặc từ chối. Hệ thống tạo một bản ghi `transactions` mới có `type = 'refund'` và chuyển trạng thái `bookings.payment_status = 'refunded'`.
+- **Request Body (`RefundPaymentDto`):**
+  ```json
+  {
+    "amount": 132000,
+    "reason": "Chủ sân hủy do thời tiết mưa bão sân ngập nước"
+  }
+  ```
+- **Response (`200 OK`):**
+  ```json
+  {
+    "success": true,
+    "data": {
+      "refundTransactionId": "a1b2c3d4-e5f6-4789-90ab-cdef12345678",
+      "bookingId": "c81d2977-4768-4870-a033-dcc3cca73f4d",
+      "refundAmount": "132000.00",
+      "paymentStatus": "refunded",
+      "transactionStatus": "success",
+      "reason": "Chủ sân hủy do thời tiết mưa bão sân ngập nước",
+      "createdAt": "2026-10-30T10:15:00.000Z"
+    }
+  }
+  ```

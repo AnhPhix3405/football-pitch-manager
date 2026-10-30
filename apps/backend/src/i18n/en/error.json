@@ -54,5 +54,15 @@
   "invalidBookingStatusTransition": "Invalid booking status transition",
   "courtUnavailable": "No courts are available in this time range",
   "bookingCannotBeCancelled": "Booking cannot be cancelled in its current status",
-  "serviceNotBelongToField": "Selected service does not belong to this field or is inactive"
+  "serviceNotBelongToField": "Selected service does not belong to this field or is inactive",
+  "paymentMethodNotSupported": "Payment method is not supported",
+  "bookingAlreadyPaid": "This booking is already paid",
+  "bookingNotEligibleForPayment": "Booking is not eligible for payment in its current status",
+  "transactionNotFound": "Transaction not found",
+  "invalidPaymentAmount": "Payment amount does not match order details",
+  "invalidPaymentChecksum": "Invalid transaction checksum signature",
+  "paymentAlreadyProcessed": "Payment transaction has already been processed",
+  "bookingCannotBeRefunded": "Booking is not eligible for refund",
+  "bookingAlreadyRefunded": "Booking has already been refunded",
+  "refundAmountInvalid": "Refund amount is invalid"
 }

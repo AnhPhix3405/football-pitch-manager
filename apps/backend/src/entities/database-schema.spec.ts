@@ -193,6 +193,29 @@ describe('database schema metadata', () => {
     expect(bookingChecks).toContain('CHK_bookings_status');
     expect(bookingChecks).toContain('CHK_bookings_court_type');
     expect(bookingChecks).toContain('CHK_bookings_payment_status');
+
+    const transactionChecks = storage.checks
+      .filter(
+        ({ target }) =>
+          typeof target === 'function' && target.name === 'TransactionEntity',
+      )
+      .map((c) => c.name);
+    expect(transactionChecks).toContain('CHK_transactions_status');
+    expect(transactionChecks).toContain('CHK_transactions_type');
+    expect(transactionChecks).toContain('CHK_transactions_gateway');
+
+    const getIndicesForTarget = (entityName: string) =>
+      storage.indices.filter(
+        ({ target }) =>
+          typeof target === 'function' && target.name === entityName,
+      );
+
+    const transactionIndices = getIndicesForTarget('TransactionEntity').map(
+      (i) => i.name,
+    );
+    expect(transactionIndices).toContain('IDX_transactions_gateway_ref');
+    expect(transactionIndices).toContain('IDX_transactions_user_status');
+    expect(transactionIndices).toContain('IDX_transactions_type_ref_status');
   });
 });
 

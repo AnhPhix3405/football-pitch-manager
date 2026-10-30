@@ -54,5 +54,15 @@
   "invalidBookingStatusTransition": "Không thể chuyển trạng thái đơn đặt sân theo yêu cầu",
   "courtUnavailable": "Không còn sân con nào khả dụng trong khung giờ này",
   "bookingCannotBeCancelled": "Đơn đặt sân ở trạng thái hiện tại không thể hủy",
-  "serviceNotBelongToField": "Dịch vụ được chọn không thuộc cụm sân này hoặc đã ngừng cung cấp"
+  "serviceNotBelongToField": "Dịch vụ được chọn không thuộc cụm sân này hoặc đã ngừng cung cấp",
+  "paymentMethodNotSupported": "Phương thức thanh toán không được hỗ trợ",
+  "bookingAlreadyPaid": "Đơn đặt sân này đã được thanh toán trước đó",
+  "bookingNotEligibleForPayment": "Đơn đặt sân không ở trạng thái hợp lệ để thanh toán",
+  "transactionNotFound": "Không tìm thấy thông tin giao dịch",
+  "invalidPaymentAmount": "Số tiền thanh toán không khớp với thông tin đơn hàng",
+  "invalidPaymentChecksum": "Chữ ký số xác thực giao dịch không hợp lệ",
+  "paymentAlreadyProcessed": "Giao dịch thanh toán đã được xử lý trước đó",
+  "bookingCannotBeRefunded": "Đơn đặt sân không đủ điều kiện hoàn tiền",
+  "bookingAlreadyRefunded": "Đơn đặt sân đã được hoàn tiền trước đó",
+  "refundAmountInvalid": "Số tiền hoàn không hợp lệ"
 }

@@ -223,7 +223,7 @@ describe('TokenService', () => {
         httpOnly: true,
         secure: false,
         sameSite: 'lax',
-        path: '/api/auth',
+        path: '/',
         maxAge: 604800, // 7d = 604800s
       });
       expect(tokenService.getRefreshCookieName()).toBe('refresh_token');

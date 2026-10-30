@@ -16,6 +16,10 @@ describe('validateEnvironment', () => {
       JWT_REFRESH_EXPIRES_IN: '7d',
       JWT_REFRESH_COOKIE_NAME: 'refresh_token',
       LOG_LEVEL: 'log',
+      VNPAY_URL: 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html',
+      VNPAY_TMN_CODE: 'CGXZLS0Z',
+      VNPAY_HASH_SECRET: 'XNBCJFAKAZQSGTARRLGCHVZWCIOIGSHN',
+      VNPAY_RETURN_URL: 'http://localhost:3000/api/v1/payments/vnpay/return',
     });
   });
 
