@@ -17,7 +17,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useAppSelector } from '../../app/hooks'
 import { useConfirmModal } from '../../hooks'
 import { PillButton } from '../../components/PillButton'
-import { matchPosts, type MatchPost } from '../user/user.data'
+import type { MatchPost } from '../user/user.data'
 import { mapBackendPostToMatchPost } from './hooks/usePublicPosts'
 import { usePostDetail } from './hooks/usePostDetail'
 import type { BackendPostMatch } from './interface/post.types'
@@ -45,10 +45,9 @@ export function PostDetailPage() {
   const [commentText, setCommentText] = useState('')
   const [messageApi, contextHolder] = message.useMessage()
 
-  const fallbackPost = matchPosts.find((item) => item.id === postId)
   const post: MatchPost | undefined = postData
     ? mapBackendPostToMatchPost(postData)
-    : fallbackPost
+    : undefined
 
   const isOwner = Boolean(currentUser?.id && postData?.userId === currentUser.id)
   const hasApplied = Boolean(
@@ -186,6 +185,13 @@ export function PostDetailPage() {
             </Tag>
             <Tag>{post.status.toUpperCase()}</Tag>
           </header>
+
+          {post.imageUrl && (
+            <div className="post-detail__cover">
+              <img src={post.imageUrl} alt={post.title} loading="lazy" decoding="async" />
+            </div>
+          )}
+
           <h1>{post.title}</h1>
           <div className="post-metadata">
             <span>

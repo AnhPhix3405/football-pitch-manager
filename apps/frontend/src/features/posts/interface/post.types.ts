@@ -3,6 +3,7 @@ export interface BackendPostUser {
   email: string
   fullName?: string | null
   phone?: string | null
+  avatarUrl?: string | null
 }
 
 export interface BackendPost {
@@ -19,6 +20,7 @@ export interface BackendPost {
   status: 'open' | 'matched' | 'closed'
   lat?: string | null
   lng?: string | null
+  imageUrl?: string | null
   createdAt: string
   updatedAt: string
 }
@@ -59,6 +61,7 @@ export interface CreatePostPayload {
   maxPlayers?: number
   lat?: number | string
   lng?: number | string
+  imageUrl?: string
 }
 
 export interface UpdatePostPayload extends Partial<CreatePostPayload> {

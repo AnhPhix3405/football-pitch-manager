@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FindOptionsWhere, LessThan, Repository } from 'typeorm';
+import { And, FindOptionsWhere, LessThan, MoreThan, Repository } from 'typeorm';
 import { BaseRepository } from '~/core/base/base-repositories';
 import { MessageEntity } from '~/entities/message.entity';
 
@@ -20,13 +20,18 @@ export class MessageRepository extends BaseRepository<MessageEntity> {
     conversationId: string,
     limit = 20,
     before?: string,
+    afterDate?: Date,
   ): Promise<MessageEntity[]> {
     const where: FindOptionsWhere<MessageEntity> = {
       conversationId,
     };
 
-    if (before) {
+    if (before && afterDate) {
+      where.createdAt = And(MoreThan(afterDate), LessThan(new Date(before)));
+    } else if (before) {
       where.createdAt = LessThan(new Date(before));
+    } else if (afterDate) {
+      where.createdAt = MoreThan(afterDate);
     }
 
     const messages = await this.repository.find({
@@ -38,5 +43,20 @@ export class MessageRepository extends BaseRepository<MessageEntity> {
     });
 
     return messages.reverse();
+  }
+
+  async findImagesByConversationId(
+    conversationId: string,
+  ): Promise<MessageEntity[]> {
+    return this.repository.find({
+      where: {
+        conversationId,
+        messageType: 'image',
+      },
+    });
+  }
+
+  async deleteByConversationId(conversationId: string): Promise<void> {
+    await this.repository.delete({ conversationId });
   }
 }

@@ -107,6 +107,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const userId = client.data.userId;
     const message = await this.chatService.saveMessage(userId, payload);
     this.server.to(payload.conversationId).emit('receive_message', message);
+    const memberUserIds = await this.chatService.getConversationMemberUserIds(
+      payload.conversationId,
+    );
+    this.emitToUsers(memberUserIds, 'receive_message', message);
   }
 
   @SubscribeMessage('mark_as_delivered')
@@ -143,6 +147,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const userId = client.data.userId;
     const edited = await this.chatService.editMessage(userId, payload);
     this.server.to(edited.conversationId).emit('message_edited', edited);
+    const memberUserIds = await this.chatService.getConversationMemberUserIds(
+      edited.conversationId,
+    );
+    this.emitToUsers(memberUserIds, 'message_edited', edited);
   }
 
   @SubscribeMessage('delete_message')
@@ -155,9 +163,16 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       userId,
       payload.messageId,
     );
-    this.server.to(deleted.conversationId).emit('message_deleted', {
+    const deletePayload = {
       messageId: payload.messageId,
       conversationId: deleted.conversationId,
-    });
+    };
+    this.server
+      .to(deleted.conversationId)
+      .emit('message_deleted', deletePayload);
+    const memberUserIds = await this.chatService.getConversationMemberUserIds(
+      deleted.conversationId,
+    );
+    this.emitToUsers(memberUserIds, 'message_deleted', deletePayload);
   }
 }

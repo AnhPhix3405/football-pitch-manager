@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -15,6 +16,7 @@ import { JwtAuthGuard } from '~/components/auth/guards/jwt-auth.guard';
 import {
   ApiChatControllerDoc,
   ApiCreateConversationDoc,
+  ApiDeleteConversationDoc,
   ApiGetConversationsDoc,
   ApiGetMessagesDoc,
 } from '../docs/chat.doc';
@@ -62,5 +64,16 @@ export class ChatController {
       parsedLimit,
       before,
     );
+  }
+
+  @UseGuards(JwtAuthGuard, AccountStatusGuard)
+  @Delete('conversations/:id')
+  @HttpCode(HttpStatus.OK)
+  @ApiDeleteConversationDoc()
+  async deleteConversation(
+    @CurrentUser('id') userId: string,
+    @Param('id') conversationId: string,
+  ) {
+    return this.chatService.deleteConversation(userId, conversationId);
   }
 }

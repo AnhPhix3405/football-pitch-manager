@@ -12,6 +12,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '../app/hooks'
 import { signedOut } from '../features/auth/auth.slice'
 import { logout } from '../features/auth/service/auth.service'
+import { disconnectChatSocket } from '../features/chat/service/chat-socket.service'
 
 interface AccountDropdownProps {
   placement?: DropdownProps['placement']
@@ -35,6 +36,7 @@ export function AccountDropdown({
     } catch {
       // Fallback
     } finally {
+      disconnectChatSocket()
       dispatch(signedOut())
       navigate('/auth/login')
     }

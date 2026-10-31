@@ -1,12 +1,21 @@
 import { io, Socket } from 'socket.io-client'
-import { ACCESS_TOKEN_KEY } from '../../../config/axios.config'
+import { ACCESS_TOKEN_KEY } from '../../../constants/auth.constant'
 import { env } from '../../../config/env'
 
 let socket: Socket | null = null
+let currentSocketToken: string | null = null
 
 export function getChatSocket(): Socket {
+  const token = window.localStorage.getItem(ACCESS_TOKEN_KEY) || ''
+
+  if (socket && currentSocketToken !== token) {
+    socket.disconnect()
+    socket = null
+    currentSocketToken = null
+  }
+
   if (!socket) {
-    const token = window.localStorage.getItem(ACCESS_TOKEN_KEY) || ''
+    currentSocketToken = token
     socket = io(`${env.apiUrl}/chat`, {
       transports: ['websocket', 'polling'],
       auth: { token },
@@ -17,8 +26,15 @@ export function getChatSocket(): Socket {
 }
 
 export function connectChatSocket(): Socket {
-  const s = getChatSocket()
   const token = window.localStorage.getItem(ACCESS_TOKEN_KEY) || ''
+
+  if (socket && currentSocketToken !== token) {
+    socket.disconnect()
+    socket = null
+    currentSocketToken = null
+  }
+
+  const s = getChatSocket()
   s.auth = { token }
   if (!s.connected) {
     s.connect()
@@ -30,5 +46,6 @@ export function disconnectChatSocket(): void {
   if (socket) {
     socket.disconnect()
     socket = null
+    currentSocketToken = null
   }
 }

@@ -32,7 +32,7 @@ import { Link } from 'react-router-dom'
 import { useAppSelector } from '../../app/hooks'
 import { useUserProfile } from '../../hooks/useUserProfile'
 import { updateMyProfile } from '../owner/service/owner.service'
-import { matchPosts, type MatchPost } from '../user/user.data'
+import type { MatchPost } from '../user/user.data'
 import { useBookings, type BookingFilterType } from '../bookings/hooks/useBookings'
 import { useMyPosts } from '../posts/hooks/useMyPosts'
 import { deletePost } from '../posts/service/post.service'
@@ -73,8 +73,7 @@ export function ProfileSettingsPage() {
   const [isCreatePostOpen, setIsCreatePostOpen] = useState(false)
   const { apiPosts, loading: postsLoading, refetch: refetchPosts } = useMyPosts(postStatus)
 
-  const visiblePosts =
-    apiPosts.length > 0 ? apiPosts : matchPosts.filter((post) => post.status === postStatus)
+  const visiblePosts = apiPosts
 
   const currentLang = (i18n.resolvedLanguage || i18n.language || 'vi').toLowerCase().startsWith('en')
     ? 'en'

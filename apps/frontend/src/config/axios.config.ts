@@ -1,8 +1,10 @@
 import axios, { type InternalAxiosRequestConfig } from 'axios'
+import { ACCESS_TOKEN_KEY } from '../constants/auth.constant'
+import { disconnectChatSocket } from '../features/chat/service/chat-socket.service'
 import { env } from './env'
 import i18n from './i18n'
 
-export const ACCESS_TOKEN_KEY = 'pitchmaster.accessToken'
+export { ACCESS_TOKEN_KEY }
 
 export interface ApiResponse<T = unknown> {
   success: boolean
@@ -64,6 +66,7 @@ const processQueue = (error: unknown, token: string | null = null) => {
 }
 
 function handleSessionExpired() {
+  disconnectChatSocket()
   window.localStorage.removeItem(ACCESS_TOKEN_KEY)
   window.localStorage.removeItem('pitchmaster.authUser')
   window.sessionStorage.removeItem('pitchmaster.authUser')

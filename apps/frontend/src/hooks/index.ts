@@ -8,4 +8,5 @@ export * from '../features/owner/hooks/useOwnerFields'
 export * from '../features/admin/hooks/useAdminApprovals'
 export * from './useChatSocket'
 export * from './useChatConversations'
+export * from './useCreatePost'
 

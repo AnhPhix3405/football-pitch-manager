@@ -25,6 +25,7 @@ export interface ConversationSummaryItem {
     id: string;
     content: string | null;
     senderId: string;
+    messageType?: string;
     createdAt: Date;
   } | null;
   updatedAt: Date;
@@ -56,7 +57,6 @@ export class ConversationRepository extends BaseRepository<ConversationEntity> {
       where: {
         conversationId,
         userId,
-        deletedAt: IsNull(),
       },
     });
     return !!member;
@@ -91,7 +91,6 @@ export class ConversationRepository extends BaseRepository<ConversationEntity> {
     const allOtherMembers = await this.memberRepository.find({
       where: {
         conversationId: In(conversationIds),
-        deletedAt: IsNull(),
       },
       relations: {
         user: true,
@@ -125,28 +124,36 @@ export class ConversationRepository extends BaseRepository<ConversationEntity> {
       .orderBy('m.created_at', 'DESC')
       .getMany();
 
-    const latestMessageMap = new Map<string, MessageEntity>();
-    for (const msg of messages) {
-      if (!latestMessageMap.has(msg.conversationId)) {
-        latestMessageMap.set(msg.conversationId, msg);
-      }
-    }
-
     const result: ConversationSummaryItem[] = [];
 
     for (const membership of memberships) {
       const conv = membership.conversation;
       if (!conv) continue;
 
-      const lastMsg = latestMessageMap.get(conv.id) ?? null;
+      const chatClearedDate = membership.chatClearedAt
+        ? new Date(membership.chatClearedAt)
+        : new Date(0);
 
-      // Unread count: messages where senderId != userId and created_at > lastReadAt
-      const lastRead = membership.lastReadAt ?? membership.joinedAt;
+      // Latest message after chatClearedAt
+      const lastMsg =
+        messages.find(
+          (m) =>
+            m.conversationId === conv.id &&
+            new Date(m.createdAt) > chatClearedDate,
+        ) ?? null;
+
+      // Unread count: messages where senderId != userId and created_at > effectiveLastRead
+      const lastRead = membership.lastReadAt
+        ? new Date(membership.lastReadAt)
+        : new Date(membership.joinedAt);
+      const effectiveLastRead =
+        lastRead > chatClearedDate ? lastRead : chatClearedDate;
+
       const unreadCount = messages.filter(
         (m) =>
           m.conversationId === conv.id &&
           m.senderId !== userId &&
-          m.createdAt > lastRead,
+          new Date(m.createdAt) > effectiveLastRead,
       ).length;
 
       let name = 'Hội thoại';
@@ -185,6 +192,7 @@ export class ConversationRepository extends BaseRepository<ConversationEntity> {
               id: lastMsg.id,
               content: lastMsg.content,
               senderId: lastMsg.senderId,
+              messageType: lastMsg.messageType,
               createdAt: lastMsg.createdAt,
             }
           : null,
@@ -210,13 +218,13 @@ export class ConversationRepository extends BaseRepository<ConversationEntity> {
       .innerJoin(
         ConversationMemberEntity,
         'm1',
-        'm1.conversation_id = c.id AND m1.user_id = :user1Id AND m1.deleted_at IS NULL',
+        'm1.conversation_id = c.id AND m1.user_id = :user1Id',
         { user1Id },
       )
       .innerJoin(
         ConversationMemberEntity,
         'm2',
-        'm2.conversation_id = c.id AND m2.user_id = :user2Id AND m2.deleted_at IS NULL',
+        'm2.conversation_id = c.id AND m2.user_id = :user2Id',
         { user2Id },
       )
       .where('c.type = :type', { type: 'direct' });
@@ -233,13 +241,13 @@ export class ConversationRepository extends BaseRepository<ConversationEntity> {
       .innerJoin(
         ConversationMemberEntity,
         'm1',
-        'm1.conversation_id = c.id AND m1.user_id = :user1Id AND m1.deleted_at IS NULL',
+        'm1.conversation_id = c.id AND m1.user_id = :user1Id',
         { user1Id },
       )
       .innerJoin(
         ConversationMemberEntity,
         'm2',
-        'm2.conversation_id = c.id AND m2.user_id = :user2Id AND m2.deleted_at IS NULL',
+        'm2.conversation_id = c.id AND m2.user_id = :user2Id',
         { user2Id },
       )
       .orderBy('c.created_at', 'DESC');
@@ -256,7 +264,7 @@ export class ConversationRepository extends BaseRepository<ConversationEntity> {
       .innerJoin(
         ConversationMemberEntity,
         'm',
-        'm.conversation_id = c.id AND m.user_id = :userId AND m.deleted_at IS NULL',
+        'm.conversation_id = c.id AND m.user_id = :userId',
         { userId },
       )
       .where('c.related_field_id = :fieldId', { fieldId });
@@ -273,7 +281,7 @@ export class ConversationRepository extends BaseRepository<ConversationEntity> {
       .innerJoin(
         ConversationMemberEntity,
         'm',
-        'm.conversation_id = c.id AND m.user_id = :userId AND m.deleted_at IS NULL',
+        'm.conversation_id = c.id AND m.user_id = :userId',
         { userId },
       )
       .where('c.related_post_id = :postId', { postId });
@@ -310,5 +318,9 @@ export class ConversationRepository extends BaseRepository<ConversationEntity> {
     await this.memberRepository.save(members);
 
     return saved;
+  }
+
+  async hardDeleteConversation(conversationId: string): Promise<void> {
+    await this.repository.delete(conversationId);
   }
 }

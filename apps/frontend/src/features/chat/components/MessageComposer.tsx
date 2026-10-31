@@ -15,6 +15,7 @@ interface MessageComposerProps {
   editingMessage?: ChatMessage | null
   onSaveEdit?: (messageId: string, content: string) => void
   onCancelEdit?: () => void
+  onFocusInput?: () => void
   disabled?: boolean
 }
 
@@ -23,6 +24,7 @@ export function MessageComposer({
   editingMessage,
   onSaveEdit,
   onCancelEdit,
+  onFocusInput,
   disabled,
 }: MessageComposerProps) {
   const { t } = useTranslation()
@@ -176,6 +178,8 @@ export function MessageComposer({
           ref={inputRef}
           value={draft}
           onChange={(event) => setDraft(event.target.value)}
+          onFocus={onFocusInput}
+          onClick={onFocusInput}
           onPressEnter={handleSubmit}
           onPaste={handlePaste}
           onKeyDown={(event) => {

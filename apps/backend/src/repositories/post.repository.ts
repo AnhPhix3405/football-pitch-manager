@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import dayjs from 'dayjs';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { BaseRepository } from '~/core/base/base-repositories';
 import { PostEntity } from '~/entities/post.entity';
+import { UserProfileEntity } from '~/entities/user-profile.entity';
 
 export interface FindPublicPostsOptions {
   page?: number;
@@ -23,6 +24,8 @@ export interface FindMyPostsOptions {
 export class PostRepository extends BaseRepository<PostEntity> {
   constructor(
     @InjectRepository(PostEntity) repository: Repository<PostEntity>,
+    @InjectRepository(UserProfileEntity)
+    private readonly profileRepository: Repository<UserProfileEntity>,
   ) {
     super(repository);
   }
@@ -71,6 +74,7 @@ export class PostRepository extends BaseRepository<PostEntity> {
       .take(limit);
 
     const [items, total] = await qb.getManyAndCount();
+    await this.attachUserProfiles(items);
 
     return {
       items,
@@ -88,6 +92,7 @@ export class PostRepository extends BaseRepository<PostEntity> {
 
     const qb = this.repository
       .createQueryBuilder('post')
+      .leftJoinAndSelect('post.user', 'user')
       .where('post.userId = :userId', { userId })
       .andWhere('post.deletedAt IS NULL');
 
@@ -98,6 +103,7 @@ export class PostRepository extends BaseRepository<PostEntity> {
     qb.orderBy('post.createdAt', 'DESC').skip(skip).take(limit);
 
     const [items, total] = await qb.getManyAndCount();
+    await this.attachUserProfiles(items);
 
     return {
       items,
@@ -109,12 +115,45 @@ export class PostRepository extends BaseRepository<PostEntity> {
   }
 
   async findPostDetailById(id: string): Promise<PostEntity | null> {
-    return this.repository
+    const post = await this.repository
       .createQueryBuilder('post')
       .leftJoinAndSelect('post.user', 'user')
       .where('post.id = :id', { id })
       .andWhere('post.deletedAt IS NULL')
       .getOne();
+
+    if (post) {
+      await this.attachUserProfiles([post]);
+    }
+
+    return post;
+  }
+
+  private async attachUserProfiles(posts: PostEntity[]): Promise<void> {
+    if (!posts || posts.length === 0) return;
+    const userIds = [
+      ...new Set(posts.map((p) => p.userId).filter(Boolean)),
+    ];
+    if (userIds.length === 0) return;
+
+    try {
+      const profiles = await this.profileRepository.find({
+        where: { userId: In(userIds) },
+      });
+      const profileMap = new Map(profiles.map((pr) => [pr.userId, pr]));
+
+      for (const post of posts) {
+        const profile = profileMap.get(post.userId);
+        if (post.user) {
+          Object.assign(post.user, {
+            fullName: profile?.fullName || null,
+            avatarUrl: profile?.avatarUrl || null,
+          });
+        }
+      }
+    } catch {
+      // Graceful fallback if profile query encounters issues
+    }
   }
 
   async closeExpiredPostsToday(

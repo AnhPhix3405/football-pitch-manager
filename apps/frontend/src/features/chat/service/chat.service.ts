@@ -13,7 +13,6 @@ export async function getConversationsApi(): Promise<Conversation[]> {
   return list.map((c) => ({
     ...c,
     unread: c.unread ?? c.unreadCount ?? 0,
-    preview: c.lastMessage?.content || '',
   }))
 }
 
@@ -36,7 +35,6 @@ export async function createConversationApi(
   return {
     ...conv,
     unread: conv?.unread ?? conv?.unreadCount ?? 0,
-    preview: conv?.lastMessage?.content || '',
   }
 }
 
@@ -56,4 +54,14 @@ export async function uploadImageApi(
   )
   return response.data?.data
 }
+
+export async function deleteConversationApi(
+  conversationId: string,
+): Promise<{ success: boolean; hardDeleted: boolean }> {
+  const response = await apiClient.delete<
+    ApiResponse<{ success: boolean; hardDeleted: boolean }>
+  >(`/chat/conversations/${conversationId}`)
+  return response.data?.data
+}
+
 

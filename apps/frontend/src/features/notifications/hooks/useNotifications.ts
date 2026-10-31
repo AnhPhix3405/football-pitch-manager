@@ -54,7 +54,7 @@ export function useNotifications() {
     return () => {
       isSubscribed = false
     }
-  }, [isLoggedIn, filter])
+  }, [isLoggedIn, currentUser?.id, filter])
 
   // 2. Real-time socket listener for new notifications
   useEffect(() => {
@@ -107,7 +107,7 @@ export function useNotifications() {
     } catch {
       // Socket connection error handling
     }
-  }, [isLoggedIn, navigate])
+  }, [isLoggedIn, currentUser?.id, navigate])
 
   const unreadCount = items.filter((n) => !n.isRead).length
   const displayedItems = filterNotifications(items, filter)

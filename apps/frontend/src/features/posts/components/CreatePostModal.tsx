@@ -1,117 +1,43 @@
-import { ClockCircleOutlined } from '@ant-design/icons'
-import { DatePicker, Form, Input, InputNumber, Modal, Radio, Select, message } from 'antd'
-import dayjs from 'dayjs'
-import { useState } from 'react'
+import {
+  CalendarOutlined,
+  CameraOutlined,
+  ClockCircleOutlined,
+  CloseOutlined,
+  DownOutlined,
+  EnvironmentOutlined,
+  GlobalOutlined,
+  PictureOutlined,
+  TeamOutlined,
+} from '@ant-design/icons'
+import {
+  Avatar,
+  DatePicker,
+  Dropdown,
+  Input,
+  Modal,
+  Popover,
+  Select,
+  Spin,
+  message,
+} from 'antd'
+import dayjs, { type Dayjs } from 'dayjs'
+import { type ChangeEvent, useState, useRef, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { PillButton } from '../../../components/PillButton'
-import { createPost } from '../service/post.service'
-import type { CreatePostPayload } from '../interface/post.types'
+import { useAppSelector } from '~/app/hooks'
+import {
+  DEFAULT_POST_MAX_PLAYERS,
+  POST_AFTERNOON_EVENING_SLOTS,
+  POST_MORNING_SLOTS,
+  POST_SKILL_LEVEL_OPTIONS,
+} from '~/constants/post.constant'
+import { useCreatePost } from '~/hooks/useCreatePost'
+import { isSlotExpired } from '../utils/post.utils'
 
-const MORNING_SLOTS = [
-  '06:00 - 07:30',
-  '07:30 - 09:00',
-  '09:00 - 10:30',
+const FORMAT_OPTIONS = [
+  { key: '5v5', label: '5v5 (10 cầu thủ)', players: 10 },
+  { key: '7v7', label: '7v7 (14 cầu thủ)', players: 14 },
+  { key: '11v11', label: '11v11 (22 cầu thủ)', players: 22 },
 ]
-
-const AFTERNOON_EVENING_SLOTS = [
-  '16:00 - 17:30',
-  '17:30 - 19:00',
-  '19:00 - 20:30',
-  '20:30 - 22:00',
-  '22:00 - 23:30',
-]
-
-interface CreatePostFormValues {
-  title: string
-  content?: string
-  playDate: dayjs.Dayjs
-  timeSlot: string
-  skillLevelRequired: string
-  maxPlayers: number
-  location?: string
-}
-
-interface SlotSelectorProps {
-  value?: string
-  onChange?: (value: string) => void
-  selectedDate?: dayjs.Dayjs
-}
-
-function SlotSelector({ value, onChange, selectedDate }: SlotSelectorProps) {
-  const { t } = useTranslation()
-
-  const isSlotExpired = (slot: string) => {
-    if (!selectedDate || !dayjs().isSame(selectedDate, 'day')) {
-      return false
-    }
-    const [start] = slot.split(' - ')
-    const [hours, minutes] = start.split(':').map(Number)
-    const slotStartTime = dayjs().hour(hours).minute(minutes).second(0)
-    return dayjs().isAfter(slotStartTime)
-  }
-
-  return (
-    <Radio.Group
-      value={value}
-      onChange={(e) => onChange?.(e.target.value)}
-      style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}
-    >
-      <div>
-        <span className="eyebrow" style={{ display: 'block', marginBottom: 8 }}>
-          {t('posts.createModal.morningSlots')}
-        </span>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
-          {MORNING_SLOTS.map((time) => (
-            <Radio.Button
-              key={time}
-              value={time}
-              disabled={isSlotExpired(time)}
-              style={{
-                height: 40,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 6,
-                borderRadius: 6,
-                textAlign: 'center',
-              }}
-            >
-              <ClockCircleOutlined />
-              <span>{time}</span>
-            </Radio.Button>
-          ))}
-        </div>
-      </div>
-
-      <div>
-        <span className="eyebrow" style={{ display: 'block', marginBottom: 8 }}>
-          {t('posts.createModal.afternoonEveningSlots')}
-        </span>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
-          {AFTERNOON_EVENING_SLOTS.map((time) => (
-            <Radio.Button
-              key={time}
-              value={time}
-              disabled={isSlotExpired(time)}
-              style={{
-                height: 40,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 6,
-                borderRadius: 6,
-                textAlign: 'center',
-              }}
-            >
-              <ClockCircleOutlined />
-              <span>{time}</span>
-            </Radio.Button>
-          ))}
-        </div>
-      </div>
-    </Radio.Group>
-  )
-}
 
 export function CreatePostModal({
   open,
@@ -123,128 +49,335 @@ export function CreatePostModal({
   onSuccess: () => void
 }) {
   const { t } = useTranslation()
-  const [form] = Form.useForm<CreatePostFormValues>()
-  const [loading, setLoading] = useState(false)
+  const currentUser = useAppSelector((state) => state.auth.user)
   const [messageApi, contextHolder] = message.useMessage()
-  const selectedDate = Form.useWatch('playDate', form)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const handleFinish = async (values: CreatePostFormValues) => {
-    try {
-      setLoading(true)
-      const [startTime, endTime] = values.timeSlot.split(' - ')
-      const payload: CreatePostPayload = {
-        title: values.title.trim(),
-        content: values.content
-          ? `${values.content.trim()}${values.location ? ` (Địa điểm: ${values.location.trim()})` : ''}`
-          : values.location
-            ? `Địa điểm: ${values.location.trim()}`
-            : undefined,
-        playDate: values.playDate.format('YYYY-MM-DD'),
-        startTime: startTime.trim(),
-        endTime: endTime?.trim() || undefined,
-        skillLevelRequired: values.skillLevelRequired,
-        maxPlayers: values.maxPlayers,
+  // Form states
+  const [title, setTitle] = useState('')
+  const [content, setContent] = useState('')
+  const [playDate, setPlayDate] = useState<Dayjs>(dayjs().add(1, 'day'))
+  const [timeSlot, setTimeSlot] = useState<string>(POST_AFTERNOON_EVENING_SLOTS[1]) // '17:30 - 19:00'
+  const [skillLevel, setSkillLevel] = useState<string>('Trung bình khá')
+  const [formatKey, setFormatKey] = useState<string>('7v7')
+  const [maxPlayers, setMaxPlayers] = useState<number>(DEFAULT_POST_MAX_PLAYERS)
+  const [location, setLocation] = useState<string>('')
+
+  const {
+    submitting,
+    uploadingImage,
+    imagePreviewUrl,
+    selectImage,
+    removeImage,
+    submitPost,
+  } = useCreatePost()
+
+  // Reset fields only when opening modal
+  const prevOpenRef = useRef(false)
+  useEffect(() => {
+    if (open && !prevOpenRef.current) {
+      setTitle('')
+      setContent('')
+      setPlayDate(dayjs().add(1, 'day'))
+      setTimeSlot(POST_AFTERNOON_EVENING_SLOTS[1])
+      setSkillLevel('Trung bình khá')
+      setFormatKey('7v7')
+      setMaxPlayers(DEFAULT_POST_MAX_PLAYERS)
+      setLocation('')
+      removeImage()
+    }
+    prevOpenRef.current = open
+  }, [open, removeImage])
+
+  const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        messageApi.error(t('posts.modal.invalidImage', { defaultValue: 'Vui lòng chọn file hình ảnh (JPG, PNG, WebP).' }))
+        return
       }
+      try {
+        await selectImage(file)
+      } catch (err: unknown) {
+        messageApi.error(
+          err instanceof Error
+            ? err.message
+            : t('posts.modal.uploadError', { defaultValue: 'Tải ảnh lên thất bại. Vui lòng thử lại.' }),
+        )
+      }
+    }
+    e.target.value = ''
+  }
 
-      await createPost(payload)
-      messageApi.success(t('posts.createModal.success'))
-      form.resetFields()
+  const handleSelectFormat = (key: string) => {
+    setFormatKey(key)
+    const matched = FORMAT_OPTIONS.find((f) => f.key === key)
+    if (matched) {
+      setMaxPlayers(matched.players)
+    }
+  }
+
+  const handleSubmit = async () => {
+    const trimmedTitle = title.trim()
+    if (!trimmedTitle) {
+      messageApi.warning(t('posts.modal.titleRequired', { defaultValue: 'Vui lòng nhập tiêu đề bài đăng.' }))
+      return
+    }
+    if (!timeSlot) {
+      messageApi.warning(t('posts.modal.slotRequired', { defaultValue: 'Vui lòng chọn khung giờ thi đấu.' }))
+      return
+    }
+
+    try {
+      await submitPost({
+        title: trimmedTitle,
+        content: content.trim() || undefined,
+        playDate: playDate.format('YYYY-MM-DD'),
+        timeSlot,
+        skillLevelRequired: skillLevel,
+        maxPlayers,
+        location: location.trim() || undefined,
+      })
+
+      messageApi.success(t('posts.modal.success', { defaultValue: 'Đăng bài thành công!' }))
       setTimeout(() => {
         onSuccess()
         onClose()
-      }, 500)
+      }, 350)
     } catch (err: unknown) {
-      messageApi.error(err instanceof Error ? err.message : 'Không thể tạo bài đăng. Vui lòng thử lại.')
-    } finally {
-      setLoading(false)
+      messageApi.error(
+        err instanceof Error
+          ? err.message
+          : t('posts.modal.error', { defaultValue: 'Đăng bài thất bại. Vui lòng thử lại.' }),
+      )
     }
   }
+
+  const allSlots = [...POST_MORNING_SLOTS, ...POST_AFTERNOON_EVENING_SLOTS]
+
+  const matchDetailsContent = (
+    <div className="minimal-match-details-popover">
+      <div className="minimal-popover-item">
+        <label><CalendarOutlined /> {t('booking.flow.matchDate', { defaultValue: 'Ngày thi đấu' })}</label>
+        <DatePicker
+          value={playDate}
+          onChange={(date) => date && setPlayDate(date)}
+          format="DD/MM/YYYY"
+          minDate={dayjs()}
+          allowClear={false}
+          style={{ width: '100%' }}
+        />
+      </div>
+
+      <div className="minimal-popover-item">
+        <label><ClockCircleOutlined /> {t('posts.createModal.slotLabel', { defaultValue: 'Khung giờ' })}</label>
+        <Select
+          value={timeSlot}
+          onChange={setTimeSlot}
+          style={{ width: '100%' }}
+          options={allSlots.map((slot) => ({
+            value: slot,
+            label: slot,
+            disabled: isSlotExpired(slot, playDate),
+          }))}
+        />
+      </div>
+
+      <div className="minimal-popover-item">
+        <label><TeamOutlined /> {t('posts.skillLevel', { defaultValue: 'Trình độ' })}</label>
+        <Select
+          value={skillLevel}
+          onChange={setSkillLevel}
+          style={{ width: '100%' }}
+          options={POST_SKILL_LEVEL_OPTIONS.map((opt) => ({
+            value: opt.value,
+            label: t(opt.labelKey, { defaultValue: opt.defaultLabel }),
+          }))}
+        />
+      </div>
+    </div>
+  )
+
+  const locationContent = (
+    <div className="minimal-match-details-popover" style={{ width: 260 }}>
+      <div className="minimal-popover-item">
+        <label><EnvironmentOutlined /> {t('posts.createPage.locationLabel', { defaultValue: 'Địa điểm / Sân bóng' })}</label>
+        <Input
+          value={location}
+          onChange={(e) => setLocation(e.target.value)}
+          placeholder={t('posts.modal.locationPlaceholder', { defaultValue: 'Ví dụ: Sân Chánh Hưng, Q8' })}
+          allowClear
+          autoFocus
+        />
+      </div>
+    </div>
+  )
+
+  const formatMenuItems = FORMAT_OPTIONS.map((opt) => ({
+    key: opt.key,
+    label: opt.label,
+  }))
 
   return (
     <>
       {contextHolder}
       <Modal
-        title={t('posts.createModal.title')}
         open={open}
         onCancel={onClose}
         footer={null}
-        destroyOnClose
+        closable={false}
         centered
-        width={620}
+        width={640}
+        wrapClassName="minimal-post-modal-wrap"
+        className="minimal-post-modal"
+        destroyOnClose
       >
-        <Form<CreatePostFormValues>
-          form={form}
-          layout="vertical"
-          onFinish={handleFinish}
-          initialValues={{
-            skillLevelRequired: 'Trung bình khá',
-            maxPlayers: 14,
-            playDate: dayjs().add(1, 'day'),
-          }}
-          style={{ marginTop: 16 }}
-        >
-          <Form.Item
-            label={t('posts.createModal.postTitle')}
-            name="title"
-            rules={[{ required: true, message: 'Vui lòng nhập tiêu đề bài đăng.' }]}
-          >
-            <Input placeholder="Ví dụ: Tìm kèo giao lưu 7v7 tối thứ 6 sân Tân Bình" />
-          </Form.Item>
+        <input
+          type="file"
+          ref={fileInputRef}
+          accept="image/jpeg,image/png,image/webp"
+          style={{ display: 'none' }}
+          onChange={handleFileChange}
+        />
 
-          <Form.Item
-            label={t('booking.flow.matchDate')}
-            name="playDate"
-            rules={[{ required: true, message: 'Vui lòng chọn ngày.' }]}
-          >
-            <DatePicker style={{ width: '100%' }} format="DD/MM/YYYY" minDate={dayjs()} />
-          </Form.Item>
-
-          <Form.Item
-            label={t('posts.createModal.slotLabel')}
-            name="timeSlot"
-            rules={[{ required: true, message: t('posts.createModal.slotRequired') }]}
-          >
-            <SlotSelector selectedDate={selectedDate} />
-          </Form.Item>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-            <Form.Item label={t('posts.skillLevel')} name="skillLevelRequired">
-              <Select
-                options={[
-                  { value: 'Phong trào', label: 'Phong trào (Vui là chính)' },
-                  { value: 'Trung bình khá', label: 'Trung bình khá' },
-                  { value: 'Khá', label: 'Khá' },
-                  { value: 'Bán chuyên', label: 'Bán chuyên' },
-                ]}
-              />
-            </Form.Item>
-
-            <Form.Item label="SỐ NGƯỜI ĐÁ (QUY MÔ)" name="maxPlayers">
-              <InputNumber style={{ width: '100%' }} min={2} max={30} addonAfter="cầu thủ" />
-            </Form.Item>
+        {/* Top Header: Avatar + Audience & Close Button */}
+        <div className="minimal-modal-header">
+          <div className="minimal-modal-user">
+            <Avatar
+              src={currentUser?.avatarUrl}
+              size={36}
+              className="minimal-modal-avatar"
+            >
+              {currentUser?.name?.charAt(0).toUpperCase() || 'U'}
+            </Avatar>
+            <div className="minimal-modal-audience-pill">
+              <GlobalOutlined />
+              <span>{t('posts.modal.everyone', { defaultValue: 'Everyone' })}</span>
+            </div>
           </div>
 
-          <Form.Item label="ĐỊA ĐIỂM / TÊN SÂN BÓNG" name="location">
-            <Input placeholder="Ví dụ: Sân Chánh Hưng, Quận 8, TP.HCM" />
-          </Form.Item>
-
-          <Form.Item label={t('posts.createModal.description')} name="content">
-            <Input.TextArea
-              rows={3}
-              placeholder="Chia tiền sân 5-5, chuẩn bị bóng thi đấu, đá văn minh không va chạm thô bạo..."
-            />
-          </Form.Item>
-
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 24 }}>
-            <PillButton variant="secondary" onClick={onClose} text={t('common.cancel')} />
-            <PillButton
-              variant="primary"
-              type="submit"
-              loading={loading}
-              text={t('posts.createModal.submit')}
-            />
+          <div className="minimal-modal-header-actions">
+            <button
+              type="button"
+              className="minimal-modal-icon-btn"
+              onClick={onClose}
+              aria-label="Close"
+            >
+              <CloseOutlined />
+            </button>
           </div>
-        </Form>
+        </div>
+
+        {/* Post Title */}
+        <div className="minimal-modal-title-wrap">
+          <input
+            type="text"
+            className="minimal-modal-title-input"
+            placeholder={t('posts.modal.titlePlaceholder', { defaultValue: 'Post title...' })}
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            autoFocus
+          />
+        </div>
+
+        {/* Main Content / Thoughts */}
+        <div className="minimal-modal-body">
+          <textarea
+            className="minimal-modal-content-input"
+            rows={5}
+            placeholder={t('posts.modal.contentPlaceholder', { defaultValue: 'Share your thoughts' })}
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+          />
+        </div>
+
+        {/* Cover image button or preview */}
+        <div className="minimal-modal-cover-section">
+          {imagePreviewUrl && (
+            <div className="minimal-modal-cover-preview">
+              <img src={imagePreviewUrl} alt="Cover preview" />
+              <button
+                type="button"
+                className="minimal-modal-cover-remove"
+                onClick={removeImage}
+                title={t('posts.modal.removeCover', { defaultValue: 'Gỡ ảnh bìa' })}
+              >
+                <CloseOutlined />
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Bottom Toolbar */}
+        <div className="minimal-modal-footer">
+          <div className="minimal-modal-footer-left">
+            <Dropdown
+              menu={{
+                items: formatMenuItems,
+                onClick: ({ key }) => handleSelectFormat(key),
+              }}
+              trigger={['click']}
+            >
+              <button type="button" className="minimal-modal-pill-dropdown">
+                <span>{formatKey}</span>
+                <DownOutlined style={{ fontSize: 10 }} />
+              </button>
+            </Dropdown>
+
+            <button
+              type="button"
+              className="minimal-modal-tool-btn"
+              onClick={() => fileInputRef.current?.click()}
+              title={t('posts.modal.addCover', { defaultValue: 'Add cover' })}
+              disabled={uploadingImage}
+            >
+              <PictureOutlined />
+            </button>
+
+            <Popover
+              content={matchDetailsContent}
+              title={t('posts.modal.matchConfig', { defaultValue: 'Cấu hình trận đấu' })}
+              trigger="click"
+              placement="top"
+            >
+              <button
+                type="button"
+                className="minimal-modal-tool-btn"
+                title={t('posts.modal.matchConfig', { defaultValue: 'Cấu hình trận đấu' })}
+              >
+                <CalendarOutlined />
+              </button>
+            </Popover>
+
+            <Popover
+              content={locationContent}
+              title={t('posts.createPage.locationLabel', { defaultValue: 'Địa điểm / Sân bóng' })}
+              trigger="click"
+              placement="top"
+            >
+              <button
+                type="button"
+                className={`minimal-modal-tool-btn ${location ? 'is-active' : ''}`}
+                title={location ? `${t('posts.createPage.locationLabel', { defaultValue: 'Địa điểm' })}: ${location}` : t('posts.createPage.locationLabel', { defaultValue: 'Địa điểm / Sân bóng' })}
+              >
+                <EnvironmentOutlined />
+              </button>
+            </Popover>
+          </div>
+
+          <div className="minimal-modal-footer-right">
+            <button
+              type="button"
+              className="minimal-modal-post-btn"
+              onClick={handleSubmit}
+              disabled={!title.trim() || !timeSlot || submitting || uploadingImage}
+            >
+              {submitting || uploadingImage
+                ? t('posts.modal.submitting', { defaultValue: 'Posting...' })
+                : t('posts.modal.postBtn', { defaultValue: 'Post' })}
+            </button>
+          </div>
+        </div>
       </Modal>
     </>
   )

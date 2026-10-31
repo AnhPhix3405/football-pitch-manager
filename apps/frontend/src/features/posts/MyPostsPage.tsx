@@ -3,7 +3,7 @@ import { Empty, Segmented, Spin, message } from 'antd'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { PillButton } from '../../components/PillButton'
-import { matchPosts, type MatchPost } from '../user/user.data'
+import type { MatchPost } from '../user/user.data'
 import { CreatePostModal } from './components/CreatePostModal'
 import { PostCard } from './components/PostCard'
 import { useMyPosts } from './hooks/useMyPosts'
@@ -16,8 +16,7 @@ export function MyPostsPage() {
   const [messageApi, contextHolder] = message.useMessage()
   const { apiPosts, loading, refetch } = useMyPosts(status)
 
-  const visible =
-    apiPosts.length > 0 ? apiPosts : matchPosts.filter((post) => post.status === status)
+  const visible = apiPosts
 
   const handleDeletePost = async (postId: string) => {
     try {

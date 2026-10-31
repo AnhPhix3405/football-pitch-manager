@@ -102,6 +102,7 @@ Tài liệu chi tiết toàn bộ các API HTTP REST và WebSocket Gateway của
 | | `GET` | `/chat/conversations` | Đã đăng nhập (JWT) | Lấy danh sách cuộc trò chuyện của tôi |
 | | `POST` | `/chat/conversations` | Đã đăng nhập (JWT) | Bắt đầu hoặc lấy cuộc trò chuyện |
 | | `GET` | `/chat/conversations/:id/messages` | Đã đăng nhập (JWT) | Lấy lịch sử tin nhắn (hỗ trợ phân trang limit/before) |
+| | `DELETE` | `/chat/conversations/:id` | Đã đăng nhập (JWT) | Xóa cuộc trò chuyện (xóa 1 phía hoặc xóa hoàn toàn 2 phía) |
 | **Tải lên tệp (Upload)** | `POST` | `/upload/image` | User / Active | Tải lên hình ảnh lên Supabase Storage |
 
 ---
@@ -1092,6 +1093,7 @@ Tài liệu chi tiết toàn bộ các API HTTP REST và WebSocket Gateway của
         "id": "223e4567-e89b-12d3-a456-426614174001",
         "content": "Đội bạn còn cần thêm người không?",
         "senderId": "323e4567-e89b-12d3-a456-426614174002",
+        "messageType": "text",
         "createdAt": "2026-10-25T09:30:00.000Z"
       },
       "updatedAt": "2026-10-25T09:30:00.000Z"
@@ -1136,7 +1138,26 @@ Tài liệu chi tiết toàn bộ các API HTTP REST và WebSocket Gateway của
   ]
   ```
 
-#### 3.8.4. WebSocket Realtime Events (`/chat` namespace)
+#### 3.8.4. Xóa cuộc trò chuyện (`DELETE /chat/conversations/:id`)
+- **Quyền truy cập:** Đã đăng nhập (`active`)
+- **Path Parameters:**
+  - `id`: ID của cuộc trò chuyện (UUID).
+- **Cơ chế xử lý:**
+  - **Cơ chế phân tách `deleted_at` & `chat_cleared_at` trong `conversation_members`:**
+    - `deleted_at` (timestamptz NULL): Đánh dấu trạng thái hiển thị của cuộc trò chuyện đối với thành viên (`NULL`: đang kích hoạt; `NOT NULL`: đang bị ẩn do người dùng xóa hội thoại).
+    - `chat_cleared_at` (timestamptz NULL): Mốc thời gian dọn sạch lịch sử tin nhắn của thành viên. Mốc này độc lập và được bảo lưu khi cuộc hội thoại được kích hoạt lại.
+  - **Xóa 1 phía (Soft delete):** Nếu đối phương chưa xóa, hệ thống cập nhật đồng thời `deleted_at = NOW()` và `chat_cleared_at = NOW()` cho thành viên hiện tại trong bảng `conversation_members`. Cuộc trò chuyện sẽ bị ẩn khỏi danh sách của người dùng này.
+  - **Tự động khôi phục khi có tin nhắn mới hoặc mở lại chat:** Khi có tin nhắn mới gửi đến hoặc người dùng mở lại cuộc trò chuyện, `deleted_at` được đặt lại về `NULL` để hội thoại tự động xuất hiện lại trên giao diện. Các tin nhắn cũ trước mốc `chat_cleared_at` vẫn được giữ ẩn, chỉ tải các tin nhắn mới gửi sau mốc này.
+  - **Xóa 2 phía (Hard delete):** Chỉ kích hoạt khi **tất cả** thành viên trong cuộc trò chuyện đều có `deleted_at IS NOT NULL` (nghĩa là cả hai bên đều đang ở trạng thái xóa và chưa có tin nhắn mới nào làm phục hồi bên còn lại). Hệ thống sẽ tự động dọn dẹp toàn bộ tệp ảnh đính kèm trên Supabase Storage, đồng thời xóa vĩnh viễn toàn bộ tin nhắn, thành viên và bản ghi cuộc trò chuyện trong database.
+- **Response (`200 OK`):**
+  ```json
+  {
+    "success": true,
+    "hardDeleted": false
+  }
+  ```
+
+#### 3.8.5. WebSocket Realtime Events (`/chat` namespace)
 - **Kết nối Socket:** `io("http://localhost:3000/chat", { auth: { token: "<accessToken>" } })`
 - **Sự kiện gửi từ Client lên Server:**
   - `join_room`: `{ "conversationId": "uuid" }` - Tham gia phòng hội thoại để nhận tin nhắn realtime.
@@ -1147,9 +1168,9 @@ Tài liệu chi tiết toàn bộ các API HTTP REST và WebSocket Gateway của
   - `mark_as_read`: `{ "conversationId": "uuid" }` - Đánh dấu đã đọc các tin nhắn trong hội thoại.
   - `mark_as_delivered`: `{ "conversationId": "uuid" }` - Đánh dấu tin nhắn đã được nhận.
 - **Sự kiện Server phát xuống Client:**
-  - `receive_message`: Phát tin nhắn mới đến tất cả thành viên trong `conversationId`.
-  - `message_edited`: Phát thông tin tin nhắn đã chỉnh sửa (`{ id, conversationId, content, isEdited: true, ... }`).
-  - `message_deleted`: Phát thông báo thu hồi tin nhắn (`{ messageId: "uuid", conversationId: "uuid" }`).
+  - `receive_message`: Phát tin nhắn mới đến phòng hội thoại `conversationId` và các phòng người dùng `user:${userId}` của tất cả thành viên (giúp danh sách hội thoại cập nhật realtime ngay cả khi chưa mở phòng).
+  - `message_edited`: Phát thông tin tin nhắn đã chỉnh sửa (`{ id, conversationId, content, isEdited: true, ... }`) đến phòng hội thoại và phòng người dùng của các thành viên.
+  - `message_deleted`: Phát thông báo thu hồi tin nhắn (`{ messageId: "uuid", conversationId: "uuid" }`) đến phòng hội thoại và phòng người dùng của các thành viên.
   - `message_read`: Phát thông báo người dùng đã đọc (`{ userId, conversationId }`).
   - `match:accepted`: Phát thông báo bài đăng ghép đối đã được chấp nhận (`{ matchId, postId, conversationId, postTitle }`).
   - `notification:new`: Phát thông báo mới tức thời cho người dùng qua room `user:${userId}` (`{ id, type, title, content, refId, isRead: false, createdAt, link }`).
@@ -1285,6 +1306,72 @@ Tài liệu chi tiết toàn bộ các API HTTP REST và WebSocket Gateway của
   }
   ```
 - **Response (`200 OK`):** Trả về đối tượng `UserProfileResponseDto` tương tự 3.11.1.
+
+---
+
+### 3.12. Quản Lý Bài Đăng Tìm Đối Thủ (Posts & Match Finding)
+
+#### 3.12.1. Tạo bài đăng tìm đối mới (`POST /posts`)
+- **Quyền truy cập:** Đã đăng nhập (`active`)
+- **Request Body (`CreatePostDto`):**
+  ```json
+  {
+    "title": "Tìm kèo giao lưu 7v7 tối thứ 6 sân Chánh Hưng",
+    "content": "Đội mình trình độ trung bình, đá văn minh không va chạm thô bạo. Tiền sân chia 5-5.",
+    "playDate": "2026-10-30",
+    "startTime": "19:00",
+    "endTime": "20:30",
+    "skillLevelRequired": "Trung bình khá",
+    "maxPlayers": 14,
+    "lat": "10.762622",
+    "lng": "106.660172",
+    "imageUrl": "https://edpwyenilpultbnxfent.supabase.co/storage/v1/object/public/football-pitch-manager/posts/cover.jpg"
+  }
+  ```
+- **Response (`201 Created` - `PostEntity`):**
+  ```json
+  {
+    "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "userId": "9175df40-fc7c-4d50-b07e-a35417a2eef2",
+    "title": "Tìm kèo giao lưu 7v7 tối thứ 6 sân Chánh Hưng",
+    "content": "Đội mình trình độ trung bình, đá văn minh không va chạm thô bạo. Tiền sân chia 5-5. (Địa điểm: Sân Chánh Hưng, Q8)",
+    "playDate": "2026-10-30",
+    "startTime": "19:00:00",
+    "endTime": "20:30:00",
+    "skillLevelRequired": "Trung bình khá",
+    "maxPlayers": 14,
+    "imageUrl": "https://edpwyenilpultbnxfent.supabase.co/storage/v1/object/public/football-pitch-manager/posts/cover.jpg",
+    "status": "open",
+    "lat": "10.762622",
+    "lng": "106.660172",
+    "createdAt": "2026-10-29T15:30:00.000Z",
+    "updatedAt": "2026-10-29T15:30:00.000Z"
+  }
+  ```
+
+#### 3.12.2. Lấy danh sách bài đăng công khai (`GET /posts`)
+- **Quyền truy cập:** Public
+- **Query Params:** `page`, `limit`, `search`, `skillLevel`, `playDate`, `status`
+- **Response (`200 OK`):** Trả về đối tượng `{ items: PostEntity[], total, page, limit, totalPages }`.
+
+#### 3.12.3. Lấy danh sách bài đăng của tôi (`GET /posts/me`)
+- **Quyền truy cập:** Đã đăng nhập (`active`)
+- **Query Params:** `page`, `limit`, `status`
+- **Response (`200 OK`):** Trả về đối tượng `{ items: PostEntity[], total, page, limit, totalPages }`.
+
+#### 3.12.4. Xem chi tiết bài đăng (`GET /posts/:id`)
+- **Quyền truy cập:** Public
+- **Response (`200 OK`):** Trả về chi tiết `PostEntity` (bao gồm `imageUrl` và thông tin người đăng `user`).
+
+#### 3.12.5. Cập nhật bài đăng (`PATCH /posts/:id`)
+- **Quyền truy cập:** User (Chính chủ bài đăng)
+- **Request Body (`UpdatePostDto`):** Tương tự `CreatePostDto` (tất cả các trường tùy chọn, hỗ trợ cập nhật `imageUrl` và `status`).
+- **Response (`200 OK`):** Trả về `PostEntity` đã cập nhật.
+
+#### 3.12.6. Xóa bài đăng (`DELETE /posts/:id`)
+- **Quyền truy cập:** User (Chính chủ bài đăng)
+- **Response (`200 OK`):** `{ "message": "Xóa bài đăng thành công" }`.
+
 
 
 

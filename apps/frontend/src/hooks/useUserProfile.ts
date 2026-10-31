@@ -11,7 +11,7 @@ import {
   uploadAvatarApi,
   updateUserLocationApi,
 } from '../features/profile/service/profile.service'
-import { compressImage } from '../utils/image-compressor.utils'
+import { compressAvatar } from '../utils/image-compressor.utils'
 
 export function useUserProfile() {
   const dispatch = useAppDispatch()
@@ -116,7 +116,7 @@ export function useUserProfile() {
       try {
         let processedFile = file
         try {
-          processedFile = await compressImage(file, { maxWidth: 800, maxHeight: 800, quality: 0.85 })
+          processedFile = await compressAvatar(file)
         } catch {
           processedFile = file
         }

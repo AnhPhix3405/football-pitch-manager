@@ -4,7 +4,6 @@ import type { Dayjs } from 'dayjs'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { PillButton } from '../../components/PillButton'
-import { matchPosts } from '../user/user.data'
 import { CreatePostModal } from './components/CreatePostModal'
 import { PostCard } from './components/PostCard'
 import { filterPosts, usePublicPosts } from './hooks/usePublicPosts'
@@ -20,8 +19,7 @@ export function OpponentDiscoveryPage() {
   const { apiPosts, loading, refetch } = usePublicPosts(query, level, formattedDate)
 
   const visible = useMemo(() => {
-    const dataSource = apiPosts.length > 0 ? apiPosts : matchPosts
-    return filterPosts(dataSource, query, level, formattedDate)
+    return filterPosts(apiPosts, query, level, formattedDate)
   }, [apiPosts, query, level, formattedDate])
 
   return (

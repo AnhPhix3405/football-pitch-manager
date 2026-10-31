@@ -39,11 +39,11 @@ export class ChatService {
     limit = 20,
     before?: string,
   ) {
-    const isMember = await this.conversationRepository.isMember(
+    const member = await this.conversationMemberRepository.getMember(
       conversationId,
       userId,
     );
-    if (!isMember) {
+    if (!member) {
       throw new ForbiddenException(
         'Bạn không có quyền xem cuộc trò chuyện này',
       );
@@ -53,6 +53,7 @@ export class ChatService {
       conversationId,
       limit,
       before,
+      member.chatClearedAt ?? undefined,
     );
 
     // Cập nhật đã đọc tin nhắn
@@ -86,6 +87,8 @@ export class ChatService {
           relatedFieldId: field.id,
           memberUserIds: Array.from(new Set([userId, field.ownerId])),
         });
+      } else {
+        await this.conversationMemberRepository.restoreMember(conv.id, userId);
       }
       return conv;
     }
@@ -106,6 +109,8 @@ export class ChatService {
           relatedPostId: post.id,
           memberUserIds: Array.from(new Set([userId, post.userId])),
         });
+      } else {
+        await this.conversationMemberRepository.restoreMember(conv.id, userId);
       }
       return conv;
     }
@@ -126,6 +131,8 @@ export class ChatService {
           type: CONVERSATION_TYPE.DIRECT,
           memberUserIds: [userId, dto.targetUserId],
         });
+      } else {
+        await this.conversationMemberRepository.restoreMember(conv.id, userId);
       }
       return conv;
     }
@@ -176,7 +183,18 @@ export class ChatService {
         isEdited: false,
       }),
     );
+    await this.conversationMemberRepository.restoreDeletedMembers(
+      payload.conversationId,
+    );
     return message;
+  }
+
+  async getConversationMemberUserIds(
+    conversationId: string,
+  ): Promise<string[]> {
+    const members =
+      await this.conversationMemberRepository.findMembers(conversationId);
+    return members.map((m) => m.userId);
   }
 
   async updateDeliveredAt(conversationId: string, userId: string) {
@@ -232,6 +250,61 @@ export class ChatService {
     });
 
     return { ...message, content: null, deletedAt };
+  }
+
+  async deleteConversation(userId: string, conversationId: string) {
+    const isMember = await this.conversationRepository.isMember(
+      conversationId,
+      userId,
+    );
+    if (!isMember) {
+      throw new ForbiddenException(
+        'Bạn không có quyền xóa cuộc trò chuyện này',
+      );
+    }
+
+    // 1. Soft delete 1 phía cho user hiện tại
+    await this.conversationMemberRepository.softDeleteMember(
+      conversationId,
+      userId,
+    );
+
+    // 2. Kiểm tra xem tất cả các thành viên đều đã xóa chưa
+    const areAllDeleted =
+      await this.conversationMemberRepository.areAllMembersDeleted(
+        conversationId,
+      );
+
+    if (areAllDeleted) {
+      // Xóa 2 phía (Hard delete): Dọn dẹp tệp ảnh lưu trên Supabase Storage
+      try {
+        const imageMessages =
+          await this.messageRepository.findImagesByConversationId(
+            conversationId,
+          );
+        for (const msg of imageMessages) {
+          if (msg.content) {
+            const storagePath = this.extractStoragePath(msg.content);
+            if (storagePath) {
+              await this.storageService.deleteFile(storagePath).catch(() => {});
+            }
+          }
+        }
+      } catch (err: unknown) {
+        console.error('Lỗi dọn dẹp file ảnh khi xóa cuộc trò chuyện:', err);
+      }
+
+      // Xóa toàn bộ messages, members và conversation
+      await this.messageRepository.deleteByConversationId(conversationId);
+      await this.conversationMemberRepository.deleteByConversationId(
+        conversationId,
+      );
+      await this.conversationRepository.hardDeleteConversation(conversationId);
+
+      return { success: true, hardDeleted: true };
+    }
+
+    return { success: true, hardDeleted: false };
   }
 
   private extractStoragePath(url: string): string | null {

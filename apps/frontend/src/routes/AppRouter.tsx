@@ -53,6 +53,7 @@ export function AppRouter() {
 
           {/* Protected user routes with new Navbar layout */}
           <Route element={<ProtectedRoute />}>
+            <Route path="posts/new" element={<Navigate to="/opponents" replace />} />
             <Route path="bookings" element={<MyBookingsPage />} />
             <Route path="messages" element={<MessagesPage />} />
             <Route path="settings" element={<ProfileSettingsPage />} />

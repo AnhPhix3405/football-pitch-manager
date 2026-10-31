@@ -95,3 +95,37 @@ export function ApiGetMessagesDoc() {
     }),
   );
 }
+
+export function ApiDeleteConversationDoc() {
+  return applyDecorators(
+    ApiBearerAuth(),
+    ApiOperation({
+      summary:
+        'Xóa cuộc trò chuyện (Xóa 1 phía nếu đối phương chưa xóa, xóa hoàn toàn nếu cả 2 phía cùng xóa)',
+    }),
+    ApiParam({
+      name: 'id',
+      description: 'ID của cuộc trò chuyện (UUID)',
+      type: String,
+    }),
+    ApiResponse({
+      status: HttpStatus.OK,
+      description: 'Xóa cuộc trò chuyện thành công',
+      schema: {
+        type: 'object',
+        properties: {
+          success: { type: 'boolean', example: true },
+          hardDeleted: { type: 'boolean', example: false },
+        },
+      },
+    }),
+    ApiResponse({
+      status: HttpStatus.FORBIDDEN,
+      description: 'Không có quyền xóa cuộc trò chuyện này',
+    }),
+    ApiResponse({
+      status: HttpStatus.UNAUTHORIZED,
+      description: 'Chưa đăng nhập hoặc token không hợp lệ',
+    }),
+  );
+}

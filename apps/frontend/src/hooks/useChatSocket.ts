@@ -127,7 +127,6 @@ export function useChatSocket(activeId: string) {
     try {
       socket = connectChatSocket()
       socket.emit('join_room', { conversationId: activeId })
-      socket.emit('mark_as_read', { conversationId: activeId })
 
       const onReceiveMessage = (raw: RawBackendMessage) => {
         if (raw && raw.conversationId === activeId) {
@@ -137,10 +136,6 @@ export function useChatSocket(activeId: string) {
             }
             return [...prev, mapRawToChatMessage(raw, currentUserId)]
           })
-
-          if (raw.senderId !== currentUserId) {
-            socket?.emit('mark_as_read', { conversationId: activeId })
-          }
         }
       }
 
@@ -245,6 +240,16 @@ export function useChatSocket(activeId: string) {
     [],
   )
 
+  const markAsRead = useCallback(() => {
+    if (!activeId) return
+    try {
+      const socket = connectChatSocket()
+      socket.emit('mark_as_read', { conversationId: activeId })
+    } catch {
+      // Fallback
+    }
+  }, [activeId])
+
   return {
     messages,
     loading,
@@ -254,5 +259,6 @@ export function useChatSocket(activeId: string) {
     sendMessage,
     editMessage,
     deleteMessage,
+    markAsRead,
   }
 }

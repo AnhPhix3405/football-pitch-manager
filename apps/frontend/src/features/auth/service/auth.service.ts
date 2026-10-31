@@ -1,5 +1,6 @@
 import { ACCESS_TOKEN_KEY, apiClient, type ApiResponse } from '../../../config/axios.config'
 import type { UserRole } from '../../../constants/role.constant'
+import { disconnectChatSocket } from '../../chat/service/chat-socket.service'
 import type { AuthUser, LoginCredentials, RegisterDetails } from '../interface/auth.types'
 
 interface BackendUser {
@@ -29,6 +30,7 @@ export async function login(credentials: LoginCredentials): Promise<AuthUser> {
     password: credentials.password,
   })
 
+  disconnectChatSocket()
   const { accessToken, user } = response.data.data
   window.localStorage.setItem(ACCESS_TOKEN_KEY, accessToken)
 
@@ -60,6 +62,7 @@ export async function loginGoogle(idToken: string): Promise<AuthUser> {
     idToken,
   })
 
+  disconnectChatSocket()
   const { accessToken, user } = response.data.data
   window.localStorage.setItem(ACCESS_TOKEN_KEY, accessToken)
 
@@ -98,6 +101,7 @@ export async function logout(): Promise<void> {
   } catch {
     // Vẫn dọn dẹp local token nếu backend trả lỗi
   } finally {
+    disconnectChatSocket()
     window.localStorage.removeItem(ACCESS_TOKEN_KEY)
     window.localStorage.removeItem('pitchmaster.authUser')
     window.sessionStorage.removeItem('pitchmaster.authUser')

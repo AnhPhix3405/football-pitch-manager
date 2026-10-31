@@ -10,6 +10,8 @@ export function mapBackendPostToMatchPost(item: BackendPost): MatchPost {
     id: item.id,
     title: item.title,
     team: item.user?.fullName || item.user?.email.split('@')[0] || 'Đội bóng',
+    authorName: item.user?.fullName || item.user?.email.split('@')[0] || 'Đội bóng',
+    authorAvatar: item.user?.avatarUrl || undefined,
     location: item.content?.includes('Địa điểm:')
       ? item.content.split('Địa điểm:')[1]?.replace(')', '').trim() || 'TP.HCM'
       : 'Sân bóng tại TP.HCM',
@@ -21,6 +23,7 @@ export function mapBackendPostToMatchPost(item: BackendPost): MatchPost {
     applicants: 0,
     status: item.status,
     description: item.content || 'Trận đấu giao lưu bóng đá.',
+    imageUrl: item.imageUrl || undefined,
   }
 }
 

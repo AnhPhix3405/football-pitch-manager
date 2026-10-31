@@ -77,6 +77,9 @@ export class PostEntity extends UuidEntity {
   @Column({ type: 'varchar', default: 'open' })
   status!: string;
 
+  @Column({ name: 'image_url', type: 'varchar', length: 500, nullable: true })
+  imageUrl!: string | null;
+
   @Column({ name: 'deleted_at', type: 'timestamptz', nullable: true })
   deletedAt!: Date | null;
 }

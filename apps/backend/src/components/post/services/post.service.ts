@@ -11,7 +11,7 @@ import { UpdatePostDto } from '../dto/update-post.dto';
 
 @Injectable()
 export class PostService {
-  constructor(private readonly postRepository: PostRepository) {}
+  constructor(private readonly postRepository: PostRepository) { }
 
   async getPublicPosts(query: QueryPostDto) {
     return this.postRepository.findPublicPosts({
@@ -76,6 +76,7 @@ export class PostService {
       lat: dto.lat ? String(dto.lat) : null,
       lng: dto.lng ? String(dto.lng) : null,
       status: POST_STATUS.OPEN,
+      imageUrl: dto.imageUrl?.trim() || null,
       deletedAt: null,
     });
 
@@ -140,6 +141,8 @@ export class PostService {
     if (dto.maxPlayers !== undefined) post.maxPlayers = dto.maxPlayers;
     if (dto.lat !== undefined) post.lat = dto.lat ? String(dto.lat) : null;
     if (dto.lng !== undefined) post.lng = dto.lng ? String(dto.lng) : null;
+    if (dto.imageUrl !== undefined)
+      post.imageUrl = dto.imageUrl?.trim() || null;
     if (dto.status !== undefined) post.status = dto.status;
 
     return this.postRepository.save(post);

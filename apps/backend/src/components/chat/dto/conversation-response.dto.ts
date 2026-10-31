@@ -10,6 +10,9 @@ export class LastMessageDto {
   @ApiProperty()
   senderId!: string;
 
+  @ApiPropertyOptional({ default: 'text' })
+  messageType?: string;
+
   @ApiProperty()
   createdAt!: Date;
 }

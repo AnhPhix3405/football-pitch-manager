@@ -37,6 +37,9 @@ export class ConversationMemberEntity {
   @Column({ name: 'deleted_at', type: 'timestamptz', nullable: true })
   deletedAt!: Date | null;
 
+  @Column({ name: 'chat_cleared_at', type: 'timestamptz', nullable: true })
+  chatClearedAt!: Date | null;
+
   @Column({ name: 'last_read_at', type: 'timestamptz', nullable: true })
   lastReadAt!: Date | null;
 }

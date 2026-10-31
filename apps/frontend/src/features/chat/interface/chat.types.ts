@@ -5,6 +5,8 @@ export interface LastMessage {
   id: string
   content: string | null
   senderId: string
+  messageType?: string
+  isDeleted?: boolean
   createdAt: string
 }
 

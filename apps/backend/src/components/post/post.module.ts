@@ -6,6 +6,7 @@ import { NotificationModule } from '~/components/notification/notification.modul
 import { PostCommentEntity } from '~/entities/post-comment.entity';
 import { PostMatchEntity } from '~/entities/post-match.entity';
 import { PostEntity } from '~/entities/post.entity';
+import { UserProfileEntity } from '~/entities/user-profile.entity';
 import { PostCommentRepository } from '~/repositories/post-comment.repository';
 import { PostMatchRepository } from '~/repositories/post-match.repository';
 import { PostRepository } from '~/repositories/post.repository';
@@ -19,7 +20,12 @@ import { PostService } from './services/post.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([PostEntity, PostMatchEntity, PostCommentEntity]),
+    TypeOrmModule.forFeature([
+      PostEntity,
+      PostMatchEntity,
+      PostCommentEntity,
+      UserProfileEntity,
+    ]),
     AuthModule,
     ChatModule,
     NotificationModule,

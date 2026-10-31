@@ -1,14 +1,30 @@
-import { CalendarOutlined, InfoCircleOutlined } from '@ant-design/icons'
-import { Button } from 'antd'
+import { CalendarOutlined, DeleteOutlined, InfoCircleOutlined } from '@ant-design/icons'
+import { Button, Tooltip } from 'antd'
 import { useTranslation } from 'react-i18next'
+import { useConfirmModal } from '~/hooks'
 import type { Conversation } from '../interface/chat.types'
 
 interface ChatHeaderProps {
   conversation: Conversation
+  onDeleteConversation?: (conversationId: string) => void
 }
 
-export function ChatHeader({ conversation }: ChatHeaderProps) {
+export function ChatHeader({ conversation, onDeleteConversation }: ChatHeaderProps) {
   const { t } = useTranslation()
+  const { showConfirm, ConfirmDialog } = useConfirmModal()
+
+  const handleDelete = () => {
+    showConfirm({
+      title: t('chat.deleteConversationConfirm', {
+        defaultValue:
+          'Bạn có chắc chắn muốn xóa đoạn chat này không? Lịch sử tin nhắn cũ sẽ không còn hiển thị.',
+      }),
+      okText: t('chat.deleteConversation', { defaultValue: 'Xóa đoạn chat' }),
+      cancelText: t('common.cancel', { defaultValue: 'Hủy' }),
+      danger: true,
+      onOk: () => onDeleteConversation?.(conversation.id),
+    })
+  }
 
   return (
     <header>
@@ -18,6 +34,7 @@ export function ChatHeader({ conversation }: ChatHeaderProps) {
             <img
               src={conversation.avatarUrl}
               alt={conversation.name}
+              decoding="async"
               style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
             />
           ) : conversation.kind === 'field' ? (
@@ -38,11 +55,24 @@ export function ChatHeader({ conversation }: ChatHeaderProps) {
           </small>
         </div>
       </div>
-      <Button
-        type="text"
-        icon={<InfoCircleOutlined />}
-        aria-label={t('chat.infoAria', { defaultValue: 'Thông tin hội thoại' })}
-      />
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <Tooltip title={t('chat.deleteConversation', { defaultValue: 'Xóa đoạn chat' })}>
+          <Button
+            type="text"
+            danger
+            icon={<DeleteOutlined />}
+            onClick={handleDelete}
+            aria-label={t('chat.deleteConversation', { defaultValue: 'Xóa đoạn chat' })}
+          />
+        </Tooltip>
+        <Button
+          type="text"
+          icon={<InfoCircleOutlined />}
+          aria-label={t('chat.infoAria', { defaultValue: 'Thông tin hội thoại' })}
+        />
+      </div>
+      {ConfirmDialog}
     </header>
   )
 }
+

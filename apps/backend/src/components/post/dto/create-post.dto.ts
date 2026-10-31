@@ -92,4 +92,12 @@ export class CreatePostDto {
   })
   @IsOptional()
   lng?: string | number;
+
+  @ApiPropertyOptional({
+    description: 'Ảnh đại diện hoặc hình ảnh liên quan đến bài viết',
+    example: 'https://example.com/pitch.jpg',
+  })
+  @IsString()
+  @IsOptional()
+  imageUrl?: string;
 }

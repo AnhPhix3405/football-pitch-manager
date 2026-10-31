@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Empty } from 'antd'
+import { Empty, message } from 'antd'
 import { useTranslation } from 'react-i18next'
 import chatPanelBg from '../../assets/chat_panel.jpg'
 import { useChatConversations } from '~/hooks/useChatConversations'
@@ -12,6 +12,7 @@ import { MessageThread } from './components/MessageThread'
 
 export function MessagesPage() {
   const { t } = useTranslation()
+  const [messageApi, contextHolder] = message.useMessage()
   const {
     activeId,
     setActiveId,
@@ -20,6 +21,8 @@ export function MessagesPage() {
     activeConversation,
     visibleConversations,
     loading: conversationsLoading,
+    deleteConversation,
+    clearConversationUnread,
   } = useChatConversations()
 
   const {
@@ -31,12 +34,30 @@ export function MessagesPage() {
     sendMessage,
     editMessage,
     deleteMessage,
+    markAsRead,
   } = useChatSocket(activeId)
   const [editingMessage, setEditingMessage] = useState<ChatMessage | null>(null)
 
   useEffect(() => {
     setEditingMessage(null)
   }, [activeId])
+
+  const handleDeleteConversation = async (conversationId: string) => {
+    try {
+      await deleteConversation(conversationId)
+      messageApi.success(
+        t('chat.deleteConversationSuccess', {
+          defaultValue: 'Đã xóa đoạn chat thành công.',
+        }),
+      )
+    } catch {
+      messageApi.error(
+        t('chat.deleteConversationError', {
+          defaultValue: 'Xóa đoạn chat thất bại. Vui lòng thử lại.',
+        }),
+      )
+    }
+  }
 
   const visibleMessages = useMemo(
     () => messages.filter((item) => item.conversationId === activeId),
@@ -45,6 +66,7 @@ export function MessagesPage() {
 
   return (
     <div className="messages-page-wrapper">
+      {contextHolder}
       <div
         className="messages-page-backdrop"
         style={{ backgroundImage: `url(${chatPanelBg})` }}
@@ -61,7 +83,10 @@ export function MessagesPage() {
         <div className="chat-panel">
           {activeConversation ? (
             <>
-              <ChatHeader conversation={activeConversation} />
+              <ChatHeader
+                conversation={activeConversation}
+                onDeleteConversation={handleDeleteConversation}
+              />
               <MessageThread
                 conversationId={activeId}
                 messages={visibleMessages}
@@ -80,6 +105,12 @@ export function MessagesPage() {
                   setEditingMessage(null)
                 }}
                 onCancelEdit={() => setEditingMessage(null)}
+                onFocusInput={() => {
+                  if (activeId) {
+                    markAsRead()
+                    clearConversationUnread(activeId)
+                  }
+                }}
               />
             </>
           ) : (

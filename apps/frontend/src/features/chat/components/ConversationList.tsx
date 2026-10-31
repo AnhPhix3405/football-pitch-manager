@@ -2,6 +2,7 @@ import { CalendarOutlined, SearchOutlined } from '@ant-design/icons'
 import { Empty, Input, Spin } from 'antd'
 import { useTranslation } from 'react-i18next'
 import type { Conversation } from '../interface/chat.types'
+import { getConversationPreview } from '../utils/chat-preview.util'
 
 interface ConversationListProps {
   conversations: Conversation[]
@@ -48,10 +49,7 @@ export function ConversationList({
         </div>
       ) : (
         conversations.map((conversation) => {
-          const previewText =
-            conversation.preview ||
-            conversation.lastMessage?.content ||
-            t('chat.noMessagesYet', { defaultValue: 'Chưa có tin nhắn nào' })
+          const previewText = getConversationPreview(conversation, t)
 
           return (
             <button
@@ -65,6 +63,8 @@ export function ConversationList({
                   <img
                     src={conversation.avatarUrl}
                     alt={conversation.name}
+                    loading="lazy"
+                    decoding="async"
                     style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
                   />
                 ) : conversation.kind === 'field' ? (
@@ -80,7 +80,7 @@ export function ConversationList({
                 <b>{conversation.name}</b>
                 <small>{previewText}</small>
               </span>
-              {conversation.unread > 0 && <em>{conversation.unread}</em>}
+              {conversation.unread > 0 && <i className="conversation-unread-dot" />}
             </button>
           )
         })
