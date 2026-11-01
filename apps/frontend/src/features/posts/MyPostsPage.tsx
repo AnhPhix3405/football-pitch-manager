@@ -8,6 +8,7 @@ import { CreatePostModal } from './components/CreatePostModal'
 import { PostCard } from './components/PostCard'
 import { useMyPosts } from './hooks/useMyPosts'
 import { deletePost } from './service/post.service'
+import { smoothScrollToTop } from '../../utils/scroll.utils'
 
 export function MyPostsPage() {
   const { t } = useTranslation()
@@ -58,7 +59,12 @@ export function MyPostsPage() {
 
       <Segmented
         value={status}
-        onChange={(val) => setStatus(val as MatchPost['status'])}
+        onChange={(val) => {
+          setStatus(val as MatchPost['status'])
+          if (window.scrollY > 150) {
+            smoothScrollToTop(0)
+          }
+        }}
         options={[
           { value: 'open', label: t('posts.status.open') },
           { value: 'matched', label: t('posts.status.matched') },

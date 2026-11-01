@@ -1,5 +1,6 @@
-export type FieldFormat = '5v5' | '7v7' | '11v11'
-export type FieldSurface = 'Cỏ nhân tạo' | 'Cỏ tự nhiên'
+import type { FieldFormat, FieldSurface } from '../../../constants'
+
+export type { FieldFormat, FieldSurface }
 
 export interface FootballField {
   id: string

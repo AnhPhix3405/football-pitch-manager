@@ -11,7 +11,7 @@ import { UpdatePostDto } from '../dto/update-post.dto';
 
 @Injectable()
 export class PostService {
-  constructor(private readonly postRepository: PostRepository) { }
+  constructor(private readonly postRepository: PostRepository) {}
 
   async getPublicPosts(query: QueryPostDto) {
     return this.postRepository.findPublicPosts({

@@ -1,6 +1,7 @@
 import type { Conversation, ChatMessage } from '../chat/interface/chat.types'
+import type { BookingStatus, FieldFormat, PostStatus } from '../../constants'
 
-export type BookingStatus = 'confirmed' | 'pending' | 'completed' | 'cancelled'
+export type { BookingStatus }
 export interface UserBooking {
   id: string;
   field: string;
@@ -18,17 +19,18 @@ export interface MatchPost {
   location: string;
   date: string;
   time: string;
-  format: '5v5' | '7v7' | '11v11';
+  format: FieldFormat;
   level: string;
   needed: number;
   applicants: number;
-  status: 'open' | 'matched' | 'closed';
+  status: PostStatus;
   description: string;
   imageUrl?: string;
   authorAvatar?: string;
   authorName?: string
 }
 export type { Conversation, ChatMessage }
+
 
 const pitchImage = 'https://images.unsplash.com/photo-1575361204480-aadea25e6e68?auto=format&fit=crop&w=900&q=80'
 export const userBookings: UserBooking[] = [

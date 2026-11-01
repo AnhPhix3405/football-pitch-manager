@@ -2,10 +2,12 @@ import { useCallback, useEffect, useState } from 'react'
 import { getPublicPosts } from '../service/post.service'
 import type { BackendPost } from '../interface/post.types'
 import type { MatchPost } from '../../user/user.data'
+import type { FieldFormat } from '../../../constants'
 
 export function mapBackendPostToMatchPost(item: BackendPost): MatchPost {
-  const format: '5v5' | '7v7' | '11v11' =
+  const format: FieldFormat =
     item.maxPlayers <= 10 ? '5v5' : item.maxPlayers <= 14 ? '7v7' : '11v11'
+
   return {
     id: item.id,
     title: item.title,
@@ -45,7 +47,10 @@ export function filterPosts(
 
 export function usePublicPosts(query = '', level = 'all', selectedDate: string | null = null) {
   const [apiPosts, setApiPosts] = useState<MatchPost[]>([])
+  const [page, setPage] = useState(1)
+  const [hasMore, setHasMore] = useState(true)
   const [loading, setLoading] = useState(false)
+  const [loadingMore, setLoadingMore] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const loadPosts = useCallback(async () => {
@@ -53,6 +58,8 @@ export function usePublicPosts(query = '', level = 'all', selectedDate: string |
       setLoading(true)
       setError(null)
       const res = await getPublicPosts({
+        page: 1,
+        limit: 8,
         search: query || undefined,
         skillLevel: level !== 'all' ? level : undefined,
         playDate: selectedDate || undefined,
@@ -60,6 +67,11 @@ export function usePublicPosts(query = '', level = 'all', selectedDate: string |
       })
       if (res?.items) {
         setApiPosts(res.items.map(mapBackendPostToMatchPost))
+        setPage(1)
+        setHasMore(res.page < res.totalPages)
+      } else {
+        setApiPosts([])
+        setHasMore(false)
       }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Lỗi tải bài đăng tìm đối')
@@ -68,9 +80,55 @@ export function usePublicPosts(query = '', level = 'all', selectedDate: string |
     }
   }, [query, level, selectedDate])
 
+  const loadMore = useCallback(async () => {
+    if (loading || loadingMore || !hasMore) return
+    const nextPage = page + 1
+
+    try {
+      setLoadingMore(true)
+      // Khoảng đệm tự nhiên (450ms) giúp skeleton hiển thị mượt mà, loại bỏ giật khựng DOM
+      const [res] = await Promise.all([
+        getPublicPosts({
+          page: nextPage,
+          limit: 8,
+          search: query || undefined,
+          skillLevel: level !== 'all' ? level : undefined,
+          playDate: selectedDate || undefined,
+          status: 'open',
+        }),
+        new Promise((resolve) => setTimeout(resolve, 450)),
+      ])
+
+      if (res?.items && res.items.length > 0) {
+        const newPosts = res.items.map(mapBackendPostToMatchPost)
+        setApiPosts((prev) => {
+          const existingIds = new Set(prev.map((p) => p.id))
+          const filteredNew = newPosts.filter((p) => !existingIds.has(p.id))
+          return [...prev, ...filteredNew]
+        })
+        setPage(nextPage)
+        setHasMore(res.page < res.totalPages)
+      } else {
+        setHasMore(false)
+      }
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Lỗi tải thêm bài đăng')
+    } finally {
+      setLoadingMore(false)
+    }
+  }, [loading, loadingMore, hasMore, page, query, level, selectedDate])
+
   useEffect(() => {
     loadPosts()
   }, [loadPosts])
 
-  return { apiPosts, loading, error, refetch: loadPosts }
+  return {
+    apiPosts,
+    loading,
+    loadingMore,
+    hasMore,
+    loadMore,
+    error,
+    refetch: loadPosts,
+  }
 }

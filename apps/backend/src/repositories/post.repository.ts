@@ -131,9 +131,7 @@ export class PostRepository extends BaseRepository<PostEntity> {
 
   private async attachUserProfiles(posts: PostEntity[]): Promise<void> {
     if (!posts || posts.length === 0) return;
-    const userIds = [
-      ...new Set(posts.map((p) => p.userId).filter(Boolean)),
-    ];
+    const userIds = [...new Set(posts.map((p) => p.userId).filter(Boolean))];
     if (userIds.length === 0) return;
 
     try {
@@ -168,10 +166,10 @@ export class PostRepository extends BaseRepository<PostEntity> {
       })
       .where('"deleted_at" IS NULL')
       .andWhere('"status" = :openStatus', { openStatus: 'open' })
-      .andWhere('"play_date" = :today', { today })
-      .andWhere('COALESCE("end_time", "start_time") <= :currentTime', {
-        currentTime,
-      })
+      .andWhere(
+        '("play_date" < :today OR ("play_date" = :today AND COALESCE("end_time", "start_time") <= :currentTime))',
+        { today, currentTime },
+      )
       .execute();
 
     return result.affected ?? 0;

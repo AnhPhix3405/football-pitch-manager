@@ -1,6 +1,5 @@
 import {
   CalendarOutlined,
-  CameraOutlined,
   ClockCircleOutlined,
   CloseOutlined,
   DownOutlined,
@@ -17,7 +16,6 @@ import {
   Modal,
   Popover,
   Select,
-  Spin,
   message,
 } from 'antd'
 import dayjs, { type Dayjs } from 'dayjs'

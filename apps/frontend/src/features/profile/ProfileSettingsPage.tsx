@@ -44,6 +44,7 @@ import { PillButton } from '../../components/PillButton'
 import profilePanelBg from '../../assets/profile_panel.jpg'
 import { ALLOWED_AVATAR_TYPES, MAX_AVATAR_SIZE } from './constants/profile.constant'
 import type { PasswordForm, ProfileForm } from './interface/profile.types'
+import { smoothScrollToTop } from '../../utils/scroll.utils'
 
 export function ProfileSettingsPage() {
   const { t, i18n } = useTranslation()
@@ -257,7 +258,12 @@ export function ProfileSettingsPage() {
       <div className="profile-history-toolbar">
         <Segmented
           value={bookingFilter}
-          onChange={(val) => setBookingFilter(val as BookingFilterType)}
+          onChange={(val) => {
+            setBookingFilter(val as BookingFilterType)
+            if (window.scrollY > 200) {
+              smoothScrollToTop(0)
+            }
+          }}
           options={[
             { value: 'upcoming', label: t('booking.tabs.upcoming', { defaultValue: 'Sắp tới' }) },
             { value: 'pending', label: t('booking.tabs.pending', { defaultValue: 'Chờ xử lý' }) },
@@ -295,7 +301,12 @@ export function ProfileSettingsPage() {
       <div className="profile-history-toolbar">
         <Segmented
           value={postStatus}
-          onChange={(val) => setPostStatus(val as MatchPost['status'])}
+          onChange={(val) => {
+            setPostStatus(val as MatchPost['status'])
+            if (window.scrollY > 200) {
+              smoothScrollToTop(0)
+            }
+          }}
           options={[
             { value: 'open', label: t('posts.status.open', { defaultValue: 'Đang mở' }) },
             { value: 'matched', label: t('posts.status.matched', { defaultValue: 'Đã ghép' }) },
@@ -455,8 +466,8 @@ export function ProfileSettingsPage() {
 
   return (
     <div className="profile-page-wrapper">
-      <BlurCircle variant="lime" size={540} left="-10%" bottom="0%" blur={130} opacity={0.32} />
-      <BlurCircle variant="emerald" size={580} right="-8%" top="30%" blur={120} opacity={0.25} />
+      <BlurCircle position="fixed" variant="lime" size={400} left="-10%" bottom="0%" blur={130} opacity={0.32} />
+      <BlurCircle position="fixed" variant="emerald" size={500} right="-8%" top="50%" blur={120} opacity={0.25} />
       {contextHolder}
 
       {/* Full-width Hero Card with stadium background banner */}
@@ -555,6 +566,11 @@ export function ProfileSettingsPage() {
       <div className="profile-content-container">
         <Tabs
           className="profile-portfolio-tabs"
+          onChange={() => {
+            if (window.scrollY > 150) {
+              smoothScrollToTop(0)
+            }
+          }}
           items={[
             {
               key: 'bookings',

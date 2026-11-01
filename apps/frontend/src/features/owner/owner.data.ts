@@ -1,7 +1,10 @@
+import type { BookingStatus, FieldFormat } from '../../constants'
+
 export type OwnerFieldStatus = 'active' | 'pending' | 'maintenance'
-export interface OwnerField { id: string; name: string; address: string; format: '5v5' | '7v7' | '11v11'; price: number; status: OwnerFieldStatus; bookingsToday: number; image: string }
+export interface OwnerField { id: string; name: string; address: string; format: FieldFormat; price: number; status: OwnerFieldStatus; bookingsToday: number; image: string }
 export interface OwnerService { id: string; name: string; price: number; unit: string; active: boolean }
-export interface OwnerBooking { id: string; customer: string; phone: string; field: string; date: string; time: string; amount: number; deposit: number; status: 'confirmed' | 'pending' | 'cancelled'; notes: string }
+export interface OwnerBooking { id: string; customer: string; phone: string; field: string; date: string; time: string; amount: number; deposit: number; status: BookingStatus; notes: string }
+
 
 const fieldImage = 'https://images.unsplash.com/photo-1575361204480-aadea25e6e68?auto=format&fit=crop&w=1000&q=80'
 export const ownerFields: OwnerField[] = [

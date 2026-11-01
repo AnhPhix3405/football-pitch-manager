@@ -34,11 +34,13 @@ import { ProfileSettingsPage } from '../features/profile/ProfileSettingsPage'
 import { AdminLayout } from './layouts/AdminLayout'
 import { OwnerLayout } from './layouts/OwnerLayout'
 import { PublicLayout } from './layouts/PublicLayout'
+import { ScrollToTop } from '../components/ScrollToTop'
 import { ProtectedRoute, RoleRoute } from './guards'
 
 export function AppRouter() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <Routes>
         <Route path="/auth/:mode" element={<AuthPage />} />
 

@@ -174,3 +174,43 @@ export async function compressImageUrl(
   })
 }
 
+/**
+ * Returns an optimized lightweight image URL or compresses via Canvas.
+ * - For CDN providers like Unsplash, adjusts URL parameters for WebP and compact size.
+ * - For other URLs, invokes compressImageUrl with in-memory caching.
+ */
+export async function getOptimizedImageUrl(
+  url?: string | null,
+  options: { maxWidth?: number; maxHeight?: number; quality?: number } = {},
+): Promise<string | null> {
+  if (!url) return null
+
+  const { maxWidth = 550, maxHeight = 320, quality = 0.75 } = options
+
+  // Fast path: If Unsplash CDN, adjust query parameters directly for instant CDN WebP delivery
+  if (url.includes('images.unsplash.com')) {
+    try {
+      const parsedUrl = new URL(url)
+      parsedUrl.searchParams.set('w', String(maxWidth))
+      parsedUrl.searchParams.set('q', String(Math.round(quality * 100)))
+      parsedUrl.searchParams.set('auto', 'format')
+      parsedUrl.searchParams.set('fit', 'crop')
+      return parsedUrl.toString()
+    } catch {
+      // Fallback
+    }
+  }
+
+  // Fallback: compress via Canvas
+  try {
+    return await compressImageUrl(url, {
+      maxWidth,
+      maxHeight,
+      quality,
+      mimeType: 'image/webp',
+    })
+  } catch {
+    return url
+  }
+}
+
