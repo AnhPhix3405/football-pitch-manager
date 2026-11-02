@@ -18,18 +18,12 @@ services:
       retries: 5
 
   redis:
-    image: redis:7-alpine
+    image: redis:8.6.2-alpine
     container_name: fpm_redis
-    restart: unless-stopped
     ports:
-      - "127.0.0.1:6379:6379"
+      - "6379:6379"
     volumes:
-      - redis_data:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+      - fpm_redis_data:/data
 
   backend:
     container_name: fpm_backend
@@ -63,4 +57,4 @@ services:
 
 volumes:
   postgres_data:
-  redis_data:
+  fpm_redis_data:

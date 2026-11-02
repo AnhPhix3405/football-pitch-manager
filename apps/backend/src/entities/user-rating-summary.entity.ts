@@ -7,6 +7,7 @@ import {
   OneToOne,
   PrimaryColumn,
   UpdateDateColumn,
+  VersionColumn,
 } from 'typeorm';
 import { UserEntity } from './user.entity';
 
@@ -42,6 +43,9 @@ export class UserRatingSummaryEntity {
     default: 0,
   })
   sportsmanshipScore!: string;
+
+  @VersionColumn({ default: 1 })
+  version!: number;
 
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' })
   updatedAt!: Date;

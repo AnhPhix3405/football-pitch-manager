@@ -131,9 +131,7 @@ export class PostRepository extends BaseRepository<PostEntity> {
 
   private async attachUserProfiles(posts: PostEntity[]): Promise<void> {
     if (!posts || posts.length === 0) return;
-    const userIds = [
-      ...new Set(posts.map((p) => p.userId).filter(Boolean)),
-    ];
+    const userIds = [...new Set(posts.map((p) => p.userId).filter(Boolean))];
     if (userIds.length === 0) return;
 
     try {

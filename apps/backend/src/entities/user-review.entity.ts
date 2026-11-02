@@ -8,7 +8,12 @@ import { UserEntity } from './user.entity';
 @Index(['targetUserId'])
 @Index(['reviewerId'])
 @Index(['targetUserId', 'createdAt'])
-@Check('"rating" BETWEEN 1 AND 5')
+@Index('IDX_user_reviews_target_rating_created', [
+  'targetUserId',
+  'rating',
+  'createdAt',
+])
+@Check('CHK_user_reviews_rating', '"rating" BETWEEN 1 AND 5')
 export class UserReviewEntity extends UuidEntity {
   @Column({ name: 'target_user_id', type: 'uuid' })
   targetUserId!: string;
@@ -39,4 +44,12 @@ export class UserReviewEntity extends UuidEntity {
 
   @Column({ name: 'is_flagged', type: 'boolean', default: false })
   isFlagged!: boolean;
+
+  @Column({
+    name: 'flag_reason',
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+  })
+  flagReason!: string | null;
 }
