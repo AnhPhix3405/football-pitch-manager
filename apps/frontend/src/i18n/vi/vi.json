@@ -19,7 +19,9 @@
     "commandCenter": "Command Center",
     "approvals": "Phê duyệt",
     "management": "Quản lý",
-    "reports": "Báo cáo & Audit"
+    "reports": "Báo cáo & Audit",
+    "ownerApprovals": "Duyệt chủ sân",
+    "fieldApprovals": "Duyệt sân bóng"
   },
   "common": {
     "online": "HỆ THỐNG TRỰC TUYẾN",

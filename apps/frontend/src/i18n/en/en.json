@@ -19,7 +19,9 @@
     "commandCenter": "Command Center",
     "approvals": "Approvals",
     "management": "Management",
-    "reports": "Reports & Audit"
+    "reports": "Reports & Audit",
+    "ownerApprovals": "Owner Approvals",
+    "fieldApprovals": "Field Approvals"
   },
   "common": {
     "online": "SYSTEM ONLINE",
