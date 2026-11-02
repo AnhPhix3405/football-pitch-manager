@@ -5,58 +5,82 @@ import {
   HttpCode,
   HttpStatus,
   Param,
-  ParseUUIDPipe,
+  Patch,
   Post,
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { CurrentUser } from '~/components/auth/decorators/current-user.decorator';
-import { JwtAuthGuard } from '~/components/auth/guards/jwt-auth.guard';
+import { CurrentUser } from '../../../components/auth/decorators/current-user.decorator';
+import { Public } from '../../../components/auth/decorators/public.decorator';
+import { Roles } from '../../../components/auth/decorators/roles.decorator';
+import { JwtAuthGuard } from '../../../components/auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../../components/auth/guards/roles.guard';
+import { ApiFieldReviewDocs } from '../docs/field-review.doc';
 import { CreateFieldReviewDto } from '../dto/create-field-review.dto';
-import { QueryReviewsDto } from '../dto/query-reviews.dto';
+import { ModerateReviewDto } from '../dto/moderate-review.dto';
+import { QueryReviewDto } from '../dto/query-review.dto';
+import { ReportReviewDto } from '../dto/report-review.dto';
 import { FieldReviewService } from '../services/field-review.service';
+import { RatingSummaryService } from '../services/rating-summary.service';
+import { ReviewModerationService } from '../services/review-moderation.service';
 
-@ApiTags('Đánh giá sân bóng')
-@Controller('fields/:id')
+@ApiFieldReviewDocs.controller()
+@Controller('reviews/fields')
 export class FieldReviewController {
-  constructor(private readonly fieldReviewService: FieldReviewService) {}
+  constructor(
+    private readonly fieldReviewService: FieldReviewService,
+    private readonly ratingSummaryService: RatingSummaryService,
+    private readonly reviewModerationService: ReviewModerationService,
+  ) {}
 
-  @Post('reviews')
   @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
+  @Post()
   @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({
-    summary: 'Gửi đánh giá và chấm sao cho sân sau khi hoàn tất đặt sân',
-  })
-  async createReview(
-    @Param('id', ParseUUIDPipe) fieldId: string,
-    @CurrentUser('id') userId: string,
+  @ApiFieldReviewDocs.create()
+  async create(
+    @CurrentUser('id') reviewerId: string,
     @Body() dto: CreateFieldReviewDto,
   ) {
-    return this.fieldReviewService.createReview(userId, fieldId, dto);
+    return this.fieldReviewService.createReview(reviewerId, dto);
   }
 
-  @Get('reviews')
-  @ApiOperation({
-    summary: 'Lấy danh sách đánh giá công khai của sân bóng có phân trang',
-  })
-  async getReviews(
-    @Param('id', ParseUUIDPipe) fieldId: string,
-    @Query() query: QueryReviewsDto,
+  @Public()
+  @Get(':fieldId')
+  @HttpCode(HttpStatus.OK)
+  @ApiFieldReviewDocs.getByField()
+  async getByField(
+    @Param('fieldId') fieldId: string,
+    @Query() query: QueryReviewDto,
   ) {
-    return this.fieldReviewService.getReviews(
-      fieldId,
-      query.page || 1,
-      query.limit || 10,
-    );
+    return this.fieldReviewService.getReviewsByField(fieldId, query);
   }
 
-  @Get('rating-summary')
-  @ApiOperation({
-    summary: 'Lấy tổng hợp điểm rating và điểm bayesian của sân bóng',
-  })
-  async getRatingSummary(@Param('id', ParseUUIDPipe) fieldId: string) {
-    return this.fieldReviewService.getRatingSummary(fieldId);
+  @Public()
+  @Get(':fieldId/summary')
+  @HttpCode(HttpStatus.OK)
+  @ApiFieldReviewDocs.getSummary()
+  async getSummary(@Param('fieldId') fieldId: string) {
+    return this.ratingSummaryService.getFieldSummary(fieldId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/report')
+  @HttpCode(HttpStatus.OK)
+  @ApiFieldReviewDocs.report()
+  async report(@Param('id') id: string, @Body() dto: ReportReviewDto) {
+    return this.reviewModerationService.reportFieldReview(id, dto.reason);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @Patch(':id/moderate')
+  @HttpCode(HttpStatus.OK)
+  @ApiFieldReviewDocs.moderate()
+  async moderate(@Param('id') id: string, @Body() dto: ModerateReviewDto) {
+    return this.reviewModerationService.moderateFieldReview(
+      id,
+      dto.action,
+      dto.reason,
+    );
   }
 }

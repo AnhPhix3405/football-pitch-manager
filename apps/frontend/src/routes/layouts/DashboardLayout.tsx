@@ -1,14 +1,11 @@
 import {
-  AuditOutlined,
   CalendarOutlined,
   CheckSquareOutlined,
   CreditCardOutlined,
-  DashboardOutlined,
   DollarOutlined,
   HomeOutlined,
   MenuOutlined,
   MessageOutlined,
-  SafetyCertificateOutlined,
   SettingOutlined,
   ShopOutlined,
   TeamOutlined,
@@ -46,10 +43,8 @@ function Navigation({ close, mode }: { close?: () => void; mode: 'user' | 'owner
   ]
 
   const adminNavItems = [
-    { to: '/admin', label: t('nav.commandCenter', { defaultValue: 'Command Center' }), icon: <DashboardOutlined /> },
-    { to: '/admin/approvals', label: t('nav.approvals', { defaultValue: 'Phê duyệt' }), icon: <CheckSquareOutlined /> },
-    { to: '/admin/management', label: t('nav.management', { defaultValue: 'Quản lý' }), icon: <SafetyCertificateOutlined /> },
-    { to: '/admin/reports', label: t('nav.reports', { defaultValue: 'Báo cáo & Audit' }), icon: <AuditOutlined /> },
+    { to: '/admin/approvals/owners', label: t('nav.ownerApprovals', { defaultValue: 'Duyệt chủ sân' }), icon: <CheckSquareOutlined /> },
+    { to: '/admin/approvals/fields', label: t('nav.fieldApprovals', { defaultValue: 'Duyệt sân bóng' }), icon: <ShopOutlined /> },
   ]
 
   const navItems = mode === 'owner' ? ownerNavItems : mode === 'admin' ? adminNavItems : userNavItems
@@ -57,7 +52,7 @@ function Navigation({ close, mode }: { close?: () => void; mode: 'user' | 'owner
   return (
     <nav className="dashboard-nav">
       {navItems.map((item) => (
-        <NavLink end={item.to === '/app'} key={item.to} to={item.to} onClick={close}>
+        <NavLink end={item.to === '/app' || item.to === '/owner'} key={item.to} to={item.to} onClick={close}>
           {item.icon}
           <span>{item.label}</span>
         </NavLink>

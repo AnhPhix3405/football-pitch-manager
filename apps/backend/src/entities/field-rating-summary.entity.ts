@@ -7,6 +7,7 @@ import {
   OneToOne,
   PrimaryColumn,
   UpdateDateColumn,
+  VersionColumn,
 } from 'typeorm';
 import { FieldEntity } from './field.entity';
 
@@ -42,6 +43,9 @@ export class FieldRatingSummaryEntity {
     default: 0,
   })
   bayesianScore!: string;
+
+  @VersionColumn({ default: 1 })
+  version!: number;
 
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' })
   updatedAt!: Date;

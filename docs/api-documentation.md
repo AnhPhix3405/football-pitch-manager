@@ -1497,3 +1497,349 @@ Tài liệu chi tiết toàn bộ các API HTTP REST và WebSocket Gateway của
     }
   }
   ```
+
+---
+
+### 3.13. Đánh Giá Sân Bóng & Xếp Hạng Bayesian (Field Reviews & Rankings)
+
+#### 3.13.1. Đánh giá sân bóng (`POST /reviews/fields`)
+- **Quyền truy cập:** Người dùng đã đăng nhập (Chủ đơn đặt sân).
+- **Mô tả:** Đánh giá chất lượng sân bóng sau khi đơn đặt sân đã hoàn thành (`status = 'completed'`). Mỗi booking chỉ được đánh giá 1 lần. Hệ thống tự động tính toán lại điểm trung bình và điểm xếp hạng Bayesian (`bayesianScore`).
+- **Request Body (`CreateFieldReviewDto`):**
+  ```json
+  {
+    "bookingId": "123e4567-e89b-42d3-a456-426614174000",
+    "rating": 5,
+    "comment": "Mặt sân cỏ rất đẹp, hệ thống chiếu sáng tốt và nhân viên nhiệt tình."
+  }
+  ```
+- **Response (`201 Created`):**
+  ```json
+  {
+    "success": true,
+    "data": {
+      "id": "123e4567-e89b-42d3-a456-426614174001",
+      "fieldId": "123e4567-e89b-42d3-a456-426614174002",
+      "reviewerId": "123e4567-e89b-42d3-a456-426614174003",
+      "bookingId": "123e4567-e89b-42d3-a456-426614174000",
+      "rating": 5,
+      "comment": "Mặt sân cỏ rất đẹp, hệ thống chiếu sáng tốt và nhân viên nhiệt tình.",
+      "isFlagged": false,
+      "flagReason": null,
+      "createdAt": "2026-10-31T10:00:00.000Z"
+    }
+  }
+  ```
+
+#### 3.13.2. Lấy danh sách đánh giá của sân bóng (`GET /reviews/fields/:fieldId`)
+- **Quyền truy cập:** Public
+- **Query Params:** `page` (mặc định: 1), `limit` (mặc định: 10), `rating` (lọc theo số sao 1-5).
+- **Response (`200 OK`):**
+  ```json
+  {
+    "success": true,
+    "data": {
+      "data": [
+        {
+          "id": "123e4567-e89b-42d3-a456-426614174001",
+          "rating": 5,
+          "comment": "Sân đẹp",
+          "createdAt": "2026-10-31T10:00:00.000Z",
+          "reviewer": {
+            "id": "123e4567-e89b-42d3-a456-426614174003",
+            "username": "nguyenvana",
+            "fullName": "Nguyen Van A"
+          }
+        }
+      ],
+      "total": 1,
+      "page": 1,
+      "limit": 10
+    }
+  }
+  ```
+
+#### 3.13.3. Xem tóm tắt điểm Bayesian của sân (`GET /reviews/fields/:fieldId/summary`)
+- **Quyền truy cập:** Public
+- **Mô tả:** Lấy điểm trung bình `avgRating`, tổng số lượt đánh giá `totalReviews`, và điểm xếp hạng Bayesian trọng số `bayesianScore` theo công thức: `(C * M + totalReviews * avgRating) / (C + totalReviews)` với `C = 5, M = 3.5`.
+- **Response (`200 OK`):**
+  ```json
+  {
+    "success": true,
+    "data": {
+      "avgRating": "4.85",
+      "totalReviews": 20,
+      "bayesianScore": "4.680"
+    }
+  }
+  ```
+
+#### 3.13.4. Bảng xếp hạng top sân bóng theo điểm Bayesian (`GET /fields/rankings/top`)
+- **Quyền truy cập:** Public
+- **Query Params:** `limit` (mặc định: 10, tối đa: 50).
+- **Response (`200 OK`):**
+  ```json
+  {
+    "success": true,
+    "data": [
+      {
+        "fieldId": "123e4567-e89b-42d3-a456-426614174002",
+        "name": "Sân Bóng Chánh Hưng",
+        "address": "123 Phạm Hùng",
+        "district": "Quận 8",
+        "avgRating": "4.85",
+        "totalReviews": 20,
+        "bayesianScore": "4.680"
+      }
+    ]
+  }
+  ```
+
+---
+
+### 3.14. Đánh Giá Người Chơi & Tinh Thần Thể Thao (User Reviews & Sportsmanship)
+
+#### 3.14.1. Đánh giá người chơi cùng trận (`POST /reviews/users`)
+- **Quyền truy cập:** Người dùng đã đăng nhập (Cùng tham gia trong trận đấu của post).
+- **Mô tả:** Đánh giá tinh thần thể thao (fair-play) của đối thủ hoặc đồng đội sau trận đấu. Yêu cầu cả người đánh giá và người được đánh giá đều là người tạo bài đăng hoặc người ứng tuyển đã được chấp nhận (`status = 'accepted'`).
+- **Request Body (`CreateUserReviewDto`):**
+  ```json
+  {
+    "targetUserId": "123e4567-e89b-42d3-a456-426614174003",
+    "postId": "123e4567-e89b-42d3-a456-426614174004",
+    "rating": 5,
+    "comment": "Đá nhiệt tình, đúng giờ và rất fair-play."
+  }
+  ```
+- **Response (`201 Created`):**
+  ```json
+  {
+    "success": true,
+    "data": {
+      "id": "123e4567-e89b-42d3-a456-426614174010",
+      "targetUserId": "123e4567-e89b-42d3-a456-426614174003",
+      "reviewerId": "123e4567-e89b-42d3-a456-426614174099",
+      "postId": "123e4567-e89b-42d3-a456-426614174004",
+      "rating": 5,
+      "comment": "Đá nhiệt tình, đúng giờ và rất fair-play.",
+      "createdAt": "2026-10-31T10:00:00.000Z"
+    }
+  }
+  ```
+
+#### 3.14.2. Xem điểm uy tín thể thao của người chơi (`GET /reviews/users/:userId/summary`)
+- **Quyền truy cập:** Public
+- **Response (`200 OK`):**
+  ```json
+  {
+    "success": true,
+    "data": {
+      "avgRating": "4.90",
+      "totalReviews": 10,
+      "sportsmanshipScore": "4.65"
+    }
+  }
+  ```
+
+---
+
+### 3.15. Kiểm Duyệt Đánh Giá (Review Moderation)
+
+#### 3.15.1. Báo cáo đánh giá sân bóng (`POST /reviews/fields/:id/report`)
+- **Quyền truy cập:** Đã đăng nhập
+- **Request Body (`ReportReviewDto`):**
+  ```json
+  {
+    "reason": "Nội dung nhận xét chứa từ ngữ xúc phạm hoặc thông tin sai sự thật"
+  }
+  ```
+- **Response (`200 OK`):**
+  ```json
+  {
+    "success": true,
+    "data": {
+      "id": "123e4567-e89b-42d3-a456-426614174001",
+      "isFlagged": true,
+      "flagReason": "Nội dung nhận xét chứa từ ngữ xúc phạm hoặc thông tin sai sự thật"
+    }
+  }
+  ```
+
+#### 3.15.2. Quản trị viên xử lý kiểm duyệt đánh giá sân (`PATCH /reviews/fields/:id/moderate`)
+- **Quyền truy cập:** Admin
+- **Mô tả:** Admin chọn hành động `dismiss` (bỏ qua báo cáo, đánh giá trở lại bình thường) hoặc `hide` (ẩn đánh giá khỏi trang và tự động loại trừ khỏi tính toán điểm Bayesian).
+- **Request Body (`ModerateReviewDto`):**
+  ```json
+  {
+    "action": "hide",
+    "reason": "Đánh giá vi phạm tiêu chuẩn cộng đồng"
+  }
+  ```
+- **Response (`200 OK`):**
+  ```json
+  {
+    "success": true,
+    "data": {
+      "id": "123e4567-e89b-42d3-a456-426614174001",
+      "isFlagged": true,
+      "flagReason": "HIDDEN: Đánh giá vi phạm tiêu chuẩn cộng đồng"
+    }
+  }
+  ```
+
+---
+
+### 3.16. Gói Thành Viên & Đăng Ký Dịch Vụ (Subscription Plans & Lifecycle)
+
+#### 3.16.1. Admin tạo gói dịch vụ mới (`POST /subscription-plans`)
+- **Quyền truy cập:** Admin
+- **Request Body (`CreateSubscriptionPlanDto`):**
+  ```json
+  {
+    "name": "Gói Hội Viên Vàng",
+    "price": 299000,
+    "durationDays": 30,
+    "benefit": {
+      "aiQuotaDaily": 50,
+      "featuredField": true
+    },
+    "isActive": true
+  }
+  ```
+- **Response (`201 Created`):**
+  ```json
+  {
+    "success": true,
+    "data": {
+      "id": "123e4567-e89b-42d3-a456-426614174020",
+      "name": "Gói Hội Viên Vàng",
+      "price": "299000.00",
+      "durationDays": 30,
+      "benefit": {
+        "aiQuotaDaily": 50,
+        "featuredField": true
+      },
+      "isActive": true,
+      "createdAt": "2026-10-31T10:00:00.000Z"
+    }
+  }
+  ```
+
+#### 3.16.2. Lấy danh sách gói thành viên đang mở đăng ký (`GET /subscription-plans`)
+- **Quyền truy cập:** Public
+- **Response (`200 OK`):**
+  ```json
+  {
+    "success": true,
+    "data": [
+      {
+        "id": "123e4567-e89b-42d3-a456-426614174020",
+        "name": "Gói Hội Viên Vàng",
+        "price": "299000.00",
+        "durationDays": 30,
+        "benefit": { "aiQuotaDaily": 50 }
+      }
+    ]
+  }
+  ```
+
+#### 3.16.3. Đăng ký gói thành viên (`POST /subscriptions`)
+- **Quyền truy cập:** Đã đăng nhập
+- **Mô tả:** Đăng ký gói dịch vụ. Hệ thống kiểm tra tài khoản chưa có gói đang active, tự động tính `startDate` và `endDate = startDate + durationDays`.
+- **Request Body (`SubscribePlanDto`):**
+  ```json
+  {
+    "planId": "123e4567-e89b-42d3-a456-426614174020"
+  }
+  ```
+- **Response (`201 Created`):**
+  ```json
+  {
+    "success": true,
+    "data": {
+      "id": "123e4567-e89b-42d3-a456-426614174021",
+      "ownerId": "123e4567-e89b-42d3-a456-426614174099",
+      "planId": "123e4567-e89b-42d3-a456-426614174020",
+      "status": "active",
+      "startDate": "2026-10-31",
+      "endDate": "2026-11-30",
+      "createdAt": "2026-10-31T10:00:00.000Z"
+    }
+  }
+  ```
+
+#### 3.16.4. Xem gói thành viên của bản thân (`GET /subscriptions/me`)
+- **Quyền truy cập:** Đã đăng nhập
+- **Response (`200 OK`):**
+  ```json
+  {
+    "success": true,
+    "data": {
+      "id": "123e4567-e89b-42d3-a456-426614174021",
+      "status": "active",
+      "startDate": "2026-10-31",
+      "endDate": "2026-11-30",
+      "plan": {
+        "name": "Gói Hội Viên Vàng",
+        "benefit": { "aiQuotaDaily": 50 }
+      }
+    }
+  }
+  ```
+
+#### 3.16.5. Hủy gói thành viên (`DELETE /subscriptions/:id`)
+- **Quyền truy cập:** Chủ sở hữu gói
+- **Response (`200 OK`):**
+  ```json
+  {
+    "success": true,
+    "data": {
+      "id": "123e4567-e89b-42d3-a456-426614174021",
+      "status": "cancelled"
+    }
+  }
+  ```
+
+---
+
+### 3.17. Trợ Lý AI & Quản Lý Hạn Mức (AI Assistant & Quota Tracking)
+
+#### 3.17.1. Gợi ý ghép trận thông minh bằng AI (`POST /ai/matchmaking/suggestions`)
+- **Quyền truy cập:** Đã đăng nhập (Áp dụng `AiRateLimitGuard`, trả về `429 Too Many Requests` nếu vượt quá hạn mức hàng ngày của gói).
+- **Mô tả:** Phân tích ứng viên đang chờ duyệt (`pending`) của bài đăng tìm đối, đối chiếu điểm tinh thần thể thao (`sportsmanshipScore`) và lịch sử tham gia để đề xuất người chơi có độ tương thích cao nhất.
+- **Request Body (`AiMatchSuggestionRequestDto`):**
+  ```json
+  {
+    "postId": "123e4567-e89b-42d3-a456-426614174004"
+  }
+  ```
+- **Response (`200 OK`):**
+  ```json
+  {
+    "success": true,
+    "data": {
+      "postId": "123e4567-e89b-42d3-a456-426614174004",
+      "recommendedUserId": "123e4567-e89b-42d3-a456-426614174003",
+      "compatibilityScore": 92,
+      "reason": "Người chơi có điểm tinh thần thể thao 4.8/5.0 và đã hoàn thành 10 đánh giá trận đấu, phù hợp tiêu chí bài đăng.",
+      "tokensUsed": 120,
+      "provider": "mock"
+    }
+  }
+  ```
+
+#### 3.17.2. Xem hạn mức AI và số lượt đã sử dụng (`GET /ai/usage/me`)
+- **Quyền truy cập:** Đã đăng nhập
+- **Mô tả:** Lấy số lượt yêu cầu AI đã sử dụng trong ngày hôm nay, hạn mức theo gói (mặc định Free: 3/ngày, Pro/VIP: 50+/ngày), và số lượt còn lại.
+- **Response (`200 OK`):**
+  ```json
+  {
+    "success": true,
+    "data": {
+      "dailyRequestsUsed": 2,
+      "dailyQuota": 50,
+      "remainingRequests": 48,
+      "totalTokensUsed": 240
+    }
+  }
+  ```

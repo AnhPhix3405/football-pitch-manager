@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { AuthModule } from '~/components/auth/auth.module';
 import { BookingEntity } from '~/entities/booking.entity';
+import { FieldCourtEntity } from '~/entities/field-court.entity';
 import { FieldImageEntity } from '~/entities/field-image.entity';
 import { FieldRatingSummaryEntity } from '~/entities/field-rating-summary.entity';
 import { FieldReviewEntity } from '~/entities/field-review.entity';
@@ -15,18 +17,19 @@ import { BookingRepository } from '~/repositories/booking.repository';
 import { FieldImageRepository } from '~/repositories/field-image.repository';
 import { FieldRatingSummaryRepository } from '~/repositories/field-rating-summary.repository';
 import { FieldReviewRepository } from '~/repositories/field-review.repository';
-import { FieldRepository } from '~/repositories/field.repository';
 import { PostMatchRepository } from '~/repositories/post-match.repository';
 import { PostRepository } from '~/repositories/post.repository';
 import { UserRatingSummaryRepository } from '~/repositories/user-rating-summary.repository';
 import { UserReviewRepository } from '~/repositories/user-review.repository';
-import { UserRepository } from '~/repositories/user.repository';
-import { AuthModule } from '../auth/auth.module';
+import { FieldRankingController } from './controllers/field-ranking.controller';
 import { FieldReviewController } from './controllers/field-review.controller';
 import { RankingController } from './controllers/ranking.controller';
 import { UserReviewController } from './controllers/user-review.controller';
+import { FieldRankingService } from './services/field-ranking.service';
 import { FieldReviewService } from './services/field-review.service';
 import { RankingService } from './services/ranking.service';
+import { RatingSummaryService } from './services/rating-summary.service';
+import { ReviewModerationService } from './services/review-moderation.service';
 import { UserReviewService } from './services/user-review.service';
 
 @Module({
@@ -37,39 +40,48 @@ import { UserReviewService } from './services/user-review.service';
       FieldRatingSummaryEntity,
       UserRatingSummaryEntity,
       BookingEntity,
+      FieldCourtEntity,
       FieldEntity,
       FieldImageEntity,
-      UserEntity,
-      UserProfileEntity,
       PostEntity,
       PostMatchEntity,
+      UserProfileEntity,
+      UserEntity,
     ]),
     AuthModule,
   ],
-  controllers: [FieldReviewController, UserReviewController, RankingController],
+  controllers: [
+    FieldReviewController,
+    UserReviewController,
+    FieldRankingController,
+    RankingController,
+  ],
   providers: [
+    // Repositories
     FieldReviewRepository,
     UserReviewRepository,
     FieldRatingSummaryRepository,
     UserRatingSummaryRepository,
-    BookingRepository,
-    FieldRepository,
     FieldImageRepository,
-    UserRepository,
+    BookingRepository,
     PostRepository,
     PostMatchRepository,
+
+    // Services
+    RatingSummaryService,
     FieldReviewService,
     UserReviewService,
+    ReviewModerationService,
+    FieldRankingService,
     RankingService,
   ],
   exports: [
+    RatingSummaryService,
     FieldReviewService,
     UserReviewService,
+    ReviewModerationService,
+    FieldRankingService,
     RankingService,
-    FieldReviewRepository,
-    UserReviewRepository,
-    FieldRatingSummaryRepository,
-    UserRatingSummaryRepository,
   ],
 })
 export class ReviewModule {}

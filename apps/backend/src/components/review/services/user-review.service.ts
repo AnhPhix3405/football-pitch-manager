@@ -1,141 +1,117 @@
-import { randomUUID } from 'node:crypto';
 import {
   BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { UserReviewEntity } from '~/entities/user-review.entity';
 import { PostMatchRepository } from '~/repositories/post-match.repository';
 import { PostRepository } from '~/repositories/post.repository';
-import { UserRatingSummaryRepository } from '~/repositories/user-rating-summary.repository';
 import { UserReviewRepository } from '~/repositories/user-review.repository';
-import { UserRepository } from '~/repositories/user.repository';
 import { CreateUserReviewDto } from '../dto/create-user-review.dto';
+import { QueryReviewDto } from '../dto/query-review.dto';
+import { RatingSummaryService } from './rating-summary.service';
 
 @Injectable()
 export class UserReviewService {
   constructor(
     private readonly userReviewRepository: UserReviewRepository,
-    private readonly userRatingSummaryRepository: UserRatingSummaryRepository,
     private readonly postRepository: PostRepository,
     private readonly postMatchRepository: PostMatchRepository,
-    private readonly userRepository: UserRepository,
+    private readonly ratingSummaryService: RatingSummaryService,
   ) {}
 
   async createReview(
     reviewerId: string,
-    targetUserId: string,
     dto: CreateUserReviewDto,
-  ) {
-    if (reviewerId === targetUserId) {
-      throw new BadRequestException('Bạn không thể tự đánh giá chính mình');
-    }
-
-    const targetUser = await this.userRepository.findById(targetUserId);
-    if (!targetUser) {
-      throw new NotFoundException('Người chơi được đánh giá không tồn tại');
+  ): Promise<UserReviewEntity> {
+    if (reviewerId === dto.targetUserId) {
+      throw new BadRequestException('selfReviewNotAllowed');
     }
 
     const post = await this.postRepository.findById(dto.postId);
     if (!post) {
-      throw new NotFoundException('Bài đăng tìm đối không tồn tại');
+      throw new NotFoundException('postNotFound');
     }
 
-    // Kiểm tra xem reviewer và targetUser có cùng tham gia trận đấu này không
     const matches = await this.postMatchRepository.findByPostId(dto.postId);
-    const acceptedMatches = matches.filter((m) => m.status === 'accepted');
+    const acceptedMatches = matches.filter(
+      (match) => match.status === 'accepted',
+    );
 
-    const isAuthor = post.userId === reviewerId;
-    const isTargetAuthor = post.userId === targetUserId;
+    const isReviewerParticipant =
+      post.userId === reviewerId ||
+      acceptedMatches.some((m) => m.applicantId === reviewerId);
 
-    const reviewerAccepted =
-      isAuthor || acceptedMatches.some((m) => m.applicantId === reviewerId);
-    const targetAccepted =
-      isTargetAuthor ||
-      acceptedMatches.some((m) => m.applicantId === targetUserId);
+    const isTargetParticipant =
+      post.userId === dto.targetUserId ||
+      acceptedMatches.some((m) => m.applicantId === dto.targetUserId);
 
-    if (!reviewerAccepted || !targetAccepted) {
-      throw new BadRequestException(
-        'Chỉ các người chơi đã ghép đội thành công trong trận đấu mới có thể đánh giá nhau',
-      );
+    if (!isReviewerParticipant || !isTargetParticipant) {
+      throw new BadRequestException('playersNotInSameMatch');
     }
 
-    const existing =
+    const existingReview =
       await this.userReviewRepository.findByPostTargetAndReviewer(
         dto.postId,
-        targetUserId,
+        dto.targetUserId,
         reviewerId,
       );
-    if (existing) {
-      throw new ConflictException(
-        'Bạn đã gửi đánh giá cho người chơi này trong trận đấu rồi',
-      );
+    if (existingReview) {
+      throw new ConflictException('duplicateUserReview');
     }
 
-    const newReview = this.userReviewRepository.create({
-      id: randomUUID(),
-      targetUserId,
-      reviewerId,
+    const review = this.userReviewRepository.create({
       postId: dto.postId,
+      targetUserId: dto.targetUserId,
+      reviewerId,
       rating: dto.rating,
-      comment: dto.comment?.trim() || null,
+      comment: dto.comment ?? null,
       isFlagged: false,
+      flagReason: null,
     });
 
-    const savedReview = await this.userReviewRepository.save(newReview);
+    const saved = await this.userReviewRepository.save(review);
 
-    // Tính toán lại summary và điểm thể thao fair-play
-    await this.updateUserRatingSummary(targetUserId);
+    await this.ratingSummaryService.recalculateUserSummary(dto.targetUserId);
 
-    return savedReview;
+    return saved;
   }
 
-  async getReviews(targetUserId: string, page = 1, limit = 10) {
-    const { items, total } =
-      await this.userReviewRepository.findPageByTargetUserId(
-        targetUserId,
+  async getReviewsByUser(
+    userId: string,
+    query: QueryReviewDto,
+  ): Promise<{
+    data: UserReviewEntity[];
+    total: number;
+    page: number;
+    limit: number;
+  }> {
+    const page = Math.max(1, Number(query.page) || 1);
+    const limit = Math.max(1, Math.min(50, Number(query.limit) || 10));
+
+    const { items, total } = await this.userReviewRepository.findByTargetUserId(
+      userId,
+      {
         page,
         limit,
-      );
+        rating: query.rating,
+      },
+    );
 
     return {
-      items,
+      data: items,
       total,
       page,
       limit,
-      totalPages: Math.ceil(total / limit),
     };
   }
 
-  async getRatingSummary(targetUserId: string) {
-    const summary =
-      await this.userRatingSummaryRepository.findByUserId(targetUserId);
-    if (!summary) {
-      return {
-        userId: targetUserId,
-        avgRating: '0.00',
-        totalReviews: 0,
-        sportsmanshipScore: '0.00',
-      };
+  async getReviewById(id: string): Promise<UserReviewEntity> {
+    const review = await this.userReviewRepository.findById(id);
+    if (!review) {
+      throw new NotFoundException('reviewNotFound');
     }
-    return summary;
-  }
-
-  private async updateUserRatingSummary(userId: string): Promise<void> {
-    const stats =
-      await this.userReviewRepository.getRatingStatsByTargetUserId(userId);
-    const v = stats.count;
-    const R = stats.avgRating;
-
-    // Điểm tinh thần thể thao (Sportsmanship Score): Thang điểm 100
-    // Điểm cơ bản = R * 20 (ví dụ 5 sao = 100 điểm, 4.5 sao = 90 điểm)
-    const sportsmanshipScore = v > 0 ? R * 20 : 0;
-
-    await this.userRatingSummaryRepository.upsertSummary(
-      userId,
-      R,
-      v,
-      sportsmanshipScore,
-    );
+    return review;
   }
 }

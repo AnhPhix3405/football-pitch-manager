@@ -73,3 +73,68 @@ export async function rejectOwnerRegistration(id: string, rejectionReason: strin
   })
   return response.data.data
 }
+
+export interface AdminTargetField {
+  id: string
+  name: string
+  address: string
+  ward?: string
+  district?: string
+  city?: string
+  avatarUrl?: string | null
+}
+
+export interface AdminFieldApprovalItem {
+  id: string
+  type: 'field_create' | 'field_update' | string
+  targetId: string
+  status: 'pending' | 'approved' | 'rejected' | string
+  note: string | null
+  createdAt: string
+  reviewedAt: string | null
+  requester: RequesterSummary
+  targetField?: AdminTargetField | null
+  proposedChanges?: Record<string, unknown> | null
+  reviewer?: ReviewerSummary | null
+}
+
+export interface AdminFieldApprovalListResponse {
+  items: AdminFieldApprovalItem[]
+  total: number
+  page: number
+  limit: number
+  totalPages: number
+}
+
+export interface AdminFieldApprovalQueryParams {
+  page?: number
+  limit?: number
+  status?: string
+  type?: string
+}
+
+export async function getFieldApprovals(params?: AdminFieldApprovalQueryParams): Promise<AdminFieldApprovalListResponse> {
+  const response = await apiClient.get<ApiResponse<AdminFieldApprovalListResponse>>('/admin/field-approvals', {
+    params,
+  })
+  return response.data.data
+}
+
+export async function getFieldApprovalDetail(id: string): Promise<AdminFieldApprovalItem> {
+  const response = await apiClient.get<ApiResponse<AdminFieldApprovalItem>>(`/admin/field-approvals/${id}`)
+  return response.data.data
+}
+
+export async function approveFieldRequest(id: string, note?: string): Promise<AdminFieldApprovalItem> {
+  const response = await apiClient.post<ApiResponse<AdminFieldApprovalItem>>(`/admin/field-approvals/${id}/approve`, {
+    note,
+  })
+  return response.data.data
+}
+
+export async function rejectFieldRequest(id: string, reason: string): Promise<AdminFieldApprovalItem> {
+  const response = await apiClient.post<ApiResponse<AdminFieldApprovalItem>>(`/admin/field-approvals/${id}/reject`, {
+    reason,
+  })
+  return response.data.data
+}

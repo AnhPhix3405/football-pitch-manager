@@ -78,5 +78,17 @@
   "maxPlayersReached": "Post has already reached the maximum player limit",
   "matchAlreadyAccepted": "This match application has already been accepted",
   "matchAlreadyProcessed": "This match application has already been processed",
-  "forbiddenMatchAction": "Only the post owner has permission to process this request"
+  "forbiddenMatchAction": "Only the post owner has permission to process this request",
+  "bookingNotCompleted": "Only completed bookings can be reviewed",
+  "duplicateReview": "You have already reviewed this booking",
+  "selfReviewNotAllowed": "You cannot review yourself",
+  "playersNotInSameMatch": "Both players must have participated in the same match to review",
+  "duplicateUserReview": "You have already reviewed this player for this match",
+  "reviewNotFound": "Review not found",
+  "invalidRatingRange": "Rating must be between 1 and 5",
+  "subscriptionNotFound": "Subscription not found",
+  "subscriptionAlreadyActive": "You already have an active subscription",
+  "subscriptionPlanNotFound": "Subscription plan not found",
+  "subscriptionPlanInactive": "Subscription plan is currently inactive",
+  "aiRateLimitExceeded": "AI request quota exceeded for your current tier"
 }

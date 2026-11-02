@@ -78,5 +78,17 @@
   "maxPlayersReached": "Bài đăng đã đủ số người tham gia",
   "matchAlreadyAccepted": "Yêu cầu ứng tuyển này đã được chấp nhận trước đó",
   "matchAlreadyProcessed": "Yêu cầu ứng tuyển này đã được xử lý",
-  "forbiddenMatchAction": "Chỉ chủ bài đăng mới có quyền duyệt yêu cầu này"
+  "forbiddenMatchAction": "Chỉ chủ bài đăng mới có quyền duyệt yêu cầu này",
+  "bookingNotCompleted": "Chỉ có thể đánh giá đơn đặt sân đã hoàn thành",
+  "duplicateReview": "Bạn đã đánh giá đơn đặt sân này rồi",
+  "selfReviewNotAllowed": "Bạn không thể tự đánh giá chính mình",
+  "playersNotInSameMatch": "Cả hai người chơi phải cùng tham gia một trận đấu để có thể đánh giá",
+  "duplicateUserReview": "Bạn đã đánh giá người chơi này trong trận đấu này rồi",
+  "reviewNotFound": "Không tìm thấy đánh giá",
+  "invalidRatingRange": "Điểm đánh giá phải từ 1 đến 5",
+  "subscriptionNotFound": "Không tìm thấy thông tin gói đăng ký",
+  "subscriptionAlreadyActive": "Bạn đang có một gói đăng ký đang hoạt động",
+  "subscriptionPlanNotFound": "Không tìm thấy gói thành viên",
+  "subscriptionPlanInactive": "Gói thành viên hiện đang tạm ngưng",
+  "aiRateLimitExceeded": "Đã vượt quá hạn mức yêu cầu AI cho gói hiện tại"
 }

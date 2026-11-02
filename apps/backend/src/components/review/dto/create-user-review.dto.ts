@@ -12,31 +12,39 @@ import {
 
 export class CreateUserReviewDto {
   @ApiProperty({
-    description: 'Mã bài đăng tìm đối liên quan đến trận đấu đã diễn ra',
-    example: 'd0c9f1a2-5b3e-4d5a-8b1c-9e2f3a4b5c6d',
+    description: 'ID người chơi được đánh giá (UUID)',
+    example: '123e4567-e89b-12d3-a456-426614174001',
   })
-  @IsUUID('4', { message: 'postId phải là UUID v4 hợp lệ' })
+  @IsUUID(undefined, { message: 'targetUserId phải là UUID hợp lệ' })
+  @IsNotEmpty({ message: 'targetUserId không được để trống' })
+  targetUserId!: string;
+
+  @ApiProperty({
+    description: 'ID bài đăng tìm đối / ghép trận liên quan (UUID)',
+    example: '123e4567-e89b-12d3-a456-426614174002',
+  })
+  @IsUUID(undefined, { message: 'postId phải là UUID hợp lệ' })
   @IsNotEmpty({ message: 'postId không được để trống' })
   postId!: string;
 
   @ApiProperty({
-    description: 'Điểm đánh giá tinh thần thể thao (từ 1 đến 5 sao)',
+    description: 'Điểm đánh giá tinh thần thể thao (từ 1 đến 5)',
     example: 5,
     minimum: 1,
     maximum: 5,
   })
   @IsInt({ message: 'rating phải là số nguyên' })
-  @Min(1, { message: 'rating tối thiểu là 1 sao' })
-  @Max(5, { message: 'rating tối đa là 5 sao' })
+  @Min(1, { message: 'rating tối thiểu là 1' })
+  @Max(5, { message: 'rating tối đa là 5' })
   rating!: number;
 
   @ApiPropertyOptional({
-    description: 'Nhận xét về lối chơi, tinh thần thi đấu, thái độ fair-play',
-    example: 'Đội bạn đá rất đẹp, tinh thần giao lưu hữu nghị, đúng giờ.',
+    description: 'Nội dung nhận xét về thái độ, tinh thần thi đấu',
+    example: 'Đúng giờ, đá nhiệt tình và fair-play.',
     maxLength: 1000,
   })
   @IsString()
   @IsOptional()
-  @MaxLength(1000, { message: 'Nhận xét không được vượt quá 1000 ký tự' })
+  @MaxLength(1000, { message: 'comment tối đa 1000 ký tự' })
   comment?: string;
 }

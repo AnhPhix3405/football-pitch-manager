@@ -1,4 +1,4 @@
-import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
+import { Check, Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 import { UuidEntity } from '../core/entities/uuid.entity';
 import { SubscriptionPlanEntity } from './subscription-plan.entity';
 import { UserEntity } from './user.entity';
@@ -9,6 +9,14 @@ import { UserEntity } from './user.entity';
 @Index(['status'])
 @Index(['ownerId', 'status'])
 @Index(['status', 'endDate'])
+@Check(
+  'CHK_subscriptions_status',
+  `"status" IN ('pending_payment', 'active', 'expired', 'cancelled')`,
+)
+@Check(
+  'CHK_subscriptions_date_order',
+  `"end_date" IS NULL OR "start_date" <= "end_date"`,
+)
 export class SubscriptionEntity extends UuidEntity {
   @Column({ name: 'owner_id', type: 'uuid' })
   ownerId!: string;

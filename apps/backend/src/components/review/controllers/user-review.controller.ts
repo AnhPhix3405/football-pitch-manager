@@ -5,58 +5,82 @@ import {
   HttpCode,
   HttpStatus,
   Param,
-  ParseUUIDPipe,
+  Patch,
   Post,
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { CurrentUser } from '~/components/auth/decorators/current-user.decorator';
-import { JwtAuthGuard } from '~/components/auth/guards/jwt-auth.guard';
+import { CurrentUser } from '../../../components/auth/decorators/current-user.decorator';
+import { Public } from '../../../components/auth/decorators/public.decorator';
+import { Roles } from '../../../components/auth/decorators/roles.decorator';
+import { JwtAuthGuard } from '../../../components/auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../../components/auth/guards/roles.guard';
+import { ApiUserReviewDocs } from '../docs/user-review.doc';
 import { CreateUserReviewDto } from '../dto/create-user-review.dto';
-import { QueryReviewsDto } from '../dto/query-reviews.dto';
+import { ModerateReviewDto } from '../dto/moderate-review.dto';
+import { QueryReviewDto } from '../dto/query-review.dto';
+import { ReportReviewDto } from '../dto/report-review.dto';
+import { RatingSummaryService } from '../services/rating-summary.service';
+import { ReviewModerationService } from '../services/review-moderation.service';
 import { UserReviewService } from '../services/user-review.service';
 
-@ApiTags('Đánh giá người chơi')
-@Controller('users/:id')
+@ApiUserReviewDocs.controller()
+@Controller('reviews/users')
 export class UserReviewController {
-  constructor(private readonly userReviewService: UserReviewService) {}
+  constructor(
+    private readonly userReviewService: UserReviewService,
+    private readonly ratingSummaryService: RatingSummaryService,
+    private readonly reviewModerationService: ReviewModerationService,
+  ) {}
 
-  @Post('reviews')
   @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
+  @Post()
   @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({
-    summary: 'Đánh giá tinh thần thể thao của người chơi sau trận đấu',
-  })
-  async createReview(
-    @Param('id', ParseUUIDPipe) targetUserId: string,
+  @ApiUserReviewDocs.create()
+  async create(
     @CurrentUser('id') reviewerId: string,
     @Body() dto: CreateUserReviewDto,
   ) {
-    return this.userReviewService.createReview(reviewerId, targetUserId, dto);
+    return this.userReviewService.createReview(reviewerId, dto);
   }
 
-  @Get('reviews')
-  @ApiOperation({
-    summary: 'Xem danh sách đánh giá của một người chơi có phân trang',
-  })
-  async getReviews(
-    @Param('id', ParseUUIDPipe) targetUserId: string,
-    @Query() query: QueryReviewsDto,
+  @Public()
+  @Get(':userId')
+  @HttpCode(HttpStatus.OK)
+  @ApiUserReviewDocs.getByUser()
+  async getByUser(
+    @Param('userId') userId: string,
+    @Query() query: QueryReviewDto,
   ) {
-    return this.userReviewService.getReviews(
-      targetUserId,
-      query.page || 1,
-      query.limit || 10,
-    );
+    return this.userReviewService.getReviewsByUser(userId, query);
   }
 
-  @Get('rating-summary')
-  @ApiOperation({
-    summary: 'Xem tổng hợp điểm tinh thần thể thao và đánh giá của người chơi',
-  })
-  async getRatingSummary(@Param('id', ParseUUIDPipe) targetUserId: string) {
-    return this.userReviewService.getRatingSummary(targetUserId);
+  @Public()
+  @Get(':userId/summary')
+  @HttpCode(HttpStatus.OK)
+  @ApiUserReviewDocs.getSummary()
+  async getSummary(@Param('userId') userId: string) {
+    return this.ratingSummaryService.getUserSummary(userId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/report')
+  @HttpCode(HttpStatus.OK)
+  @ApiUserReviewDocs.report()
+  async report(@Param('id') id: string, @Body() dto: ReportReviewDto) {
+    return this.reviewModerationService.reportUserReview(id, dto.reason);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @Patch(':id/moderate')
+  @HttpCode(HttpStatus.OK)
+  @ApiUserReviewDocs.moderate()
+  async moderate(@Param('id') id: string, @Body() dto: ModerateReviewDto) {
+    return this.reviewModerationService.moderateUserReview(
+      id,
+      dto.action,
+      dto.reason,
+    );
   }
 }

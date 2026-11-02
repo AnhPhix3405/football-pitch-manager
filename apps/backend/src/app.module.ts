@@ -5,6 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { I18nModule } from 'nestjs-i18n';
 import { StorageModule } from './common/storage/storage.module';
 import { AdminApprovalModule } from './components/admin-approval/admin-approval.module';
+import { AiModule } from './components/ai/ai.module';
 import { AuthModule } from './components/auth/auth.module';
 import { BookingModule } from './components/booking/booking.module';
 import { ChatModule } from './components/chat/chat.module';
@@ -14,6 +15,8 @@ import { NotificationModule } from './components/notification/notification.modul
 import { OwnerProfileModule } from './components/owner-profile/owner-profile.module';
 import { PaymentModule } from './components/payment/payment.module';
 import { PostModule } from './components/post/post.module';
+import { ReviewModule } from './components/review/review.module';
+import { SubscriptionModule } from './components/subscription/subscription.module';
 import { UserProfileModule } from './components/user-profile/user-profile.module';
 import { appConfig } from './config/app.config';
 import { validateEnvironment } from './config/environment.validation';
@@ -47,6 +50,9 @@ import { typeOrmDataSourceOptions } from './database/config/typeorm.options';
     ChatModule,
     PostModule,
     NotificationModule,
+    ReviewModule,
+    SubscriptionModule,
+    AiModule,
   ],
 })
 export class AppModule {}

@@ -12,7 +12,9 @@ export class RankingService {
   ) {}
 
   async getFieldRankings(limit = 20) {
-    const list = await this.fieldRatingSummaryRepository.findTopRanked(limit);
+    const list = await this.fieldRatingSummaryRepository.findTopRanked({
+      limit,
+    });
 
     const results = await Promise.all(
       list.map(async (item, index) => {

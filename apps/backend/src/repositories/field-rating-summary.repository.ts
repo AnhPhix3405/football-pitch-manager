@@ -10,59 +10,45 @@ export class FieldRatingSummaryRepository {
     private readonly repository: Repository<FieldRatingSummaryEntity>,
   ) {}
 
-  findByFieldId(fieldId: string): Promise<FieldRatingSummaryEntity | null> {
+  async findByFieldId(
+    fieldId: string,
+  ): Promise<FieldRatingSummaryEntity | null> {
     return this.repository.findOne({
       where: { fieldId },
+      relations: { field: true },
     });
   }
 
-  async upsertSummary(
-    fieldId: string,
-    avgRating: number,
-    totalReviews: number,
-    bayesianScore: number,
+  async save(
+    summary: FieldRatingSummaryEntity,
   ): Promise<FieldRatingSummaryEntity> {
-    let existing = await this.findByFieldId(fieldId);
-    if (!existing) {
-      existing = this.repository.create({
-        fieldId,
-        avgRating: avgRating.toFixed(2),
-        totalReviews,
-        bayesianScore: bayesianScore.toFixed(3),
+    return this.repository.save(summary);
+  }
+
+  create(data: Partial<FieldRatingSummaryEntity>): FieldRatingSummaryEntity {
+    return this.repository.create(data);
+  }
+
+  async findTopRanked(
+    options: { limit?: number; districtId?: string } = {},
+  ): Promise<FieldRatingSummaryEntity[]> {
+    const limit = Math.max(1, Math.min(50, Number(options.limit) || 10));
+
+    const qb = this.repository
+      .createQueryBuilder('summary')
+      .innerJoinAndSelect('summary.field', 'field')
+      .where('field.status = :status', { status: 'approved' });
+
+    if (options.districtId) {
+      qb.andWhere('field.district = :districtId', {
+        districtId: options.districtId,
       });
-    } else {
-      existing.avgRating = avgRating.toFixed(2);
-      existing.totalReviews = totalReviews;
-      existing.bayesianScore = bayesianScore.toFixed(3);
     }
 
-    return this.repository.save(existing);
-  }
+    qb.orderBy('summary.bayesianScore', 'DESC')
+      .addOrderBy('summary.totalReviews', 'DESC')
+      .take(limit);
 
-  async findTopRanked(limit = 20): Promise<FieldRatingSummaryEntity[]> {
-    return this.repository.find({
-      relations: {
-        field: true,
-      },
-      order: {
-        bayesianScore: 'DESC',
-        totalReviews: 'DESC',
-      },
-      take: limit,
-    });
-  }
-
-  async getOverallFieldAverage(): Promise<{ avg: number; count: number }> {
-    const res = await this.repository
-      .createQueryBuilder('summary')
-      .select('AVG(summary.avg_rating)', 'overallAvg')
-      .addSelect('COUNT(summary.field_id)', 'fieldCount')
-      .where('summary.total_reviews > 0')
-      .getRawOne<{ overallAvg: string | null; fieldCount: string }>();
-
-    return {
-      avg: parseFloat(res?.overallAvg || '4.0'),
-      count: parseInt(res?.fieldCount || '0', 10),
-    };
+    return qb.getMany();
   }
 }

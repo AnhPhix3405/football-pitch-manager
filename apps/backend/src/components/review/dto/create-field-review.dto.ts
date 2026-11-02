@@ -12,31 +12,31 @@ import {
 
 export class CreateFieldReviewDto {
   @ApiProperty({
-    description: 'Mã đơn đặt sân đã hoàn tất',
-    example: 'd0c9f1a2-5b3e-4d5a-8b1c-9e2f3a4b5c6d',
+    description: 'ID của đơn đặt sân đã hoàn thành (UUID)',
+    example: '123e4567-e89b-12d3-a456-426614174000',
   })
-  @IsUUID('4', { message: 'bookingId phải là UUID v4 hợp lệ' })
+  @IsUUID(undefined, { message: 'bookingId phải là UUID hợp lệ' })
   @IsNotEmpty({ message: 'bookingId không được để trống' })
   bookingId!: string;
 
   @ApiProperty({
-    description: 'Số sao đánh giá (từ 1 đến 5 sao)',
+    description: 'Số sao đánh giá (từ 1 đến 5)',
     example: 5,
     minimum: 1,
     maximum: 5,
   })
   @IsInt({ message: 'rating phải là số nguyên' })
-  @Min(1, { message: 'rating tối thiểu là 1 sao' })
-  @Max(5, { message: 'rating tối đa là 5 sao' })
+  @Min(1, { message: 'rating tối thiểu là 1' })
+  @Max(5, { message: 'rating tối đa là 5' })
   rating!: number;
 
   @ApiPropertyOptional({
-    description: 'Nhận xét chi tiết về sân bóng',
-    example: 'Mặt cỏ rất đẹp, đèn sáng rõ, chủ sân nhiệt tình hỗ trợ.',
+    description: 'Nội dung nhận xét về sân bóng',
+    example: 'Mặt cỏ đẹp, đèn sáng và dịch vụ tốt.',
     maxLength: 1000,
   })
   @IsString()
   @IsOptional()
-  @MaxLength(1000, { message: 'Nhận xét không được vượt quá 1000 ký tự' })
+  @MaxLength(1000, { message: 'comment tối đa 1000 ký tự' })
   comment?: string;
 }

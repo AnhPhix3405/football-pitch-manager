@@ -13,33 +13,21 @@ export class UserRatingSummaryRepository {
     private readonly profileRepository: Repository<UserProfileEntity>,
   ) {}
 
-  findByUserId(userId: string): Promise<UserRatingSummaryEntity | null> {
+  async findByUserId(userId: string): Promise<UserRatingSummaryEntity | null> {
     return this.repository.findOne({
       where: { userId },
+      relations: { user: true },
     });
   }
 
-  async upsertSummary(
-    userId: string,
-    avgRating: number,
-    totalReviews: number,
-    sportsmanshipScore: number,
+  async save(
+    summary: UserRatingSummaryEntity,
   ): Promise<UserRatingSummaryEntity> {
-    let existing = await this.findByUserId(userId);
-    if (!existing) {
-      existing = this.repository.create({
-        userId,
-        avgRating: avgRating.toFixed(2),
-        totalReviews,
-        sportsmanshipScore: sportsmanshipScore.toFixed(2),
-      });
-    } else {
-      existing.avgRating = avgRating.toFixed(2);
-      existing.totalReviews = totalReviews;
-      existing.sportsmanshipScore = sportsmanshipScore.toFixed(2);
-    }
+    return this.repository.save(summary);
+  }
 
-    return this.repository.save(existing);
+  create(data: Partial<UserRatingSummaryEntity>): UserRatingSummaryEntity {
+    return this.repository.create(data);
   }
 
   async findTopRanked(

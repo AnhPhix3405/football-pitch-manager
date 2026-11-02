@@ -1,5 +1,6 @@
 import { Controller, Get, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Public } from '~/components/auth/decorators/public.decorator';
 import { QueryRankingsDto } from '../dto/query-rankings.dto';
 import { RankingService } from '../services/ranking.service';
 
@@ -8,6 +9,7 @@ import { RankingService } from '../services/ranking.service';
 export class RankingController {
   constructor(private readonly rankingService: RankingService) {}
 
+  @Public()
   @Get('fields')
   @ApiOperation({
     summary: 'Lấy bảng xếp hạng Top sân bóng uy tín nhất theo điểm Bayesian',
@@ -16,6 +18,7 @@ export class RankingController {
     return this.rankingService.getFieldRankings(query.limit || 20);
   }
 
+  @Public()
   @Get('players')
   @ApiOperation({
     summary: 'Lấy bảng xếp hạng Top người chơi thể thao gương mẫu / fair-play',

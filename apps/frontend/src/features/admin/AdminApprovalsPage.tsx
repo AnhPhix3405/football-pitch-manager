@@ -1,23 +1,39 @@
 import { CheckOutlined, CloseOutlined, EyeOutlined, FileTextOutlined, ReloadOutlined, SearchOutlined } from '@ant-design/icons'
 import { Button, Descriptions, Drawer, Input, Modal, Segmented, Table, Tag, message } from 'antd'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router-dom'
 import { approvalRequests, type ApprovalRequest } from './admin.data'
-import { mapOwnerApprovalToRequest, useAdminApprovals } from './hooks/useAdminApprovals'
+import { mapFieldApprovalToRequest, mapOwnerApprovalToRequest, useAdminApprovals } from './hooks/useAdminApprovals'
+import type { AdminFieldApprovalItem, AdminOwnerApprovalItem } from './service/admin.service'
 
-export function AdminApprovalsPage() {
+interface AdminApprovalsPageProps {
+  forcedType?: 'owner' | 'field'
+}
+
+export function AdminApprovalsPage({ forcedType }: AdminApprovalsPageProps) {
   const { t } = useTranslation()
-  const [type, setType] = useState<'owner' | 'field'>('owner')
+  const navigate = useNavigate()
+  const [type, setType] = useState<'owner' | 'field'>(forcedType || 'owner')
   const [query, setQuery] = useState('')
   const [selected, setSelected] = useState<ApprovalRequest>()
   const [resolved, setResolved] = useState<string[]>([])
   const [messageApi, contextHolder] = message.useMessage()
 
+  useEffect(() => {
+    if (forcedType && forcedType !== type) {
+      setType(forcedType)
+    }
+  }, [forcedType, type])
+
   const { apiApprovals, loading, refetch, approve, reject } = useAdminApprovals(type, query)
 
   const mappedApiRequests: ApprovalRequest[] = useMemo(() => {
-    if (type !== 'owner' || apiApprovals.length === 0) return []
-    return apiApprovals.map(mapOwnerApprovalToRequest)
+    if (apiApprovals.length === 0) return []
+    if (type === 'owner') {
+      return (apiApprovals as AdminOwnerApprovalItem[]).map(mapOwnerApprovalToRequest)
+    }
+    return (apiApprovals as AdminFieldApprovalItem[]).map(mapFieldApprovalToRequest)
   }, [apiApprovals, type])
 
   const visible = useMemo(() => {
@@ -46,6 +62,12 @@ export function AdminApprovalsPage() {
             } else {
               await reject(request.id, 'Hồ sơ chưa đạt yêu cầu xác minh')
             }
+          } else {
+            if (isApproved) {
+              await approve(request.id, 'Cụm sân hợp lệ')
+            } else {
+              await reject(request.id, 'Thông tin cụm sân chưa đạt yêu cầu')
+            }
           }
           setResolved((items) => [...items, request.id])
           setSelected(undefined)
@@ -69,10 +91,14 @@ export function AdminApprovalsPage() {
       <div className="admin-toolbar">
         <Segmented
           value={type}
-          onChange={(val) => setType(val as 'owner' | 'field')}
+          onChange={(val) => {
+            const nextType = val as 'owner' | 'field'
+            setType(nextType)
+            navigate(nextType === 'owner' ? '/admin/approvals/owners' : '/admin/approvals/fields')
+          }}
           options={[
-            { value: 'owner', label: 'Chủ sân chờ duyệt' },
-            { value: 'field', label: 'Sân chờ duyệt' },
+            { value: 'owner', label: t('nav.ownerApprovals', { defaultValue: 'Duyệt chủ sân' }) },
+            { value: 'field', label: t('nav.fieldApprovals', { defaultValue: 'Duyệt sân bóng' }) },
           ]}
         />
         <Input
