@@ -1,7 +1,8 @@
 import {
-  CalendarOutlined,
   CheckOutlined,
+  ClockCircleOutlined,
   CloseOutlined,
+  CommentOutlined,
   DeleteOutlined,
   DownOutlined,
   EnvironmentOutlined,
@@ -17,10 +18,24 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useAppSelector } from '../../app/hooks'
 import { useConfirmModal } from '../../hooks'
 import { PillButton } from '../../components/PillButton'
+import { BlurCircle } from '../../components/BlurCircle'
 import type { MatchPost } from '../user/user.data'
 import { mapBackendPostToMatchPost } from './hooks/usePublicPosts'
 import { usePostDetail } from './hooks/usePostDetail'
 import type { BackendPostMatch } from './interface/post.types'
+
+function getDisplayName(
+  user?: { fullName?: string | null; email?: string } | null,
+  fallback = 'Người dùng',
+): string {
+  if (user?.fullName?.trim()) {
+    return user.fullName.trim()
+  }
+  if (user?.email?.trim()) {
+    return user.email.trim().split('@')[0]
+  }
+  return fallback
+}
 
 export function PostDetailPage() {
   const { t } = useTranslation()
@@ -56,14 +71,16 @@ export function PostDetailPage() {
 
   const handleApply = async () => {
     if (!currentUser) {
-      messageApi.warning('Vui lòng đăng nhập để bắt đối.')
+      messageApi.warning(t('posts.detail.loginPrompt'))
       return
     }
     try {
       await applyForMatch()
-      messageApi.success('Đã gửi yêu cầu bắt đối! Chờ chủ bài duyệt.')
+      messageApi.success(t('posts.applied'))
     } catch (err: unknown) {
-      messageApi.error(err instanceof Error ? err.message : 'Không thể gửi yêu cầu.')
+      messageApi.error(
+        err instanceof Error ? err.message : t('posts.applicantModal.actionError'),
+      )
     }
   }
 
@@ -90,7 +107,7 @@ export function PostDetailPage() {
           await deleteCurrentPost()
           messageApi.success(t('posts.deleteModal.success'))
           setTimeout(() => {
-            navigate('/posts')
+            navigate('/opponents')
           }, 400)
         } catch (err: unknown) {
           messageApi.error(
@@ -102,7 +119,7 @@ export function PostDetailPage() {
   }
 
   const handleDecide = (match: BackendPostMatch, accept: boolean) => {
-    const applicantName = match.applicant?.fullName || match.applicant?.email || 'Đội bạn'
+    const applicantName = getDisplayName(match.applicant, 'Đội bạn')
     showConfirm({
       title: accept
         ? t('posts.applicantModal.acceptTitle', { name: applicantName })
@@ -118,7 +135,9 @@ export function PostDetailPage() {
         try {
           if (accept) {
             await acceptMatchApplicant(match.id)
-            messageApi.success(t('posts.applicantModal.acceptSuccess', { name: applicantName }))
+            messageApi.success(
+              t('posts.applicantModal.acceptSuccess', { name: applicantName }),
+            )
             messageApi.info(
               t('posts.applicantModal.chatReadyPrompt', {
                 defaultValue:
@@ -128,11 +147,15 @@ export function PostDetailPage() {
             )
           } else {
             await rejectMatchApplicant(match.id)
-            messageApi.info(t('posts.applicantModal.rejectSuccess', { name: applicantName }))
+            messageApi.info(
+              t('posts.applicantModal.rejectSuccess', { name: applicantName }),
+            )
           }
         } catch (err: unknown) {
           messageApi.error(
-            err instanceof Error ? err.message : t('posts.applicantModal.actionError'),
+            err instanceof Error
+              ? err.message
+              : t('posts.applicantModal.actionError'),
           )
         }
       },
@@ -142,21 +165,26 @@ export function PostDetailPage() {
   const handleSendComment = async () => {
     if (!commentText.trim()) return
     if (!currentUser) {
-      messageApi.warning('Vui lòng đăng nhập để bình luận.')
+      messageApi.warning(t('posts.detail.loginPrompt'))
       return
     }
     try {
       await sendComment(commentText.trim())
       setCommentText('')
-      messageApi.success('Đã gửi bình luận.')
+      messageApi.success(t('posts.detail.sendSuccess'))
     } catch (err: unknown) {
-      messageApi.error(err instanceof Error ? err.message : 'Không thể gửi bình luận.')
+      messageApi.error(
+        err instanceof Error ? err.message : t('posts.detail.sendError'),
+      )
     }
   }
 
   if (loading) {
     return (
-      <section className="user-page" style={{ textAlign: 'center', padding: '100px 0' }}>
+      <section
+        className="user-page"
+        style={{ textAlign: 'center', padding: '120px 0' }}
+      >
         <Spin size="large" />
       </section>
     )
@@ -164,65 +192,165 @@ export function PostDetailPage() {
 
   if (!post) {
     return (
-      <section className="user-page">
-        Không tìm thấy bài đăng. <Link to="/posts">Quay lại danh sách</Link>
+      <section
+        className="user-page"
+        style={{ textAlign: 'center', padding: '80px 0' }}
+      >
+        <p style={{ color: 'var(--sage)', marginBottom: 20 }}>
+          {t('posts.detail.notFound')}
+        </p>
+        <Link className="post-detail-back-link" to="/opponents">
+          ← {t('posts.detail.back')}
+        </Link>
       </section>
     )
   }
 
+  const authorName = getDisplayName(postData?.user, post.team || 'Đội bóng')
+  const authorAvatar = postData?.user?.avatarUrl || undefined
+  const postDateFormatted = postData?.createdAt
+    ? new Date(postData.createdAt).toLocaleDateString(undefined, {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    })
+    : ''
+
   return (
-    <section className="user-page">
+    <section className="user-page post-detail-page-wrapper">
       {contextHolder}
-      <Link className="back-link" to="/posts">
-        ← Trở lại danh sách bài đăng
-      </Link>
+      <BlurCircle
+        variant="lime"
+        size={420}
+        top="-60px"
+        left="-80px"
+        opacity={0.15}
+        animate
+      />
+      <BlurCircle
+        variant="blue"
+        size={380}
+        top="35%"
+        right="-80px"
+        opacity={0.12}
+        animate
+      />
+
+      <nav className="post-detail-nav">
+        <Link className="post-detail-back-link" to="/opponents">
+          ← {t('posts.detail.back')}
+        </Link>
+      </nav>
 
       <div className="post-detail-grid">
+        {/* Left Column: Post Details */}
         <article className="post-detail">
-          <header>
-            <Tag color={post.status === 'open' ? 'green' : post.status === 'matched' ? 'blue' : 'default'}>
-              {post.status === 'open' ? 'MATCH REQUEST' : post.status === 'matched' ? 'MATCHED' : 'CLOSED'}
-            </Tag>
-            <Tag>{post.status.toUpperCase()}</Tag>
-          </header>
+          <div className="post-detail__top-bar">
+            <div className="post-detail__author-info">
+              <Avatar
+                size={44}
+                src={authorAvatar}
+                icon={<UserOutlined />}
+                style={{
+                  background: 'rgba(140, 252, 112, 0.15)',
+                  border: '1px solid rgba(140, 252, 112, 0.3)',
+                  color: 'var(--lime)',
+                }}
+              >
+                {authorName.charAt(0).toUpperCase()}
+              </Avatar>
+              <div className="post-detail__author-meta">
+                <span className="author-name">{authorName}</span>
+                <span className="author-sub">
+                  {t('posts.detail.authorLabel')}
+                  {postDateFormatted ? ` · ${postDateFormatted}` : ''}
+                </span>
+              </div>
+            </div>
+          </div>
 
           {post.imageUrl && (
             <div className="post-detail__cover">
-              <img src={post.imageUrl} alt={post.title} loading="lazy" decoding="async" />
+              <img
+                src={post.imageUrl}
+                alt={post.title}
+                loading="lazy"
+                decoding="async"
+              />
             </div>
           )}
 
           <h1>{post.title}</h1>
-          <div className="post-metadata">
-            <span>
-              <EnvironmentOutlined /> {post.location}
-            </span>
-            <span>
-              <CalendarOutlined /> {post.date} · {post.time}
-            </span>
-            <span>
-              <TeamOutlined /> {post.format} · {post.level}
-            </span>
+
+          <div className="post-detail__specs-grid">
+
+            <div className="post-detail__spec-card">
+              <div className="flex flex-row items-center gap-2 ">
+                <div className="post-detail__spec-icon icon-location">
+                  <EnvironmentOutlined />
+                </div>
+                <span className="post-detail__spec-label">
+                  {t('posts.detail.specs.location')}
+                </span>
+              </div>
+              <span className="post-detail__spec-val">{post.location}</span>
+            </div>
+
+            <div className="post-detail__spec-card">
+              <div className="flex flex-row items-center gap-2 ">
+                <div className="post-detail__spec-icon icon-time">
+                  <ClockCircleOutlined />
+                </div>
+                <span className="post-detail__spec-label">
+                  {t('posts.detail.specs.time')}
+                </span>
+              </div>
+              <span className="post-detail__spec-val">
+                {post.date} · {post.time}
+              </span>
+            </div>
+
+            <div className="post-detail__spec-card">
+              <div className="flex flex-row items-center gap-2 ">
+                <div className="post-detail__spec-icon icon-team">
+                  <TeamOutlined />
+                </div>
+                <span className="post-detail__spec-label">
+                  {t('posts.detail.specs.format')}
+                </span>
+              </div>
+              <span className="post-detail__spec-val">
+                {post.format} · {post.level}
+              </span>
+            </div>
           </div>
-          <p>{post.description}</p>
+
+          <div className="post-detail__desc-box">
+            <h3>
+              {t('posts.detail.descriptionTitle')}
+            </h3>
+            <p>{post.description || t('posts.detail.noDescription')}</p>
+          </div>
 
           {!isOwner && post.status === 'open' && (
-            <div style={{ marginTop: 24 }}>
+            <div className="post-detail__cta-bar">
               <PillButton
                 variant="primary"
                 size="lg"
                 loading={actionLoading}
                 disabled={hasApplied}
                 onClick={handleApply}
-                text={hasApplied ? 'Đã gửi yêu cầu bắt đối' : 'Bắt đối / Xin giao lưu ngay'}
+                text={hasApplied ? t('posts.applied') : t('posts.applyMatch')}
+                style={{ minWidth: 220 }}
               />
             </div>
           )}
         </article>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20, alignSelf: 'start' }}>
+        {/* Right Column: Sidebar (Sticky) with Controls, Applicants, and Discussion */}
+        <aside className="post-detail-sidebar">
           {isOwner && (
-            <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+            <div className="post-detail-owner-card">
               <Dropdown
                 menu={{
                   items: [
@@ -230,7 +358,8 @@ export function PostDetailPage() {
                     { key: 'matched', label: t('posts.status.matched') },
                     { key: 'closed', label: t('posts.status.closed') },
                   ],
-                  onClick: ({ key }) => handleStatusChange(key as 'open' | 'matched' | 'closed'),
+                  onClick: ({ key }) =>
+                    handleStatusChange(key as 'open' | 'matched' | 'closed'),
                 }}
                 disabled={actionLoading}
               >
@@ -240,6 +369,9 @@ export function PostDetailPage() {
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    borderColor: 'rgba(255, 255, 255, 0.12)',
+                    color: '#fff',
                   }}
                 >
                   <span>
@@ -263,111 +395,190 @@ export function PostDetailPage() {
             </div>
           )}
 
-          <aside className="applicant-panel">
+          {/* Applicant Panel */}
+          <section className="applicant-panel">
             <header>
-              <h2>Ứng viên xin bắt đối</h2>
-              <Tag color={matches.filter((m) => m.status === 'pending').length > 0 ? 'green' : 'default'}>
-                {matches.filter((m) => m.status === 'pending').length} PENDING
+              <h2>{t('posts.detail.applicantsTitle')}</h2>
+              <Tag
+                color={
+                  matches.filter((m) => m.status === 'pending').length > 0
+                    ? 'green'
+                    : 'default'
+                }
+              >
+                {matches.filter((m) => m.status === 'pending').length}
               </Tag>
             </header>
 
-          {matches.length === 0 ? (
-            <p style={{ color: '#888', fontStyle: 'italic', padding: '16px 0' }}>
-              Chưa có ứng viên nào gửi yêu cầu bắt đối.
-            </p>
-          ) : (
-            matches.map((item) => (
-              <div className="applicant" key={item.id} style={{ marginBottom: 12 }}>
-                <div>
-                  <b>{item.applicant?.fullName || item.applicant?.email || 'Đội bóng'}</b>
-                  <div style={{ fontSize: '12px', color: '#888' }}>
-                    Trạng thái:{' '}
-                    <Tag color={item.status === 'accepted' ? 'green' : item.status === 'rejected' ? 'red' : 'gold'}>
-                      {item.status.toUpperCase()}
-                    </Tag>
-                  </div>
-                </div>
+            {matches.length === 0 ? (
+              <p
+                style={{
+                  color: '#888',
+                  fontStyle: 'italic',
+                  padding: '12px 0',
+                  margin: 0,
+                  fontSize: 13,
+                }}
+              >
+                {t('posts.detail.noApplicants')}
+              </p>
+            ) : (
+              <div className="applicant-list">
+                {matches.map((item) => (
+                  <div className="applicant-card" key={item.id}>
+                    <div className="applicant-card__left">
+                      <Avatar
+                        size="small"
+                        src={item.applicant?.avatarUrl || undefined}
+                        icon={<UserOutlined />}
+                        style={{
+                          background: 'rgba(140, 252, 112, 0.2)',
+                          color: 'var(--lime)',
+                          flexShrink: 0,
+                        }}
+                      >
+                        {getDisplayName(item.applicant).charAt(0).toUpperCase()}
+                      </Avatar>
+                      <div className='flex gap-2 min-w-0'>
+                        <div className="applicant-card__name">
+                          {getDisplayName(item.applicant, 'Đội bạn')}
+                        </div>
+                        <div
+                          style={{ fontSize: '11px', color: '#888', marginTop: 2 }}
+                        >
+                          <Tag
+                            color={
+                              item.status === 'accepted'
+                                ? 'green'
+                                : item.status === 'rejected'
+                                  ? 'red'
+                                  : 'gold'
+                            }
+                            style={{
+                              marginRight: 0,
+                              fontSize: 10,
+                              lineHeight: '18px',
+                              padding: '0 6px',
+                            }}
+                          >
+                            {item.status.toUpperCase()}
+                          </Tag>
+                        </div>
+                      </div>
+                    </div>
 
-                {isOwner && item.status === 'pending' && (
-                  <div style={{ display: 'flex', gap: 8 }}>
-                    <Button
-                      type="primary"
-                      icon={<CheckOutlined />}
-                      size="small"
-                      loading={actionLoading}
-                      onClick={() => handleDecide(item, true)}
-                    >
-                      Nhận
-                    </Button>
-                    <Button
-                      danger
-                      icon={<CloseOutlined />}
-                      size="small"
-                      loading={actionLoading}
-                      onClick={() => handleDecide(item, false)}
-                    >
-                      Từ chối
-                    </Button>
-                  </div>
-                )}
+                    <div className="applicant-card__actions">
+                      {isOwner && item.status === 'pending' && (
+                        <>
+                          <Button
+                            type="primary"
+                            icon={<CheckOutlined />}
+                            size="small"
+                            loading={actionLoading}
+                            onClick={() => handleDecide(item, true)}
+                          >
+                            {t('posts.detail.accept')}
+                          </Button>
+                          <Button
+                            danger
+                            icon={<CloseOutlined />}
+                            size="small"
+                            loading={actionLoading}
+                            onClick={() => handleDecide(item, false)}
+                          >
+                            {t('posts.detail.reject')}
+                          </Button>
+                        </>
+                      )}
 
-                {item.status === 'accepted' && (isOwner || item.applicantId === currentUser?.id) && (
-                  <Button
-                    type="primary"
-                    icon={<MessageOutlined />}
-                    size="small"
-                    onClick={() => navigate('/messages')}
-                  >
-                    {t('chat.sendMessage', { defaultValue: 'Nhắn tin' })}
-                  </Button>
-                )}
+                      {item.status === 'accepted' &&
+                        (isOwner || item.applicantId === currentUser?.id) && (
+                          <Button
+                            type="primary"
+                            icon={<MessageOutlined />}
+                            size="small"
+                            onClick={() => navigate('/messages')}
+                          >
+                            {t('posts.detail.chat')}
+                          </Button>
+                        )}
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))
-          )}
+            )}
+          </section>
+
+          {/* Discussion */}
+          <section className="discussion">
+            <header>
+              <h2>
+                <CommentOutlined
+                  style={{ marginRight: 6, color: 'var(--lime)' }}
+                />
+                {t('posts.detail.discussionTitle')} ({comments.length})
+              </h2>
+            </header>
+
+            {comments.length === 0 ? (
+              <p
+                style={{
+                  color: '#888',
+                  fontStyle: 'italic',
+                  marginBottom: 14,
+                  fontSize: 13,
+                }}
+              >
+                {t('posts.detail.noComments')}
+              </p>
+            ) : (
+              <div className="discussion-comments-list">
+                {comments.map((item) => (
+                  <div className="discussion-comment-item" key={item.id}>
+                    <div className="discussion-comment-header">
+                      <Avatar
+                        size="small"
+                        src={item.user?.avatarUrl || undefined}
+                        icon={<UserOutlined />}
+                        style={{ background: 'rgba(255, 255, 255, 0.1)', flexShrink: 0 }}
+                      >
+                        {getDisplayName(item.user).charAt(0).toUpperCase()}
+                      </Avatar>
+                      <span className="discussion-comment-author">
+                        {getDisplayName(item.user, 'Thành viên')}
+                      </span>
+                      <span className="discussion-comment-time">
+                        {new Date(item.createdAt).toLocaleTimeString([], {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </span>
+                    </div>
+                    <p className="discussion-comment-body">{item.content}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="discussion-input-row">
+              <Input
+                value={commentText}
+                onChange={(e) => setCommentText(e.target.value)}
+                onPressEnter={handleSendComment}
+                placeholder={t('posts.detail.commentPlaceholder')}
+              />
+              <PillButton
+                variant="primary"
+                icon={<SendOutlined />}
+                loading={actionLoading}
+                onClick={handleSendComment}
+                text={t('posts.detail.send')}
+              />
+            </div>
+          </section>
         </aside>
       </div>
 
-        <section className="discussion">
-          <h2>Thảo luận ({comments.length})</h2>
-          {comments.length === 0 ? (
-            <p style={{ color: '#888', fontStyle: 'italic', marginBottom: 16 }}>
-              Chưa có bình luận nào. Hãy bắt đầu cuộc trò chuyện!
-            </p>
-          ) : (
-            comments.map((item) => (
-              <blockquote key={item.id}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                  <Avatar size="small" icon={<UserOutlined />} />
-                  <b>{item.user?.fullName || item.user?.email || 'Thành viên'}</b>
-                  <small style={{ color: '#888', marginLeft: 'auto' }}>
-                    {new Date(item.createdAt).toLocaleTimeString('vi-VN', {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
-                  </small>
-                </div>
-                <p style={{ margin: 0 }}>{item.content}</p>
-              </blockquote>
-            ))
-          )}
-
-          <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-            <Input
-              value={commentText}
-              onChange={(e) => setCommentText(e.target.value)}
-              onPressEnter={handleSendComment}
-              placeholder="Thêm câu hỏi hoặc thảo luận về trận đấu..."
-            />
-            <PillButton
-              variant="primary"
-              icon={<SendOutlined />}
-              loading={actionLoading}
-              onClick={handleSendComment}
-              text="Gửi"
-            />
-          </div>
-        </section>
-      </div>
       {ConfirmDialog}
     </section>
   )

@@ -22,3 +22,23 @@ export const POST_SKILL_LEVEL_OPTIONS = [
 export const DEFAULT_POST_MAX_PLAYERS = 14
 export const MIN_POST_PLAYERS = 2
 export const MAX_POST_PLAYERS = 30
+
+export const POST_STATUS = {
+  OPEN: 'open',
+  MATCHED: 'matched',
+  CLOSED: 'closed',
+  CANCELLED: 'cancelled',
+} as const
+
+export type PostStatus = (typeof POST_STATUS)[keyof typeof POST_STATUS]
+
+export const POST_MATCH_STATUS = {
+  PENDING: 'pending',
+  ACCEPTED: 'accepted',
+  REJECTED: 'rejected',
+  CANCELLED: 'cancelled',
+} as const
+
+export type PostMatchStatus =
+  (typeof POST_MATCH_STATUS)[keyof typeof POST_MATCH_STATUS]
+

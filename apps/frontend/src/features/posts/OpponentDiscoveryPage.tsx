@@ -1,106 +1,152 @@
-import { FilterOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons'
-import { DatePicker, Empty, Input, Select, Spin } from 'antd'
-import type { Dayjs } from 'dayjs'
-import { useMemo, useState } from 'react'
+import { Empty, Spin } from 'antd'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { PillButton } from '../../components/PillButton'
+import { BlurCircle } from '~/components/BlurCircle'
 import { CreatePostModal } from './components/CreatePostModal'
+import { OpponentDiscoveryToolbar } from './components/OpponentDiscoveryToolbar'
 import { PostCard } from './components/PostCard'
+import { PostCardSkeleton } from './components/PostCardSkeleton'
 import { filterPosts, usePublicPosts } from './hooks/usePublicPosts'
+import type { OpponentFilterValues } from './interface/post.types'
 
 export function OpponentDiscoveryPage() {
   const { t } = useTranslation()
-  const [query, setQuery] = useState('')
-  const [level, setLevel] = useState('all')
-  const [selectedDate, setSelectedDate] = useState<Dayjs | null>(null)
+  const [filters, setFilters] = useState<OpponentFilterValues>({
+    search: '',
+    skillLevel: 'all',
+    playDate: null,
+  })
   const [isModalOpen, setIsModalOpen] = useState(false)
 
-  const formattedDate = selectedDate ? selectedDate.format('YYYY-MM-DD') : null
-  const { apiPosts, loading, refetch } = usePublicPosts(query, level, formattedDate)
+  const { apiPosts, loading, loadingMore, hasMore, loadMore, refetch } = usePublicPosts(
+    filters.search,
+    filters.skillLevel,
+    filters.playDate,
+  )
 
   const visible = useMemo(() => {
-    return filterPosts(apiPosts, query, level, formattedDate)
-  }, [apiPosts, query, level, formattedDate])
+    return filterPosts(apiPosts, filters.search, filters.skillLevel, filters.playDate)
+  }, [apiPosts, filters.search, filters.skillLevel, filters.playDate])
+
+  // Trích xuất địa điểm từ danh sách bài đăng thực tế để gợi ý linh hoạt
+  const dynamicLocations = useMemo(() => {
+    const locs = new Set<string>()
+    apiPosts.forEach((p) => {
+      if (p.location && p.location !== 'TP.HCM' && p.location !== 'Sân bóng tại TP.HCM') {
+        locs.add(p.location)
+      }
+    })
+    return Array.from(locs)
+  }, [apiPosts])
+
+  const handleFiltersChange = useCallback((newFilters: OpponentFilterValues) => {
+    setFilters(newFilters)
+  }, [])
+
+  const handleRefresh = useCallback(() => {
+    refetch()
+  }, [refetch])
+
+  const handleOpenCreateModal = useCallback(() => {
+    setIsModalOpen(true)
+  }, [])
+
+  const handleCloseCreateModal = useCallback(() => {
+    setIsModalOpen(false)
+  }, [])
+
+  const sentinelRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    const sentinelEl = sentinelRef.current
+    if (!sentinelEl) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const first = entries[0]
+        if (first?.isIntersecting && hasMore && !loading && !loadingMore) {
+          loadMore()
+        }
+      },
+      { root: null, rootMargin: '250px', threshold: 0.1 },
+    )
+
+    observer.observe(sentinelEl)
+    return () => {
+      observer.disconnect()
+    }
+  }, [hasMore, loading, loadingMore, loadMore])
 
   return (
-    <section className="user-page">
-      <header className="user-page__head">
-        <div>
-          <span className="eyebrow">{t('posts.eyebrow')}</span>
-          <h1>{t('posts.title')}</h1>
-          <p>{t('posts.subtitle')}</p>
-        </div>
-        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-          <PillButton
-            variant="secondary"
-            icon={<ReloadOutlined />}
-            onClick={() => refetch()}
-            loading={loading}
-            text={t('common.refresh')}
-          />
-          <PillButton
-            variant="primary"
-            icon={<PlusOutlined />}
-            onClick={() => setIsModalOpen(true)}
-            text={t('posts.createPost')}
-          />
-        </div>
-      </header>
+    <section className="user-page opponent-discovery-page">
+      {/* Ambient Blur Circles phát sáng nền phong cách PitchMaster */}
+      <BlurCircle
+        variant="lime"
+        size={560}
+        top="-40px"
+        right="-80px"
+        opacity={0.3}
+        blur={110}
+      />
+      <BlurCircle
+        variant="emerald"
+        size={460}
+        top="35%"
+        left="-120px"
+        opacity={0.22}
+        blur={100}
+      />
 
-      <div className="opponent-filters">
-        <Input
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder={t('posts.searchPlaceholder')}
-          prefix={<FilterOutlined />}
-          allowClear
-        />
-        <Select
-          value={level}
-          onChange={setLevel}
-          options={[
-            { value: 'all', label: t('posts.allSkills') },
-            ...['Phong trào', 'Trung bình khá', 'Khá', 'Bán chuyên'].map((value) => ({
-              value,
-              label: value,
-            })),
-          ]}
-        />
-        <DatePicker
-          placeholder={t('booking.flow.matchDate')}
-          value={selectedDate}
-          onChange={setSelectedDate}
-        />
-        <PillButton
-          variant="secondary"
-          size="sm"
-          onClick={() => {
-            setQuery('')
-            setLevel('all')
-            setSelectedDate(null)
-          }}
-          text={t('common.reset')}
-        />
+      {/* 1 Khối điều khiển độc lập: Đứng yên, không bị re-render chung khi bài đăng tải lại */}
+      <OpponentDiscoveryToolbar
+        onFiltersChange={handleFiltersChange}
+        onRefresh={handleRefresh}
+        onCreatePost={handleOpenCreateModal}
+        loading={loading}
+        dynamicLocations={dynamicLocations}
+      />
+
+      {/* Khu vực bài đăng: Cố định vị trí, chống giật layout khi tải/lọc */}
+      <div className="opponent-discovery__content-wrap">
+        <Spin spinning={loading}>
+          <div className="opponent-discovery__posts-container">
+            {visible.length > 0 ? (
+              <>
+                <div className="post-grid">
+                  {visible.map((post) => (
+                    <PostCard post={post} key={post.id} />
+                  ))}
+
+                  {/* Hiệu ứng Skeleton Cards mô phỏng khi đang tải thêm bài */}
+                  {loadingMore &&
+                    Array.from({ length: 4 }).map((_, idx) => (
+                      <PostCardSkeleton key={`skeleton-load-more-${idx}`} />
+                    ))}
+                </div>
+
+                {/* Sentinel kích hoạt infinite scroll khi cuộn tới chân trang */}
+                <div ref={sentinelRef} className="post-scroll-sentinel" />
+
+                {/* Đã xem hết tất cả */}
+                {!hasMore && !loading && (
+                  <div className="post-scroll-status post-scroll-status--end">
+                    <span>{t('posts.allLoaded')}</span>
+                  </div>
+                )}
+              </>
+            ) : !loading ? (
+              <div className="opponent-discovery__empty">
+                <Empty description={t('posts.empty')} />
+              </div>
+            ) : null}
+          </div>
+        </Spin>
       </div>
-
-      {loading ? (
-        <div style={{ textAlign: 'center', padding: '60px 0' }}>
-          <Spin size="large" />
-        </div>
-      ) : visible.length ? (
-        <div className="post-grid">
-          {visible.map((post) => (
-            <PostCard post={post} key={post.id} />
-          ))}
-        </div>
-      ) : (
-        <Empty description={t('posts.empty')} />
-      )}
 
       <CreatePostModal
         open={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSuccess={() => refetch()}
+        onClose={handleCloseCreateModal}
+        onSuccess={handleRefresh}
       />
     </section>
   )

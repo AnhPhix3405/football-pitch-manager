@@ -1,3 +1,5 @@
+import type { PostMatchStatus, PostStatus } from '../../../constants'
+
 export interface BackendPostUser {
   id: string
   email: string
@@ -17,13 +19,14 @@ export interface BackendPost {
   endTime?: string | null
   skillLevelRequired?: string | null
   maxPlayers: number
-  status: 'open' | 'matched' | 'closed'
+  status: PostStatus
   lat?: string | null
   lng?: string | null
   imageUrl?: string | null
   createdAt: string
   updatedAt: string
 }
+
 
 export interface BackendPostListResponse {
   items: BackendPost[]
@@ -38,7 +41,7 @@ export interface BackendPostMatch {
   postId: string
   applicantId: string
   applicant?: BackendPostUser
-  status: 'pending' | 'accepted' | 'rejected' | 'cancelled'
+  status: PostMatchStatus
   createdAt: string
 }
 
@@ -65,8 +68,9 @@ export interface CreatePostPayload {
 }
 
 export interface UpdatePostPayload extends Partial<CreatePostPayload> {
-  status?: 'open' | 'matched' | 'closed'
+  status?: PostStatus
 }
+
 
 export interface QueryPostParams {
   page?: number
@@ -75,4 +79,10 @@ export interface QueryPostParams {
   skillLevel?: string
   playDate?: string
   status?: string
+}
+
+export interface OpponentFilterValues {
+  search: string
+  skillLevel: string
+  playDate: string | null
 }

@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom'
 import { PillButton } from '../../components/PillButton'
 import { useBookings, type BookingFilterType } from './hooks/useBookings'
 import { BookingCard } from './components/BookingCard'
+import { smoothScrollToTop } from '../../utils/scroll.utils'
 
 export function MyBookingsPage() {
   const { t } = useTranslation()
@@ -45,7 +46,12 @@ export function MyBookingsPage() {
       <Segmented
         block
         value={filter}
-        onChange={(val) => setFilter(val as BookingFilterType)}
+        onChange={(val) => {
+          setFilter(val as BookingFilterType)
+          if (window.scrollY > 150) {
+            smoothScrollToTop(0)
+          }
+        }}
         options={[
           { value: 'upcoming', label: t('booking.tabs.upcoming') },
           { value: 'pending', label: t('booking.tabs.pending') },

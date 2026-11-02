@@ -1,13 +1,17 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import dayjs from 'dayjs';
 import { PostRepository } from '~/repositories/post.repository';
 
 @Injectable()
-export class PostCleanupService {
+export class PostCleanupService implements OnModuleInit {
   private readonly logger = new Logger(PostCleanupService.name);
 
   constructor(private readonly postRepository: PostRepository) {}
+
+  async onModuleInit(): Promise<void> {
+    await this.handleCloseExpiredPostsToday();
+  }
 
   @Cron('*/10 * * * *', {
     timeZone: 'Asia/Ho_Chi_Minh',

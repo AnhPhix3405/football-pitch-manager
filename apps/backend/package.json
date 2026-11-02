@@ -21,7 +21,8 @@
     "migration:run": "typeorm-ts-node-commonjs migration:run -d src/database/config/typeorm.datasource.ts",
     "migration:revert": "typeorm-ts-node-commonjs migration:revert -d src/database/config/typeorm.datasource.ts",
     "migration:show": "typeorm-ts-node-commonjs migration:show -d src/database/config/typeorm.datasource.ts",
-    "seed:admin": "ts-node -r tsconfig-paths/register src/scripts/seed-admin.ts"
+    "seed:admin": "ts-node -r tsconfig-paths/register src/scripts/seed-admin.ts",
+    "seed:posts": "ts-node -r tsconfig-paths/register src/scripts/seed-posts.ts"
   },
   "dependencies": {
     "@fastify/multipart": "^10.1.6",

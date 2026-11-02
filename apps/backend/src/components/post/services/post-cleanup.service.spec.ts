@@ -45,6 +45,16 @@ describe('PostCleanupService', () => {
     expect(service).toBeDefined();
   });
 
+  describe('onModuleInit', () => {
+    it('should trigger handleCloseExpiredPostsToday on startup', async () => {
+      const spy = jest
+        .spyOn(service, 'handleCloseExpiredPostsToday')
+        .mockResolvedValue();
+      await service.onModuleInit();
+      expect(spy).toHaveBeenCalledTimes(1);
+    });
+  });
+
   describe('closeExpiredPostsToday', () => {
     it('should call repository to close expired posts for today', async () => {
       const result = await service.closeExpiredPostsToday();

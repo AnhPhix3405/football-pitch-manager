@@ -13,7 +13,7 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { ClickSpark } from '~/components/ClickSpark'
-import { compressImageUrl } from '~/utils/image-compressor.utils'
+import { compressImageUrl, getOptimizedImageUrl } from '~/utils/image-compressor.utils'
 import type { MatchPost } from '../../user/user.data'
 
 const STORAGE_KEY_PREFIX = 'pm_post_like_'
@@ -70,6 +70,27 @@ export function PostCard({
     }
   }, [post.authorAvatar])
 
+  // Optimized & compressed cover image state
+  const [coverSrc, setCoverSrc] = useState<string | null>(null)
+
+  useEffect(() => {
+    let active = true
+    if (post.imageUrl) {
+      getOptimizedImageUrl(post.imageUrl, { maxWidth: 550, maxHeight: 320, quality: 0.75 })
+        .then((optimized) => {
+          if (active && optimized) setCoverSrc(optimized)
+        })
+        .catch(() => {
+          if (active) setCoverSrc(post.imageUrl || null)
+        })
+    } else {
+      setCoverSrc(null)
+    }
+    return () => {
+      active = false
+    }
+  }, [post.imageUrl])
+
   // Persistent likes state per post via localStorage
   const baseLikes = post.applicants ? post.applicants * 2 + 3 : 5
   const [isLiked, setIsLiked] = useState(() => {
@@ -122,7 +143,7 @@ export function PostCard({
         <div className="post-card__header-left">
           <Avatar
             src={avatarSrc || undefined}
-            size={38}
+            size={32}
             shape="circle"
             className="post-card__author-avatar"
           >
@@ -190,7 +211,7 @@ export function PostCard({
       {post.imageUrl && (
         <div className="post-card__cover-preview-wrap">
           <img
-            src={post.imageUrl}
+            src={coverSrc || post.imageUrl}
             alt={post.title}
             loading="lazy"
             decoding="async"

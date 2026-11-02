@@ -26,7 +26,9 @@ export function BookingCard({ booking, onCancel, onViewDetails }: BookingCardPro
     pending: t('booking.status.pending', { defaultValue: 'CHỜ ĐẶT CỌC' }),
     completed: t('booking.status.completed', { defaultValue: 'HOÀN TẤT' }),
     cancelled: t('booking.status.cancelled', { defaultValue: 'ĐÃ HỦY' }),
+    rejected: t('booking.status.rejected', { defaultValue: 'ĐÃ TỪ CHỐI' }),
   }
+
 
   const handleView = () => {
     if (onViewDetails) {

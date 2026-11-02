@@ -1,6 +1,7 @@
 import React from 'react'
 
 export interface BlurCircleProps {
+  position?: 'absolute' | 'fixed'
   variant?: 'lime' | 'amber' | 'emerald' | 'blue'
   color?: string
   size?: number | string
@@ -34,7 +35,8 @@ const variantGradients: Record<NonNullable<BlurCircleProps['variant']>, { center
   },
 }
 
-export function BlurCircle({
+export const BlurCircle = React.memo(function BlurCircle({
+  position = 'absolute',
   variant = 'lime',
   color,
   size = 500,
@@ -56,7 +58,7 @@ export function BlurCircle({
   const blurValue = typeof blur === 'number' ? `${blur}px` : blur
 
   const circleStyle: React.CSSProperties = {
-    position: 'absolute',
+    position,
     width: sizeValue,
     height: sizeValue,
     top,
@@ -79,4 +81,4 @@ export function BlurCircle({
       style={circleStyle}
     />
   )
-}
+})
