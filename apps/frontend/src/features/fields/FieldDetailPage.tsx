@@ -10,11 +10,21 @@ import { Link, useParams } from 'react-router-dom'
 import { BookingFlow } from '../bookings/components/BookingFlow'
 import { formatPrice } from './field.data'
 import { useFieldDetail } from './hooks/useFieldDetail'
+import { useFieldReviews } from '../../hooks/useFieldReviews'
+import { FieldReviewList } from '../reviews/components/FieldReviewList'
 
 export function FieldDetailPage() {
   const { fieldId = '' } = useParams()
   const backLink = '/fields'
   const { field, loading } = useFieldDetail(fieldId)
+  const {
+    reviews,
+    summary,
+    loading: reviewsLoading,
+    total: totalReviews,
+    page: reviewsPage,
+    fetchReviews,
+  } = useFieldReviews(fieldId)
   const [bookingOpen, setBookingOpen] = useState(false)
   const [activeImage, setActiveImage] = useState(0)
 
@@ -75,8 +85,15 @@ export function FieldDetailPage() {
               </div>
             </div>
             <strong>
-              <StarFilled /> {field.rating}
-              <small>{field.reviewCount} đánh giá</small>
+              <StarFilled />{' '}
+              {summary && Number(summary.avgRating) > 0
+                ? Number(summary.avgRating).toFixed(1)
+                : field.rating}
+              <small>
+                {summary && summary.totalReviews > 0
+                  ? `${summary.totalReviews} đánh giá`
+                  : `${field.reviewCount} đánh giá`}
+              </small>
             </strong>
           </div>
           <article className="field-specs">
@@ -92,14 +109,16 @@ export function FieldDetailPage() {
               ))}
             </ul>
           </article>
-          <section className="review-preview">
-            <span className="eyebrow">PLAYER FEEDBACK</span>
-            <h2>Đánh giá gần đây</h2>
-            <blockquote>
-              “Mặt sân tốt, ánh sáng đều và nhân viên hỗ trợ rất nhanh. Quy trình đặt sân cực kỳ rõ ràng.”
-              <footer>— Minh Hoàng · Đội trưởng Neon Strikers</footer>
-            </blockquote>
-          </section>
+          <div className="mt-8">
+            <FieldReviewList
+              reviews={reviews}
+              summary={summary}
+              loading={reviewsLoading}
+              total={totalReviews}
+              page={reviewsPage}
+              onPageChange={(p) => void fetchReviews(p)}
+            />
+          </div>
         </section>
         <aside className="quick-book">
           <span className="eyebrow">RESERVATION TERMINAL</span>

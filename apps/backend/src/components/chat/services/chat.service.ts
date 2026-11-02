@@ -27,7 +27,7 @@ export class ChatService {
     private readonly postRepository: PostRepository,
     @Inject(STORAGE_SERVICE_TOKEN)
     private readonly storageService: IStorageService,
-  ) { }
+  ) {}
 
   async getUserConversations(userId: string) {
     return this.conversationRepository.getUserConversations(userId);
@@ -286,7 +286,7 @@ export class ChatService {
           if (msg.content) {
             const storagePath = this.extractStoragePath(msg.content);
             if (storagePath) {
-              await this.storageService.deleteFile(storagePath).catch(() => { });
+              await this.storageService.deleteFile(storagePath).catch(() => {});
             }
           }
         }

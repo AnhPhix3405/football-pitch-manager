@@ -32,9 +32,7 @@ export class PostCommentRepository extends BaseRepository<PostCommentEntity> {
     comments: PostCommentEntity[],
   ): Promise<void> {
     if (!this.profileRepository || !comments || comments.length === 0) return;
-    const userIds = [
-      ...new Set(comments.map((c) => c.userId).filter(Boolean)),
-    ];
+    const userIds = [...new Set(comments.map((c) => c.userId).filter(Boolean))];
     if (userIds.length === 0) return;
 
     try {

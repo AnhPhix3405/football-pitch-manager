@@ -2,19 +2,9 @@ import { useEffect, useLayoutEffect, useRef } from 'react'
 import { DeleteOutlined, EditOutlined } from '@ant-design/icons'
 import { Empty, Image, Spin, Tooltip } from 'antd'
 import { useTranslation } from 'react-i18next'
+import { MESSAGE_SENDER, MESSAGE_TYPE } from '~/constants/chat.constant'
 import { useConfirmModal } from '~/hooks'
-import type { ChatMessage } from '../interface/chat.types'
-
-interface MessageThreadProps {
-  conversationId?: string
-  messages: ChatMessage[]
-  loading?: boolean
-  loadingMore?: boolean
-  hasMore?: boolean
-  onLoadMore?: () => Promise<unknown> | void
-  onStartEditMessage?: (message: ChatMessage) => void
-  onDeleteMessage?: (messageId: string) => void
-}
+import type { MessageThreadProps } from '../interface/chat.types'
 
 export function MessageThread({
   conversationId,
@@ -106,7 +96,6 @@ export function MessageThread({
     isFetchingRef.current = false
   }, [conversationId])
 
-
   if (loading && messages.length === 0) {
     return (
       <div className="message-thread" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -138,12 +127,12 @@ export function MessageThread({
       {messages.map((msg) => (
         <article
           key={msg.id}
-          className={`${msg.sender === 'me' ? 'mine' : ''} ${msg.isDeleted ? 'recalled' : ''}`}
+          className={`${msg.sender === MESSAGE_SENDER.ME ? 'mine' : ''} ${msg.isDeleted ? 'recalled' : ''}`}
         >
           <div className="message-bubble-wrapper">
             {msg.isDeleted ? (
               <p>{t('chat.recalled', { defaultValue: 'Đã thu hồi' })}</p>
-            ) : msg.messageType === 'image' ? (
+            ) : msg.messageType === MESSAGE_TYPE.IMAGE ? (
               <div className="message-image-bubble">
                 <Image
                   src={msg.body}
@@ -155,9 +144,9 @@ export function MessageThread({
             ) : (
               <p>{msg.body}</p>
             )}
-            {msg.sender === 'me' && !msg.isDeleted && (
+            {msg.sender === MESSAGE_SENDER.ME && !msg.isDeleted && (
               <div className="message-actions">
-                {msg.messageType !== 'image' && (
+                {msg.messageType !== MESSAGE_TYPE.IMAGE && (
                   <Tooltip title={t('chat.edit', { defaultValue: 'Chỉnh sửa' })}>
                     <button
                       type="button"
@@ -203,7 +192,6 @@ export function MessageThread({
         </article>
       ))}
       <div ref={bottomRef} />
-
 
       {ConfirmDialog}
     </div>

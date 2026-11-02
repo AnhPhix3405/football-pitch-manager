@@ -1,11 +1,10 @@
 import { apiClient, type ApiResponse } from '~/config/axios.config'
 import type {
+  BackendConversation,
   Conversation,
   CreateConversationPayload,
   RawBackendMessage,
 } from '../interface/chat.types'
-
-type BackendConversation = Conversation & { unreadCount?: number }
 
 export async function getConversationsApi(): Promise<Conversation[]> {
   const response = await apiClient.get<ApiResponse<BackendConversation[]>>('/chat/conversations')

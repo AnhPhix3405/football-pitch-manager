@@ -32,13 +32,15 @@ import { Link } from 'react-router-dom'
 import { useAppSelector } from '../../app/hooks'
 import { useUserProfile } from '../../hooks/useUserProfile'
 import { updateMyProfile } from '../owner/service/owner.service'
-import type { MatchPost } from '../user/user.data'
+import type { MatchPost, UserBooking } from '../user/user.data'
 import { useBookings, type BookingFilterType } from '../bookings/hooks/useBookings'
 import { useMyPosts } from '../posts/hooks/useMyPosts'
 import { deletePost } from '../posts/service/post.service'
 import { PostCard } from '../posts/components/PostCard'
 import { BookingCard } from '../bookings/components/BookingCard'
 import { CreatePostModal } from '../posts/components/CreatePostModal'
+import { FieldReviewModal } from '../reviews/components/FieldReviewModal'
+import { useUserReviews } from '../../hooks/useUserReviews'
 import { BlurCircle } from '../../components/BlurCircle'
 import { PillButton } from '../../components/PillButton'
 import profilePanelBg from '../../assets/profile_panel.jpg'
@@ -65,6 +67,8 @@ export function ProfileSettingsPage() {
   const [notifications, setNotifications] = useState(true)
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false)
   const avatarInputRef = useRef<HTMLInputElement>(null)
+  const { summary: userRatingSummary } = useUserReviews(user?.id)
+  const [reviewBooking, setReviewBooking] = useState<{ id: string; fieldId?: string; fieldName: string } | null>(null)
 
   // Booking history state & hook
   const { filter: bookingFilter, setFilter: setBookingFilter, visible: visibleBookings, cancel: cancelBooking } = useBookings()
@@ -286,6 +290,13 @@ export function ProfileSettingsPage() {
               key={booking.id}
               booking={booking}
               onCancel={handleCancelBooking}
+              onReview={(b) =>
+                setReviewBooking({
+                  id: b.id,
+                  fieldId: (b as UserBooking & { fieldId?: string }).fieldId || b.id,
+                  fieldName: b.field,
+                })
+              }
             />
           ))}
         </div>
@@ -555,7 +566,11 @@ export function ProfileSettingsPage() {
                 <span className="profile-stat-item__label">
                   {t('profile.stats.rating', { defaultValue: 'Đánh giá' })}
                 </span>
-                <b className="profile-stat-item__value">5.0 ★</b>
+                <b className="profile-stat-item__value">
+                  {userRatingSummary && Number(userRatingSummary.avgRating) > 0
+                    ? `${Number(userRatingSummary.avgRating).toFixed(1)} ★`
+                    : '5.0 ★'}
+                </b>
               </div>
             </div>
           </div>
@@ -672,6 +687,17 @@ export function ProfileSettingsPage() {
         onClose={() => setIsCreatePostOpen(false)}
         onSuccess={() => refetchPosts()}
       />
+
+      {reviewBooking && (
+        <FieldReviewModal
+          open={!!reviewBooking}
+          fieldId={reviewBooking.fieldId || reviewBooking.id}
+          fieldName={reviewBooking.fieldName}
+          bookingId={reviewBooking.id}
+          onClose={() => setReviewBooking(null)}
+          onSuccess={() => messageApi.success(t('reviews.thankYou', { defaultValue: 'Cảm ơn bạn đã gửi đánh giá!' }))}
+        />
+      )}
     </div>
   )
 }

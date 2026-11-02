@@ -1,10 +1,11 @@
+import { MESSAGE_TYPE } from '~/constants/chat.constant'
 import type { Conversation } from '../interface/chat.types'
 
 /**
  * Checks if a message represents an image based on messageType or URL pattern.
  */
 export function isImageContent(messageType?: string, content?: string | null): boolean {
-  if (messageType === 'image') {
+  if (messageType === MESSAGE_TYPE.IMAGE) {
     return true
   }
   if (!content) {

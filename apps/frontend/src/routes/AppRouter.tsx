@@ -28,6 +28,7 @@ import { MyPostsPage } from '../features/posts/MyPostsPage'
 import { OpponentDiscoveryPage } from '../features/posts/OpponentDiscoveryPage'
 import { PostDetailPage } from '../features/posts/PostDetailPage'
 import { ProfileSettingsPage } from '../features/profile/ProfileSettingsPage'
+import { RankingPage } from '../features/rankings/RankingPage'
 import { AdminLayout } from './layouts/AdminLayout'
 import { OwnerLayout } from './layouts/OwnerLayout'
 import { PublicLayout } from './layouts/PublicLayout'
@@ -47,6 +48,7 @@ export function AppRouter() {
           <Route path="fields" element={<FieldDiscoveryPage />} />
           <Route path="fields/:fieldId" element={<FieldDetailPage />} />
           <Route path="opponents" element={<OpponentDiscoveryPage />} />
+          <Route path="rankings" element={<RankingPage />} />
           <Route path="posts" element={<MyPostsPage />} />
           <Route path="posts/:postId" element={<PostDetailPage />} />
 

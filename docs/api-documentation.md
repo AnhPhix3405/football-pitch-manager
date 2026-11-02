@@ -104,6 +104,26 @@ Tài liệu chi tiết toàn bộ các API HTTP REST và WebSocket Gateway của
 | | `GET` | `/chat/conversations/:id/messages` | Đã đăng nhập (JWT) | Lấy lịch sử tin nhắn (hỗ trợ phân trang limit/before) |
 | | `DELETE` | `/chat/conversations/:id` | Đã đăng nhập (JWT) | Xóa cuộc trò chuyện (xóa 1 phía hoặc xóa hoàn toàn 2 phía) |
 | **Tải lên tệp (Upload)** | `POST` | `/upload/image` | User / Active | Tải lên hình ảnh lên Supabase Storage |
+| **Đánh giá sân bóng** | `POST` | `/reviews/fields` | User / Active | Gửi đánh giá và chấm sao cho sân sau khi hoàn tất đặt sân |
+| | `GET` | `/reviews/fields/:fieldId` | Public | Lấy danh sách đánh giá công khai của sân bóng |
+| | `GET` | `/reviews/fields/:fieldId/summary` | Public | Xem tổng hợp điểm rating và điểm bayesian của sân bóng |
+| | `POST` | `/reviews/fields/:id/report` | User / Active | Báo cáo đánh giá sân bóng |
+| | `PATCH` | `/reviews/fields/:id/moderate` | Admin | Quản trị viên duyệt / ẩn đánh giá sân |
+| **Đánh giá người chơi** | `POST` | `/reviews/users` | User / Active | Đánh giá tinh thần thể thao của người chơi sau trận đấu |
+| | `GET` | `/reviews/users/:userId` | Public | Xem danh sách đánh giá của một người chơi |
+| | `GET` | `/reviews/users/:userId/summary` | Public | Xem tổng hợp điểm tinh thần thể thao của người chơi |
+| | `POST` | `/reviews/users/:id/report` | User / Active | Báo cáo đánh giá người chơi |
+| | `PATCH` | `/reviews/users/:id/moderate` | Admin | Quản trị viên duyệt / ẩn đánh giá người chơi |
+| **Bảng xếp hạng** | `GET` | `/rankings/fields` | Public | Lấy BXH Top sân bóng uy tín theo điểm Bayesian |
+| | `GET` | `/rankings/players` | Public | Lấy BXH Top người chơi theo điểm tinh thần thể thao |
+| | `GET` | `/fields/rankings/top` | Public | Lấy top sân bóng có điểm Bayesian cao nhất |
+| **Gói dịch vụ (Subscription)** | `POST` | `/subscription-plans` | Admin | Tạo gói hội viên dịch vụ mới |
+| | `GET` | `/subscription-plans` | Public | Xem danh sách gói hội viên đang mở |
+| | `POST` | `/subscriptions` | User / Active | Đăng ký gói hội viên dịch vụ |
+| | `GET` | `/subscriptions/me` | User / Active | Xem thông tin gói hội viên của bản thân |
+| | `DELETE` | `/subscriptions/:id` | User / Active | Hủy gói hội viên dịch vụ |
+| **Trợ lý AI** | `POST` | `/ai/matchmaking/suggestions` | User / Active | Gợi ý ghép trận thông minh bằng AI |
+| | `GET` | `/ai/usage/me` | User / Active | Xem hạn mức và số lượt AI đã sử dụng |
 
 ---
 
@@ -1843,3 +1863,53 @@ Tài liệu chi tiết toàn bộ các API HTTP REST và WebSocket Gateway của
     }
   }
   ```
+
+---
+
+### 3.18. Bảng Xếp Hạng & Leaderboards
+
+#### 3.18.1. Bảng xếp hạng Top sân bóng uy tín (`GET /rankings/fields`)
+- **Quyền truy cập:** Public
+- **Query Params:** `limit` (mặc định 20).
+- **Response (`200 OK`):**
+  ```json
+  {
+    "success": true,
+    "data": [
+      {
+        "rank": 1,
+        "fieldId": "f7a6b5c4-1234-5678-90ab-cdef12345678",
+        "name": "Sân Bóng Chánh Hưng",
+        "address": "18 Nguyễn Lương Bằng, Tân Phú",
+        "district": "Quận 7",
+        "avgRating": 4.9,
+        "totalReviews": 128,
+        "bayesianScore": 4.88,
+        "thumbnailUrl": "https://example.com/pitch.jpg"
+      }
+    ]
+  }
+  ```
+
+#### 3.18.2. Bảng xếp hạng Top người chơi thể thao gương mẫu (`GET /rankings/players`)
+- **Quyền truy cập:** Public
+- **Query Params:** `limit` (mặc định 20).
+- **Response (`200 OK`):**
+  ```json
+  {
+    "success": true,
+    "data": [
+      {
+        "rank": 1,
+        "userId": "u1a2b3c4-5678-90ab-cdef-1234567890ab",
+        "name": "Alex Mercer",
+        "avatarUrl": "https://example.com/avatar.jpg",
+        "skillLevel": "Bán chuyên",
+        "avgRating": 4.95,
+        "totalReviews": 42,
+        "sportsmanshipScore": 99.0
+      }
+    ]
+  }
+  ```
+

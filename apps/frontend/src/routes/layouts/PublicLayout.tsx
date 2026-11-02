@@ -40,6 +40,9 @@ export function PublicLayout() {
           <NavLink to="/opponents">
             {t('nav.opponents', { defaultValue: 'Tìm đối' })}
           </NavLink>
+          <NavLink to="/rankings">
+            {t('nav.rankings', { defaultValue: 'Xếp hạng' })}
+          </NavLink>
           <NavLink to="/bookings">
             {t('nav.myBookings', { defaultValue: 'Lịch đặt' })}
           </NavLink>

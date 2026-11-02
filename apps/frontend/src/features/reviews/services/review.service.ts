@@ -11,11 +11,11 @@ import type {
 
 export const reviewService = {
   async createFieldReview(
-    fieldId: string,
+    _fieldId: string,
     payload: CreateFieldReviewPayload,
   ): Promise<FieldReview> {
     const res = await apiClient.post<ApiResponse<FieldReview>>(
-      `/fields/${fieldId}/reviews`,
+      '/reviews/fields',
       payload,
     )
     return res.data.data
@@ -27,7 +27,7 @@ export const reviewService = {
     limit = 10,
   ): Promise<PaginatedReviews<FieldReview>> {
     const res = await apiClient.get<ApiResponse<PaginatedReviews<FieldReview>>>(
-      `/fields/${fieldId}/reviews`,
+      `/reviews/fields/${fieldId}`,
       { params: { page, limit } },
     )
     return res.data.data
@@ -35,7 +35,7 @@ export const reviewService = {
 
   async getFieldRatingSummary(fieldId: string): Promise<FieldRatingSummary> {
     const res = await apiClient.get<ApiResponse<FieldRatingSummary>>(
-      `/fields/${fieldId}/rating-summary`,
+      `/reviews/fields/${fieldId}/summary`,
     )
     return res.data.data
   },
@@ -45,8 +45,8 @@ export const reviewService = {
     payload: CreateUserReviewPayload,
   ): Promise<UserReview> {
     const res = await apiClient.post<ApiResponse<UserReview>>(
-      `/users/${targetUserId}/reviews`,
-      payload,
+      '/reviews/users',
+      { targetUserId, ...payload },
     )
     return res.data.data
   },
@@ -57,7 +57,7 @@ export const reviewService = {
     limit = 10,
   ): Promise<PaginatedReviews<UserReview>> {
     const res = await apiClient.get<ApiResponse<PaginatedReviews<UserReview>>>(
-      `/users/${targetUserId}/reviews`,
+      `/reviews/users/${targetUserId}`,
       { params: { page, limit } },
     )
     return res.data.data
@@ -65,7 +65,7 @@ export const reviewService = {
 
   async getUserRatingSummary(targetUserId: string): Promise<UserRatingSummary> {
     const res = await apiClient.get<ApiResponse<UserRatingSummary>>(
-      `/users/${targetUserId}/rating-summary`,
+      `/reviews/users/${targetUserId}/summary`,
     )
     return res.data.data
   },

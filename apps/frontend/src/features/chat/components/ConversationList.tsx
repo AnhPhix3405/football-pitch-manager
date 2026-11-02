@@ -1,17 +1,9 @@
 import { CalendarOutlined, SearchOutlined } from '@ant-design/icons'
 import { Empty, Input, Spin } from 'antd'
 import { useTranslation } from 'react-i18next'
-import type { Conversation } from '../interface/chat.types'
+import { CONVERSATION_KIND } from '~/constants/chat.constant'
+import type { ConversationListProps } from '../interface/chat.types'
 import { getConversationPreview } from '../utils/chat-preview.util'
-
-interface ConversationListProps {
-  conversations: Conversation[]
-  activeId: string
-  onSelectConversation: (id: string) => void
-  query: string
-  onQueryChange: (query: string) => void
-  loading?: boolean
-}
 
 export function ConversationList({
   conversations,
@@ -67,7 +59,7 @@ export function ConversationList({
                     decoding="async"
                     style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
                   />
-                ) : conversation.kind === 'field' ? (
+                ) : conversation.kind === CONVERSATION_KIND.FIELD ? (
                   <CalendarOutlined />
                 ) : (
                   <span className="conversation-avatar-text">

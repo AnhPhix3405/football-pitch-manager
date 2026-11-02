@@ -4,6 +4,7 @@ import {
   DeleteOutlined,
   EnvironmentOutlined,
   EyeOutlined,
+  StarFilled,
   TagOutlined,
 } from '@ant-design/icons'
 import { Modal, Tooltip } from 'antd'
@@ -15,9 +16,10 @@ interface BookingCardProps {
   booking: UserBooking
   onCancel?: (id: string) => void
   onViewDetails?: (booking: UserBooking) => void
+  onReview?: (booking: UserBooking) => void
 }
 
-export function BookingCard({ booking, onCancel, onViewDetails }: BookingCardProps) {
+export function BookingCard({ booking, onCancel, onViewDetails, onReview }: BookingCardProps) {
   const { t } = useTranslation()
   const [isDetailOpen, setIsDetailOpen] = useState(false)
 
@@ -62,6 +64,20 @@ export function BookingCard({ booking, onCancel, onViewDetails }: BookingCardPro
               <EyeOutlined />
             </button>
           </Tooltip>
+
+          {onReview && booking.status === 'completed' && (
+            <Tooltip title={t('reviews.ratePitch', { defaultValue: 'Đánh giá sân bóng' })}>
+              <button
+                type="button"
+                className="booking-card__icon-btn"
+                style={{ color: '#84cc16' }}
+                onClick={() => onReview(booking)}
+                aria-label={t('reviews.ratePitch', { defaultValue: 'Đánh giá sân bóng' })}
+              >
+                <StarFilled />
+              </button>
+            </Tooltip>
+          )}
 
           {onCancel && (booking.status === 'confirmed' || booking.status === 'pending') && (
             <Tooltip title={t('booking.card.cancel', { defaultValue: 'Hủy lịch đặt' })}>

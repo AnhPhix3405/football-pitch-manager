@@ -7,17 +7,9 @@ import {
 } from '@ant-design/icons'
 import { Button, Input, Spin, Tooltip, type InputRef } from 'antd'
 import { useTranslation } from 'react-i18next'
-import type { ChatMessage } from '~/features/chat/interface/chat.types'
+import { MESSAGE_TYPE } from '~/constants/chat.constant'
+import type { MessageComposerProps } from '~/features/chat/interface/chat.types'
 import { useUploadImage } from '~/hooks/useUploadImage'
-
-interface MessageComposerProps {
-  onSendMessage: (content: string, messageType?: 'text' | 'image') => void
-  editingMessage?: ChatMessage | null
-  onSaveEdit?: (messageId: string, content: string) => void
-  onCancelEdit?: () => void
-  onFocusInput?: () => void
-  disabled?: boolean
-}
 
 export function MessageComposer({
   onSendMessage,
@@ -83,9 +75,9 @@ export function MessageComposer({
     if (file) {
       const res = await upload()
       if (!res) return
-      onSendMessage(res.url, 'image')
+      onSendMessage(res.url, MESSAGE_TYPE.IMAGE)
       if (draft.trim()) {
-        onSendMessage(draft.trim(), 'text')
+        onSendMessage(draft.trim(), MESSAGE_TYPE.TEXT)
         setDraft('')
       }
       return
@@ -94,7 +86,7 @@ export function MessageComposer({
     // Send regular text message
     const trimmed = draft.trim()
     if (!trimmed) return
-    onSendMessage(trimmed, 'text')
+    onSendMessage(trimmed, MESSAGE_TYPE.TEXT)
     setDraft('')
   }
 

@@ -1,13 +1,9 @@
 import { CalendarOutlined, DeleteOutlined, InfoCircleOutlined } from '@ant-design/icons'
 import { Button, Tooltip } from 'antd'
 import { useTranslation } from 'react-i18next'
+import { CONVERSATION_KIND } from '~/constants/chat.constant'
 import { useConfirmModal } from '~/hooks'
-import type { Conversation } from '../interface/chat.types'
-
-interface ChatHeaderProps {
-  conversation: Conversation
-  onDeleteConversation?: (conversationId: string) => void
-}
+import type { ChatHeaderProps } from '../interface/chat.types'
 
 export function ChatHeader({ conversation, onDeleteConversation }: ChatHeaderProps) {
   const { t } = useTranslation()
@@ -37,7 +33,7 @@ export function ChatHeader({ conversation, onDeleteConversation }: ChatHeaderPro
               decoding="async"
               style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
             />
-          ) : conversation.kind === 'field' ? (
+          ) : conversation.kind === CONVERSATION_KIND.FIELD ? (
             <CalendarOutlined />
           ) : (
             <span className="conversation-avatar-text">
@@ -49,7 +45,7 @@ export function ChatHeader({ conversation, onDeleteConversation }: ChatHeaderPro
         <div className="chat-panel__meta">
           <b>{conversation.name}</b>
           <small>
-            {conversation.kind === 'field'
+            {conversation.kind === CONVERSATION_KIND.FIELD
               ? t('chat.fieldChannel', { defaultValue: 'Kênh liên hệ sân bóng' })
               : t('chat.teamChannel', { defaultValue: 'Trưởng nhóm đối thủ' })}
           </small>
@@ -75,4 +71,3 @@ export function ChatHeader({ conversation, onDeleteConversation }: ChatHeaderPro
     </header>
   )
 }
-
