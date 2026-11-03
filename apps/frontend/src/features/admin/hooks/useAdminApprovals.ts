@@ -1,4 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
+import type { ApprovalRequest } from '../admin.data'
+import type {
+  AdminFieldApprovalItem,
+  AdminOwnerApprovalItem,
+} from '../interface/admin.interface'
 import {
   approveFieldRequest,
   approveOwnerRegistration,
@@ -6,22 +11,20 @@ import {
   getOwnerApprovals,
   rejectFieldRequest,
   rejectOwnerRegistration,
-  type AdminFieldApprovalItem,
-  type AdminOwnerApprovalItem,
 } from '../service/admin.service'
-import type { ApprovalRequest } from '../admin.data'
 
 export function mapOwnerApprovalToRequest(item: AdminOwnerApprovalItem): ApprovalRequest {
   return {
     id: item.id,
     name: item.ownerProfile?.businessName || item.requester.email,
     applicant: item.requester.email,
+    phone: item.requester.phone,
+    license: item.ownerProfile?.businessLicense || null,
+    bankAccount: item.ownerProfile?.bankAccount || null,
     location: item.ownerProfile?.bankAccount || 'Đang cập nhật',
     type: 'owner',
-    status: item.status === 'approved' ? 'active' : (item.status as 'pending' | 'active' | 'suspended' | 'rejected'),
-    submittedAt: new Date(item.createdAt).toLocaleDateString('vi-VN'),
-    documents: item.ownerProfile?.businessLicense ? 1 : 0,
-    risk: 'low',
+    status: item.status,
+    submittedAt: new Date(item.createdAt).toLocaleString('vi-VN'),
   }
 }
 
@@ -31,12 +34,11 @@ export function mapFieldApprovalToRequest(item: AdminFieldApprovalItem): Approva
     id: item.id,
     name: item.targetField?.name || (item.proposedChanges?.name as string) || 'Cụm sân bóng',
     applicant: item.requester?.email || 'N/A',
+    phone: item.requester?.phone || null,
     location: locationParts.length > 0 ? locationParts.join(', ') : 'Đang cập nhật vị trí',
     type: 'field',
-    status: item.status === 'approved' ? 'active' : (item.status as 'pending' | 'active' | 'suspended' | 'rejected'),
-    submittedAt: new Date(item.createdAt).toLocaleDateString('vi-VN'),
-    documents: 1,
-    risk: 'low',
+    status: item.status,
+    submittedAt: new Date(item.createdAt).toLocaleString('vi-VN'),
   }
 }
 
