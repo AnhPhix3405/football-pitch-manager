@@ -1,0 +1,2 @@
+export const ADMIN_APPROVALS_PAGE_SIZE = 10;
+export const ADMIN_APPROVALS_PAGE_SIZE_OPTIONS = ['10'];

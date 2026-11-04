@@ -60,6 +60,9 @@ export interface AdminFieldApprovalQueryParams {
   limit?: number
   status?: string
   type?: string
+  search?: string
+  fromDate?: string
+  toDate?: string
 }
 
 export async function getFieldApprovals(params?: AdminFieldApprovalQueryParams): Promise<AdminFieldApprovalListResponse> {

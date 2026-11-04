@@ -1,8 +1,43 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsIn, IsInt, IsOptional, Max, Min } from 'class-validator';
+import {
+  IsDateString,
+  IsIn,
+  IsInt,
+  IsOptional,
+  IsString,
+  Max,
+  Min,
+} from 'class-validator';
 
 export class AdminFieldApprovalQueryDto {
+  @ApiPropertyOptional({
+    description:
+      'Từ khóa tìm kiếm theo tên sân bóng, địa chỉ, quận/huyện hoặc email người gửi',
+    example: 'Tân Bình',
+  })
+  @IsOptional()
+  @IsString()
+  search?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Lọc từ ngày gửi yêu cầu (định dạng YYYY-MM-DD hoặc ISO 8601 string)',
+    example: '2026-10-01',
+  })
+  @IsOptional()
+  @IsDateString()
+  fromDate?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Lọc đến ngày gửi yêu cầu (định dạng YYYY-MM-DD hoặc ISO 8601 string)',
+    example: '2026-10-31',
+  })
+  @IsOptional()
+  @IsDateString()
+  toDate?: string;
+
   @ApiPropertyOptional({
     description: 'Trạng thái yêu cầu duyệt để lọc',
     enum: ['pending', 'approved', 'rejected', 'all'],

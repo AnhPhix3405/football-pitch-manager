@@ -3,6 +3,7 @@ export type AdminEntityStatus = 'active' | 'pending' | 'suspended' | 'rejected'
 export interface ApprovalRequest {
   id: string
   type: 'owner' | 'field'
+  requestType?: string
   name: string
   applicant: string
   phone?: string | null

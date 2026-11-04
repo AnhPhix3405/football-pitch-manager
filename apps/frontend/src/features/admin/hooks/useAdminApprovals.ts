@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { ADMIN_APPROVALS_PAGE_SIZE } from '../constants/pagination.constant'
 import type { ApprovalRequest } from '../admin.data'
 import type {
   AdminFieldApprovalItem,
@@ -23,6 +24,7 @@ export function mapOwnerApprovalToRequest(item: AdminOwnerApprovalItem): Approva
     bankAccount: item.ownerProfile?.bankAccount || null,
     location: item.ownerProfile?.bankAccount || 'Đang cập nhật',
     type: 'owner',
+    requestType: item.type,
     status: item.status,
     submittedAt: new Date(item.createdAt).toLocaleString('vi-VN'),
   }
@@ -37,33 +39,61 @@ export function mapFieldApprovalToRequest(item: AdminFieldApprovalItem): Approva
     phone: item.requester?.phone || null,
     location: locationParts.length > 0 ? locationParts.join(', ') : 'Đang cập nhật vị trí',
     type: 'field',
+    requestType: item.type,
     status: item.status,
     submittedAt: new Date(item.createdAt).toLocaleString('vi-VN'),
   }
 }
 
-export function useAdminApprovals(type: 'owner' | 'field', query = '') {
+export function useAdminApprovals(
+  type: 'owner' | 'field',
+  query = '',
+  fromDate?: string,
+  toDate?: string,
+) {
+  const [page, setPage] = useState(1)
+  const [total, setTotal] = useState(0)
   const [apiApprovals, setApiApprovals] = useState<(AdminOwnerApprovalItem | AdminFieldApprovalItem)[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    setPage(1)
+  }, [type, query, fromDate, toDate])
 
   const loadData = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
       if (type === 'owner') {
-        const data = await getOwnerApprovals({ search: query || undefined, status: 'pending' })
+        const data = await getOwnerApprovals({
+          search: query || undefined,
+          status: 'pending',
+          fromDate,
+          toDate,
+          page,
+          limit: ADMIN_APPROVALS_PAGE_SIZE,
+        })
         setApiApprovals(data.items || [])
+        setTotal(data.total || 0)
       } else {
-        const data = await getFieldApprovals({ status: 'pending' })
+        const data = await getFieldApprovals({
+          search: query || undefined,
+          status: 'pending',
+          fromDate,
+          toDate,
+          page,
+          limit: ADMIN_APPROVALS_PAGE_SIZE,
+        })
         setApiApprovals(data.items || [])
+        setTotal(data.total || 0)
       }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Lỗi tải danh sách phê duyệt')
     } finally {
       setLoading(false)
     }
-  }, [type, query])
+  }, [type, query, fromDate, toDate, page])
 
   useEffect(() => {
     loadData()
@@ -91,6 +121,9 @@ export function useAdminApprovals(type: 'owner' | 'field', query = '') {
     apiApprovals,
     loading,
     error,
+    page,
+    setPage,
+    total,
     refetch: loadData,
     approve,
     reject,

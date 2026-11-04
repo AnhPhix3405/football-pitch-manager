@@ -958,6 +958,9 @@ Tài liệu chi tiết toàn bộ các API HTTP REST và WebSocket Gateway của
 #### 3.6.1. Lấy danh sách duyệt hồ sơ chủ sân (`GET /admin/owner-approvals`)
 - **Quyền truy cập:** `admin` (Active)
 - **Query Parameters (`AdminOwnerApprovalQueryDto`):**
+  - `search` *(string, optional, từ khóa tìm kiếm theo email, số điện thoại người yêu cầu)*
+  - `fromDate` *(string: YYYY-MM-DD, optional, lọc yêu cầu tạo từ ngày)*
+  - `toDate` *(string: YYYY-MM-DD, optional, lọc yêu cầu tạo đến ngày)*
   - `status` *(enum: `pending`, `approved`, `rejected`, `all`, default: `pending`)*
   - `page` *(number, default: 1)*
   - `limit` *(number, default: 10, max: 100)*
@@ -1012,6 +1015,9 @@ Tài liệu chi tiết toàn bộ các API HTTP REST và WebSocket Gateway của
 #### 3.5.5. Lấy danh sách duyệt sân bóng (`GET /admin/field-approvals`)
 - **Quyền truy cập:** `admin` (Active)
 - **Query Parameters (`AdminFieldApprovalQueryDto`):**
+  - `search` *(string, optional, từ khóa tìm kiếm theo tên sân bóng, địa chỉ, quận/huyện, email người yêu cầu)*
+  - `fromDate` *(string: YYYY-MM-DD, optional, lọc yêu cầu tạo từ ngày)*
+  - `toDate` *(string: YYYY-MM-DD, optional, lọc yêu cầu tạo đến ngày)*
   - `status` *(enum: `pending`, `approved`, `rejected`, `all`, default: `pending`)*
   - `type` *(enum: `field_create`, `field_update`, `all`, default: `all`)*
   - `page` *(number, default: 1)*

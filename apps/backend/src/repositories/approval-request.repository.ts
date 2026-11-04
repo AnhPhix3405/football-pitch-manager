@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
 import { BaseRepository } from '~/core/base/base-repositories';
 import { ApprovalRequestEntity } from '~/entities/approval-request.entity';
+import { FieldEntity } from '~/entities/field.entity';
 
 export interface CreateApprovalRequestData {
   type: string;
@@ -17,6 +18,9 @@ export interface FindOwnerApprovalsOptions {
   status?: string;
   page?: number;
   limit?: number;
+  search?: string;
+  fromDate?: string;
+  toDate?: string;
 }
 
 export interface FindFieldApprovalsOptions {
@@ -24,6 +28,9 @@ export interface FindFieldApprovalsOptions {
   type?: 'field_create' | 'field_update' | 'all';
   page?: number;
   limit?: number;
+  search?: string;
+  fromDate?: string;
+  toDate?: string;
 }
 
 export interface PaginatedApprovalRequests {
@@ -102,6 +109,30 @@ export class ApprovalRequestRepository extends BaseRepository<ApprovalRequestEnt
       qb.andWhere('request.status = :status', { status: options.status });
     }
 
+    if (options.fromDate) {
+      const from = new Date(options.fromDate);
+      from.setHours(0, 0, 0, 0);
+      qb.andWhere('request.createdAt >= :fromDate', {
+        fromDate: from.toISOString(),
+      });
+    }
+
+    if (options.toDate) {
+      const to = new Date(options.toDate);
+      to.setHours(23, 59, 59, 999);
+      qb.andWhere('request.createdAt <= :toDate', { toDate: to.toISOString() });
+    }
+
+    if (options.search?.trim()) {
+      const sanitized = options.search
+        .trim()
+        .replace(/[%_\\]/g, (ch) => '\\' + ch);
+      qb.andWhere(
+        '(requester.email ILIKE :search OR requester.phone ILIKE :search OR request.note ILIKE :search)',
+        { search: `%${sanitized}%` },
+      );
+    }
+
     qb.orderBy('request.createdAt', 'DESC').skip(skip).take(limit);
 
     const [items, total] = await qb.getManyAndCount();
@@ -142,10 +173,35 @@ export class ApprovalRequestRepository extends BaseRepository<ApprovalRequestEnt
       .createQueryBuilder('request')
       .leftJoinAndSelect('request.requester', 'requester')
       .leftJoinAndSelect('request.reviewer', 'reviewer')
+      .leftJoin(FieldEntity, 'field', 'field.id = request.targetId')
       .where('request.type IN (:...types)', { types: allowedTypes });
 
     if (options.status && options.status !== 'all') {
       qb.andWhere('request.status = :status', { status: options.status });
+    }
+
+    if (options.fromDate) {
+      const from = new Date(options.fromDate);
+      from.setHours(0, 0, 0, 0);
+      qb.andWhere('request.createdAt >= :fromDate', {
+        fromDate: from.toISOString(),
+      });
+    }
+
+    if (options.toDate) {
+      const to = new Date(options.toDate);
+      to.setHours(23, 59, 59, 999);
+      qb.andWhere('request.createdAt <= :toDate', { toDate: to.toISOString() });
+    }
+
+    if (options.search?.trim()) {
+      const sanitized = options.search
+        .trim()
+        .replace(/[%_\\]/g, (ch) => '\\' + ch);
+      qb.andWhere(
+        '(field.name ILIKE :search OR field.address ILIKE :search OR field.district ILIKE :search OR requester.email ILIKE :search OR request.note ILIKE :search)',
+        { search: `%${sanitized}%` },
+      );
     }
 
     qb.orderBy('request.createdAt', 'DESC').skip(skip).take(limit);

@@ -44,16 +44,23 @@ export interface AdminApprovalQueryParams {
   limit?: number
   status?: string
   search?: string
+  fromDate?: string
+  toDate?: string
 }
 
 export interface AdminTargetField {
   id: string
   name: string
   address: string
-  ward?: string
-  district?: string
-  city?: string
+  ward?: string | null
+  district?: string | null
+  city?: string | null
   avatarUrl?: string | null
+  description?: string | null
+  status?: string
+  requireDeposit?: boolean
+  depositType?: string | null
+  depositValue?: number | null
 }
 
 export interface AdminFieldApprovalItem {

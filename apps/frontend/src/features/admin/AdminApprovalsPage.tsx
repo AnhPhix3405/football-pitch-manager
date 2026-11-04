@@ -7,11 +7,13 @@ import {
 } from '@ant-design/icons'
 import {
   Button,
+  DatePicker,
   Descriptions,
   Drawer,
   Input,
   Modal,
   Segmented,
+  Select,
   Spin,
   Table,
   Tag,
@@ -20,13 +22,21 @@ import {
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
-import { approvalRequests, type ApprovalRequest } from './admin.data'
+import type { ApprovalRequest } from './admin.data'
 import {
   mapFieldApprovalToRequest,
   mapOwnerApprovalToRequest,
   useAdminApprovals,
 } from './hooks/useAdminApprovals'
+import { useAdminFieldApprovalDetail } from './hooks/useAdminFieldApprovalDetail'
 import { useAdminOwnerApprovalDetail } from './hooks/useAdminOwnerApprovalDetail'
+import type { Dayjs } from 'dayjs'
+import type { DateFilterPreset } from './constants/date-filter.constant'
+import { getDateRangeFromPreset } from './utils/date-range.util'
+import {
+  ADMIN_APPROVALS_PAGE_SIZE,
+  ADMIN_APPROVALS_PAGE_SIZE_OPTIONS,
+} from './constants/pagination.constant'
 import type {
   AdminFieldApprovalItem,
   AdminOwnerApprovalItem,
@@ -41,6 +51,8 @@ export function AdminApprovalsPage({ forcedType }: AdminApprovalsPageProps) {
   const navigate = useNavigate()
   const [type, setType] = useState<'owner' | 'field'>(forcedType || 'owner')
   const [query, setQuery] = useState('')
+  const [datePreset, setDatePreset] = useState<DateFilterPreset>('all')
+  const [customRange, setCustomRange] = useState<[Dayjs | null, Dayjs | null] | null>(null)
   const [selectedRecord, setSelectedRecord] = useState<ApprovalRequest | null>(null)
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const [resolved, setResolved] = useState<string[]>([])
@@ -48,10 +60,17 @@ export function AdminApprovalsPage({ forcedType }: AdminApprovalsPageProps) {
 
   const {
     detail: ownerDetail,
-    loading: detailLoading,
+    loading: ownerDetailLoading,
     fetchDetail: fetchOwnerDetail,
     resetDetail: resetOwnerDetail,
   } = useAdminOwnerApprovalDetail()
+
+  const {
+    detail: fieldDetail,
+    loading: fieldDetailLoading,
+    fetchDetail: fetchFieldDetail,
+    resetDetail: resetFieldDetail,
+  } = useAdminFieldApprovalDetail()
 
   useEffect(() => {
     if (forcedType && forcedType !== type) {
@@ -59,7 +78,47 @@ export function AdminApprovalsPage({ forcedType }: AdminApprovalsPageProps) {
     }
   }, [forcedType, type])
 
-  const { apiApprovals, loading, refetch, approve, reject } = useAdminApprovals(type, query)
+  const { fromDate, toDate } = useMemo(
+    () => getDateRangeFromPreset(datePreset, customRange),
+    [datePreset, customRange],
+  )
+
+  const datePresetOptions = useMemo(
+    () => [
+      {
+        value: 'all',
+        label: t('admin.dateFilterAll', { defaultValue: 'Tất cả thời gian' }),
+      },
+      {
+        value: 'today',
+        label: t('admin.dateFilterToday', { defaultValue: 'Hôm nay' }),
+      },
+      {
+        value: 'this_week',
+        label: t('admin.dateFilterThisWeek', { defaultValue: 'Tuần này' }),
+      },
+      {
+        value: 'this_month',
+        label: t('admin.dateFilterThisMonth', { defaultValue: 'Tháng này' }),
+      },
+      {
+        value: 'custom',
+        label: t('admin.dateFilterCustom', { defaultValue: 'Chọn khoảng thời gian' }),
+      },
+    ],
+    [t],
+  )
+
+  const {
+    apiApprovals,
+    loading,
+    page,
+    setPage,
+    total,
+    refetch,
+    approve,
+    reject,
+  } = useAdminApprovals(type, query, fromDate, toDate)
 
   const mappedApiRequests: ApprovalRequest[] = useMemo(() => {
     if (apiApprovals.length === 0) return []
@@ -70,13 +129,12 @@ export function AdminApprovalsPage({ forcedType }: AdminApprovalsPageProps) {
   }, [apiApprovals, type])
 
   const visible = useMemo(() => {
-    const source = mappedApiRequests.length > 0 ? mappedApiRequests : approvalRequests
-    return source.filter(
+    return mappedApiRequests.filter(
       (item) =>
         item.type === type &&
         !resolved.includes(item.id) &&
         (!query ||
-          `${item.name} ${item.applicant} ${item.phone || ''} ${item.id}`
+          `${item.name} ${item.applicant} ${item.phone || ''}`
             .toLowerCase()
             .includes(query.toLowerCase())),
     )
@@ -86,7 +144,8 @@ export function AdminApprovalsPage({ forcedType }: AdminApprovalsPageProps) {
     setIsDrawerOpen(false)
     setSelectedRecord(null)
     resetOwnerDetail()
-  }, [resetOwnerDetail])
+    resetFieldDetail()
+  }, [resetFieldDetail, resetOwnerDetail])
 
   const handleViewDetail = useCallback(
     async (record: ApprovalRequest) => {
@@ -98,9 +157,15 @@ export function AdminApprovalsPage({ forcedType }: AdminApprovalsPageProps) {
         } catch {
           messageApi.error(t('admin.loadDetailError', { defaultValue: 'Không thể tải chi tiết hồ sơ phê duyệt' }))
         }
+      } else {
+        try {
+          await fetchFieldDetail(record.id)
+        } catch {
+          messageApi.error(t('admin.loadFieldDetailError', { defaultValue: 'Không thể tải chi tiết cụm sân' }))
+        }
       }
     },
-    [fetchOwnerDetail, messageApi, t],
+    [fetchFieldDetail, fetchOwnerDetail, messageApi, t],
   )
 
   const decide = useCallback(
@@ -113,8 +178,9 @@ export function AdminApprovalsPage({ forcedType }: AdminApprovalsPageProps) {
           ? t('admin.confirmApproveContent', { defaultValue: 'Tài khoản hoặc sân sẽ được kích hoạt trên hệ thống.' })
           : t('admin.confirmRejectContent', { defaultValue: 'Người gửi sẽ nhận thông báo và lý do từ chối.' }),
         okText: isApproved
-          ? t('common.confirm', { defaultValue: 'Phê duyệt' })
-          : t('common.cancel', { defaultValue: 'Từ chối' }),
+          ? t('admin.approve', { defaultValue: 'Duyệt' })
+          : t('admin.reject', { defaultValue: 'Từ chối' }),
+        cancelText: t('common.cancel', { defaultValue: 'Hủy' }),
         okButtonProps: { danger: !isApproved },
         onOk: async () => {
           try {
@@ -155,13 +221,7 @@ export function AdminApprovalsPage({ forcedType }: AdminApprovalsPageProps) {
       {
         title: t('admin.tablePartnerName', { defaultValue: 'TÊN ĐỐI TÁC / DOANH NGHIỆP' }),
         dataIndex: 'name',
-        render: (val: string, record: ApprovalRequest) => (
-          <div>
-            <b>{val}</b>
-            <br />
-            <small style={{ color: '#888' }}>ID: {record.id.slice(0, 8)}...</small>
-          </div>
-        ),
+        render: (val: string) => <b>{val}</b>,
       },
       {
         title: t('admin.tableRequester', { defaultValue: 'NGƯỜI LIÊN HỆ' }),
@@ -215,10 +275,10 @@ export function AdminApprovalsPage({ forcedType }: AdminApprovalsPageProps) {
               {t('common.details', { defaultValue: 'Xem' })}
             </Button>
             <Button size="small" type="primary" icon={<CheckOutlined />} onClick={() => decide(record, true)}>
-              {t('common.confirm', { defaultValue: 'Duyệt' })}
+              {t('admin.approve', { defaultValue: 'Duyệt' })}
             </Button>
             <Button size="small" danger icon={<CloseOutlined />} onClick={() => decide(record, false)}>
-              {t('common.cancel', { defaultValue: 'Từ chối' })}
+              {t('admin.reject', { defaultValue: 'Từ chối' })}
             </Button>
           </div>
         ),
@@ -230,18 +290,23 @@ export function AdminApprovalsPage({ forcedType }: AdminApprovalsPageProps) {
   const fieldColumns = useMemo(
     () => [
       {
-        title: t('admin.tablePartnerName', { defaultValue: 'TÊN SÂN BÓNG' }),
+        title: t('admin.tableFieldName', { defaultValue: 'TÊN SÂN BÓNG' }),
         dataIndex: 'name',
         render: (val: string, record: ApprovalRequest) => (
-          <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <b>{val}</b>
-            <br />
-            <small style={{ color: '#888' }}>ID: {record.id.slice(0, 8)}...</small>
+            {record.requestType && (
+              <Tag color={record.requestType === 'field_create' ? 'cyan' : 'purple'}>
+                {record.requestType === 'field_create'
+                  ? t('admin.fieldTypeCreate', { defaultValue: 'Tạo mới' })
+                  : t('admin.fieldTypeUpdate', { defaultValue: 'Cập nhật' })}
+              </Tag>
+            )}
           </div>
         ),
       },
       {
-        title: t('admin.tableRequester', { defaultValue: 'NGƯỜI LIÊN HỆ' }),
+        title: t('admin.tableRequester', { defaultValue: 'NGƯỜI YÊU CẦU' }),
         dataIndex: 'applicant',
         render: (val: string, record: ApprovalRequest) => (
           <div>
@@ -287,10 +352,10 @@ export function AdminApprovalsPage({ forcedType }: AdminApprovalsPageProps) {
               {t('common.details', { defaultValue: 'Xem' })}
             </Button>
             <Button size="small" type="primary" icon={<CheckOutlined />} onClick={() => decide(record, true)}>
-              {t('common.confirm', { defaultValue: 'Duyệt' })}
+              {t('admin.approve', { defaultValue: 'Duyệt' })}
             </Button>
             <Button size="small" danger icon={<CloseOutlined />} onClick={() => decide(record, false)}>
-              {t('common.cancel', { defaultValue: 'Từ chối' })}
+              {t('admin.reject', { defaultValue: 'Từ chối' })}
             </Button>
           </div>
         ),
@@ -298,6 +363,8 @@ export function AdminApprovalsPage({ forcedType }: AdminApprovalsPageProps) {
     ],
     [decide, handleViewDetail, t],
   )
+
+  const isDetailLoading = ownerDetailLoading || fieldDetailLoading
 
   return (
     <section className="admin-page">
@@ -309,7 +376,16 @@ export function AdminApprovalsPage({ forcedType }: AdminApprovalsPageProps) {
           <p>{t('admin.approvalsSubtitle', { defaultValue: 'Kiểm tra hồ sơ, tài liệu và mức độ rủi ro trước khi kích hoạt.' })}</p>
         </div>
       </header>
-      <div className="admin-toolbar">
+      <div
+        className="admin-toolbar"
+        style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: 12,
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}
+      >
         <Segmented
           value={type}
           onChange={(val) => {
@@ -322,29 +398,73 @@ export function AdminApprovalsPage({ forcedType }: AdminApprovalsPageProps) {
             { value: 'field', label: t('nav.fieldApprovals', { defaultValue: 'Duyệt sân bóng' }) },
           ]}
         />
-        <Input
-          prefix={<SearchOutlined />}
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder={t('admin.searchPlaceholder', { defaultValue: 'Tìm hồ sơ...' })}
-        />
-        <Button icon={<ReloadOutlined />} onClick={() => refetch()} loading={loading}>
-          {t('common.refresh', { defaultValue: 'Làm mới' })}
-        </Button>
+        <div
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: 8,
+            alignItems: 'center',
+            flex: 1,
+            justifyContent: 'flex-end',
+          }}
+        >
+          <Input
+            prefix={<SearchOutlined />}
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder={t('admin.searchPlaceholder', { defaultValue: 'Tìm hồ sơ...' })}
+            style={{ maxWidth: 220 }}
+          />
+          <Select
+            value={datePreset}
+            onChange={(val) => {
+              setDatePreset(val)
+              if (val !== 'custom') {
+                setCustomRange(null)
+              }
+            }}
+            options={datePresetOptions}
+            style={{ width: 170 }}
+          />
+          {datePreset === 'custom' && (
+            <DatePicker.RangePicker
+              value={customRange}
+              onChange={(dates) =>
+                setCustomRange(dates as [Dayjs | null, Dayjs | null] | null)
+              }
+              format="YYYY-MM-DD"
+              placeholder={[
+                t('admin.startDatePlaceholder', { defaultValue: 'Từ ngày' }),
+                t('admin.endDatePlaceholder', { defaultValue: 'Đến ngày' }),
+              ]}
+            />
+          )}
+          <Button icon={<ReloadOutlined />} onClick={() => refetch()} loading={loading}>
+            {t('common.refresh', { defaultValue: 'Làm mới' })}
+          </Button>
+        </div>
       </div>
       <Table
         loading={loading}
         rowKey="id"
         dataSource={visible}
         columns={type === 'owner' ? ownerColumns : fieldColumns}
+        pagination={{
+          current: page,
+          pageSize: ADMIN_APPROVALS_PAGE_SIZE,
+          total,
+          showSizeChanger: false,
+          pageSizeOptions: ADMIN_APPROVALS_PAGE_SIZE_OPTIONS,
+          onChange: (nextPage) => setPage(nextPage),
+        }}
       />
       <Drawer
         title={t('admin.detailTitle', { defaultValue: 'Chi tiết hồ sơ phê duyệt' })}
         open={isDrawerOpen}
         onClose={handleCloseDrawer}
-        width={540}
+        width={560}
       >
-        {detailLoading ? (
+        {isDetailLoading ? (
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 240 }}>
             <Spin size="large" />
           </div>
@@ -356,9 +476,6 @@ export function AdminApprovalsPage({ forcedType }: AdminApprovalsPageProps) {
               bordered
               size="small"
             >
-              <Descriptions.Item label={t('admin.recordId', { defaultValue: 'Mã hồ sơ' })}>
-                <code>{ownerDetail.id}</code>
-              </Descriptions.Item>
               <Descriptions.Item label={t('admin.requestType', { defaultValue: 'Loại yêu cầu' })}>
                 <Tag color="blue">{ownerDetail.type}</Tag>
               </Descriptions.Item>
@@ -473,13 +590,159 @@ export function AdminApprovalsPage({ forcedType }: AdminApprovalsPageProps) {
               </div>
             )}
           </div>
+        ) : selectedRecord?.type === 'field' && fieldDetail ? (
+          <div className="approval-detail">
+            <Descriptions
+              title={t('admin.requestInfo', { defaultValue: 'Thông tin yêu cầu' })}
+              column={1}
+              bordered
+              size="small"
+            >
+              <Descriptions.Item label={t('admin.requestType', { defaultValue: 'Loại yêu cầu' })}>
+                <Tag color={fieldDetail.type === 'field_create' ? 'cyan' : 'purple'}>
+                  {fieldDetail.type === 'field_create'
+                    ? t('admin.fieldTypeCreate', { defaultValue: 'Tạo sân mới' })
+                    : t('admin.fieldTypeUpdate', { defaultValue: 'Cập nhật sân' })}
+                </Tag>
+              </Descriptions.Item>
+              <Descriptions.Item label={t('admin.status', { defaultValue: 'Trạng thái' })}>
+                <Tag
+                  color={
+                    fieldDetail.status === 'approved'
+                      ? 'green'
+                      : fieldDetail.status === 'rejected'
+                        ? 'red'
+                        : 'gold'
+                  }
+                >
+                  {fieldDetail.status.toUpperCase()}
+                </Tag>
+              </Descriptions.Item>
+              <Descriptions.Item label={t('admin.submittedAt', { defaultValue: 'Thời điểm nộp' })}>
+                {new Date(fieldDetail.createdAt).toLocaleString('vi-VN')}
+              </Descriptions.Item>
+              {fieldDetail.reviewedAt && (
+                <Descriptions.Item label={t('admin.reviewedAt', { defaultValue: 'Thời điểm duyệt' })}>
+                  {new Date(fieldDetail.reviewedAt).toLocaleString('vi-VN')}
+                </Descriptions.Item>
+              )}
+              {fieldDetail.note && (
+                <Descriptions.Item label={t('admin.note', { defaultValue: 'Ghi chú' })}>
+                  {fieldDetail.note}
+                </Descriptions.Item>
+              )}
+            </Descriptions>
+
+            <Descriptions
+              title={t('admin.requesterInfo', { defaultValue: 'Thông tin người yêu cầu' })}
+              column={1}
+              bordered
+              size="small"
+              style={{ marginTop: 16 }}
+            >
+              <Descriptions.Item label={t('admin.email', { defaultValue: 'Email liên hệ' })}>
+                {fieldDetail.requester.email}
+              </Descriptions.Item>
+              <Descriptions.Item label={t('admin.phone', { defaultValue: 'Số điện thoại' })}>
+                {fieldDetail.requester.phone || t('admin.notUpdated', { defaultValue: 'Chưa cập nhật' })}
+              </Descriptions.Item>
+              <Descriptions.Item label={t('admin.userRole', { defaultValue: 'Vai trò tài khoản' })}>
+                <Tag>{fieldDetail.requester.role}</Tag>
+              </Descriptions.Item>
+              <Descriptions.Item label={t('admin.accountStatus', { defaultValue: 'Trạng thái tài khoản' })}>
+                <Tag color={fieldDetail.requester.status === 'active' ? 'green' : 'default'}>
+                  {fieldDetail.requester.status}
+                </Tag>
+              </Descriptions.Item>
+            </Descriptions>
+
+            {fieldDetail.targetField && (
+              <Descriptions
+                title={t('admin.fieldInfo', { defaultValue: 'Thông tin cụm sân bóng' })}
+                column={1}
+                bordered
+                size="small"
+                style={{ marginTop: 16 }}
+              >
+                <Descriptions.Item label={t('admin.pitchName', { defaultValue: 'Tên cụm sân' })}>
+                  <b>{fieldDetail.targetField.name}</b>
+                </Descriptions.Item>
+                <Descriptions.Item label={t('admin.pitchAddress', { defaultValue: 'Địa chỉ sân' })}>
+                  {fieldDetail.targetField.address}
+                </Descriptions.Item>
+                {fieldDetail.targetField.district && (
+                  <Descriptions.Item label={t('admin.pitchDistrict', { defaultValue: 'Quận / Huyện' })}>
+                    {fieldDetail.targetField.district}
+                  </Descriptions.Item>
+                )}
+                {fieldDetail.targetField.description && (
+                  <Descriptions.Item label={t('admin.pitchDescription', { defaultValue: 'Mô tả' })}>
+                    {fieldDetail.targetField.description}
+                  </Descriptions.Item>
+                )}
+                <Descriptions.Item label={t('admin.pitchDeposit', { defaultValue: 'Yêu cầu đặt cọc' })}>
+                  {fieldDetail.targetField.requireDeposit
+                    ? `${t('admin.pitchDepositYes', { defaultValue: 'Có cọc' })}${fieldDetail.targetField.depositValue ? ` (${fieldDetail.targetField.depositValue.toLocaleString('vi-VN')} VNĐ)` : ''}`
+                    : t('admin.pitchDepositNo', { defaultValue: 'Không cọc' })}
+                </Descriptions.Item>
+              </Descriptions>
+            )}
+
+            {fieldDetail.proposedChanges && Object.keys(fieldDetail.proposedChanges).length > 0 && (
+              <Descriptions
+                title={t('admin.proposedChanges', { defaultValue: 'Nội dung thay đổi đề xuất' })}
+                column={1}
+                bordered
+                size="small"
+                style={{ marginTop: 16 }}
+              >
+                {Object.entries(fieldDetail.proposedChanges).map(([key, value]) => (
+                  <Descriptions.Item key={key} label={key}>
+                    {typeof value === 'object' ? JSON.stringify(value) : String(value)}
+                  </Descriptions.Item>
+                ))}
+              </Descriptions>
+            )}
+
+            {fieldDetail.reviewer && (
+              <Descriptions
+                title={t('admin.reviewer', { defaultValue: 'Người kiểm duyệt' })}
+                column={1}
+                bordered
+                size="small"
+                style={{ marginTop: 16 }}
+              >
+                <Descriptions.Item label={t('admin.reviewerEmail', { defaultValue: 'Admin duyệt' })}>
+                  {fieldDetail.reviewer.email}
+                </Descriptions.Item>
+              </Descriptions>
+            )}
+
+            {selectedRecord && (
+              <div style={{ marginTop: 24, display: 'flex', gap: 12 }}>
+                <Button
+                  type="primary"
+                  block
+                  icon={<CheckOutlined />}
+                  onClick={() => decide(selectedRecord, true)}
+                >
+                  {t('admin.approveAction', { defaultValue: 'Phê duyệt hồ sơ' })}
+                </Button>
+                <Button
+                  danger
+                  block
+                  icon={<CloseOutlined />}
+                  onClick={() => decide(selectedRecord, false)}
+                >
+                  {t('admin.rejectAction', { defaultValue: 'Từ chối' })}
+                </Button>
+              </div>
+            )}
+          </div>
         ) : selectedRecord ? (
           <div className="approval-detail">
             <Descriptions column={1} bordered size="small">
-              <Descriptions.Item label={t('admin.recordId', { defaultValue: 'Mã hồ sơ' })}>
-                {selectedRecord.id}
-              </Descriptions.Item>
-              <Descriptions.Item label={t('admin.tablePartnerName', { defaultValue: 'Tên đối tác' })}>
+              <Descriptions.Item label={t('admin.tablePartnerName', { defaultValue: 'Tên đối tác / Sân' })}>
                 {selectedRecord.name}
               </Descriptions.Item>
               <Descriptions.Item label={t('admin.email', { defaultValue: 'Email liên hệ' })}>
@@ -490,7 +753,7 @@ export function AdminApprovalsPage({ forcedType }: AdminApprovalsPageProps) {
                   {selectedRecord.phone}
                 </Descriptions.Item>
               )}
-              <Descriptions.Item label={t('admin.tableLocation', { defaultValue: 'Khu vực / Tài khoản' })}>
+              <Descriptions.Item label={t('admin.tableLocation', { defaultValue: 'Khu vực / Địa chỉ' })}>
                 {selectedRecord.location}
               </Descriptions.Item>
               <Descriptions.Item label={t('admin.submittedAt', { defaultValue: 'Ngày nộp' })}>
