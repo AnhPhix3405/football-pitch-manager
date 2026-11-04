@@ -63,7 +63,8 @@
     "registerBtn": "Tạo tài khoản",
     "googleAuth": "Tiếp tục với Google",
     "haveAccount": "Đã có tài khoản?",
-    "noAccount": "Chưa có tài khoản?"
+    "noAccount": "Chưa có tài khoản?",
+    "ownerRegistration": "Đăng ký chủ sân"
   },
   "booking": {
     "eyebrow": "RESERVATION LOG",

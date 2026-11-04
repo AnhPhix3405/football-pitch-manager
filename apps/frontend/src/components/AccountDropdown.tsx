@@ -4,6 +4,7 @@ import {
   LoginOutlined,
   LogoutOutlined,
   SettingOutlined,
+  ShopOutlined,
   UserAddOutlined,
 } from '@ant-design/icons'
 import { Avatar, Button, Dropdown, type DropdownProps, type MenuProps } from 'antd'
@@ -84,6 +85,19 @@ export function AccountDropdown({
             key: 'portal',
             icon: <DashboardOutlined />,
             label: <Link to={portalPath}>{portalLabel}</Link>,
+          },
+        ]
+      : []),
+    ...(user?.role === 'user'
+      ? [
+          {
+            key: 'owner-registration',
+            icon: <ShopOutlined />,
+            label: (
+              <Link to="/owner/register">
+                {t('auth.ownerRegistration', { defaultValue: 'Đăng ký chủ sân' })}
+              </Link>
+            ),
           },
         ]
       : []),

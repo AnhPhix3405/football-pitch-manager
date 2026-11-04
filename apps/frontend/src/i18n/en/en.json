@@ -63,7 +63,8 @@
     "registerBtn": "Create Account",
     "googleAuth": "Continue with Google",
     "haveAccount": "Already have an account?",
-    "noAccount": "Don't have an account?"
+    "noAccount": "Don't have an account?",
+    "ownerRegistration": "Register as Field Owner"
   },
   "booking": {
     "eyebrow": "RESERVATION LOG",
