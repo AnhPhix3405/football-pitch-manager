@@ -14,6 +14,9 @@ export interface ApprovalRequest {
   documents?: number
   risk?: 'low' | 'medium'
   status: AdminEntityStatus | string
+  reviewedAt?: string | null
+  note?: string | null
+  reviewerEmail?: string | null
 }
 
 export interface ManagedUser {

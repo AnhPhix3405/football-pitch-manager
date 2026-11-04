@@ -6,6 +6,7 @@ import {
   SearchOutlined,
 } from '@ant-design/icons'
 import {
+  Alert,
   Button,
   DatePicker,
   Descriptions,
@@ -41,7 +42,6 @@ import type {
   AdminFieldApprovalItem,
   AdminOwnerApprovalItem,
 } from './interface/admin.interface'
-
 import type { ApprovalStatusFilter } from './constants/status-filter.constant'
 
 interface AdminApprovalsPageProps {
@@ -59,6 +59,9 @@ export function AdminApprovalsPage({ forcedType }: AdminApprovalsPageProps) {
   const [selectedRecord, setSelectedRecord] = useState<ApprovalRequest | null>(null)
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const [resolved, setResolved] = useState<string[]>([])
+  const [rejectModalRecord, setRejectModalRecord] = useState<ApprovalRequest | null>(null)
+  const [rejectionReason, setRejectionReason] = useState('')
+  const [isSubmittingReject, setIsSubmittingReject] = useState(false)
   const [messageApi, contextHolder] = message.useMessage()
 
   const {
@@ -135,13 +138,13 @@ export function AdminApprovalsPage({ forcedType }: AdminApprovalsPageProps) {
     return mappedApiRequests.filter(
       (item) =>
         item.type === type &&
-        !resolved.includes(item.id) &&
+        (statusFilter !== 'pending' || !resolved.includes(item.id)) &&
         (!query ||
           `${item.name} ${item.applicant} ${item.phone || ''}`
             .toLowerCase()
             .includes(query.toLowerCase())),
     )
-  }, [mappedApiRequests, query, resolved, type])
+  }, [mappedApiRequests, query, resolved, statusFilter, type])
 
   const handleCloseDrawer = useCallback(() => {
     setIsDrawerOpen(false)
@@ -171,42 +174,23 @@ export function AdminApprovalsPage({ forcedType }: AdminApprovalsPageProps) {
     [fetchFieldDetail, fetchOwnerDetail, messageApi, t],
   )
 
-  const decide = useCallback(
-    (request: ApprovalRequest, isApproved: boolean) =>
+  const handleConfirmApprove = useCallback(
+    (request: ApprovalRequest) =>
       Modal.confirm({
-        title: isApproved
-          ? t('admin.confirmApproveTitle', { defaultValue: `Phê duyệt ${request.name}?`, name: request.name })
-          : t('admin.confirmRejectTitle', { defaultValue: `Từ chối ${request.name}?`, name: request.name }),
-        content: isApproved
-          ? t('admin.confirmApproveContent', { defaultValue: 'Tài khoản hoặc sân sẽ được kích hoạt trên hệ thống.' })
-          : t('admin.confirmRejectContent', { defaultValue: 'Người gửi sẽ nhận thông báo và lý do từ chối.' }),
-        okText: isApproved
-          ? t('admin.approve', { defaultValue: 'Duyệt' })
-          : t('admin.reject', { defaultValue: 'Từ chối' }),
+        title: t('admin.confirmApproveTitle', { defaultValue: `Phê duyệt ${request.name}?`, name: request.name }),
+        content: t('admin.confirmApproveContent', { defaultValue: 'Tài khoản hoặc sân sẽ được kích hoạt trên hệ thống.' }),
+        okText: t('admin.approve', { defaultValue: 'Duyệt' }),
         cancelText: t('common.cancel', { defaultValue: 'Hủy' }),
-        okButtonProps: { danger: !isApproved },
         onOk: async () => {
           try {
             if (request.type === 'owner') {
-              if (isApproved) {
-                await approve(request.id, 'Hồ sơ đã được phê duyệt')
-              } else {
-                await reject(request.id, 'Hồ sơ chưa đạt yêu cầu xác minh')
-              }
+              await approve(request.id, t('admin.defaultApproveOwnerNote', { defaultValue: 'Hồ sơ đã được phê duyệt' }))
             } else {
-              if (isApproved) {
-                await approve(request.id, 'Cụm sân hợp lệ')
-              } else {
-                await reject(request.id, 'Thông tin cụm sân chưa đạt yêu cầu')
-              }
+              await approve(request.id, t('admin.defaultApproveFieldNote', { defaultValue: 'Cụm sân hợp lệ' }))
             }
             setResolved((items) => [...items, request.id])
             handleCloseDrawer()
-            messageApi.success(
-              isApproved
-                ? t('admin.approveSuccess', { defaultValue: 'Đã phê duyệt hồ sơ.' })
-                : t('admin.rejectSuccess', { defaultValue: 'Đã từ chối hồ sơ.' }),
-            )
+            messageApi.success(t('admin.approveSuccess', { defaultValue: 'Đã phê duyệt hồ sơ.' }))
           } catch (err) {
             messageApi.error(
               err instanceof Error
@@ -216,8 +200,124 @@ export function AdminApprovalsPage({ forcedType }: AdminApprovalsPageProps) {
           }
         },
       }),
-    [approve, handleCloseDrawer, messageApi, reject, t],
+    [approve, handleCloseDrawer, messageApi, t],
   )
+
+  const handleOpenRejectModal = useCallback((record: ApprovalRequest) => {
+    setRejectModalRecord(record)
+    setRejectionReason('')
+  }, [])
+
+  const handleConfirmReject = useCallback(async () => {
+    if (!rejectModalRecord) return
+    const reason =
+      rejectionReason.trim() ||
+      (rejectModalRecord.type === 'owner'
+        ? t('admin.defaultRejectOwnerReason', { defaultValue: 'Hồ sơ chưa đạt yêu cầu xác minh' })
+        : t('admin.defaultRejectFieldReason', { defaultValue: 'Thông tin cụm sân chưa đạt yêu cầu' }))
+
+    try {
+      setIsSubmittingReject(true)
+      await reject(rejectModalRecord.id, reason)
+      setResolved((items) => [...items, rejectModalRecord.id])
+      setRejectModalRecord(null)
+      setRejectionReason('')
+      handleCloseDrawer()
+      messageApi.success(t('admin.rejectSuccess', { defaultValue: 'Đã từ chối hồ sơ.' }))
+    } catch (err) {
+      messageApi.error(
+        err instanceof Error
+          ? err.message
+          : t('admin.actionFailed', { defaultValue: 'Thao tác không thành công.' }),
+      )
+    } finally {
+      setIsSubmittingReject(false)
+    }
+  }, [handleCloseDrawer, messageApi, reject, rejectModalRecord, rejectionReason, t])
+
+  const renderStatusAlert = (
+    status: string,
+    reviewedAt?: string | null,
+    reviewerEmail?: string | null,
+    note?: string | null,
+  ) => {
+    const isApproved = status === 'approved' || status === 'active'
+    const isRejected = status === 'rejected'
+
+    if (isApproved) {
+      return (
+        <Alert
+          type="success"
+          showIcon
+          style={{ marginBottom: 16 }}
+          message={t('admin.alertApprovedTitle', { defaultValue: 'Yêu cầu đã được phê duyệt' })}
+          description={
+            <div style={{ fontSize: 13, marginTop: 4 }}>
+              {reviewedAt && (
+                <div>
+                  <strong>{t('admin.reviewedAt', { defaultValue: 'Thời điểm duyệt' })}:</strong>{' '}
+                  {reviewedAt.includes('T') ? new Date(reviewedAt).toLocaleString('vi-VN') : reviewedAt}
+                </div>
+              )}
+              {reviewerEmail && (
+                <div>
+                  <strong>{t('admin.reviewer', { defaultValue: 'Người kiểm duyệt' })}:</strong> {reviewerEmail}
+                </div>
+              )}
+              {note && (
+                <div>
+                  <strong>{t('admin.note', { defaultValue: 'Ghi chú' })}:</strong> {note}
+                </div>
+              )}
+            </div>
+          }
+        />
+      )
+    }
+
+    if (isRejected) {
+      return (
+        <Alert
+          type="error"
+          showIcon
+          style={{ marginBottom: 16 }}
+          message={t('admin.alertRejectedTitle', { defaultValue: 'Yêu cầu đã bị từ chối' })}
+          description={
+            <div style={{ fontSize: 13, marginTop: 4 }}>
+              {reviewedAt && (
+                <div>
+                  <strong>{t('admin.rejectedAt', { defaultValue: 'Thời điểm từ chối' })}:</strong>{' '}
+                  {reviewedAt.includes('T') ? new Date(reviewedAt).toLocaleString('vi-VN') : reviewedAt}
+                </div>
+              )}
+              {reviewerEmail && (
+                <div>
+                  <strong>{t('admin.reviewer', { defaultValue: 'Người kiểm duyệt' })}:</strong> {reviewerEmail}
+                </div>
+              )}
+              {note && (
+                <div>
+                  <strong>{t('admin.rejectReason', { defaultValue: 'Lý do từ chối' })}:</strong> {note}
+                </div>
+              )}
+            </div>
+          }
+        />
+      )
+    }
+
+    return (
+      <Alert
+        type="info"
+        showIcon
+        style={{ marginBottom: 16 }}
+        message={t('admin.alertPendingTitle', { defaultValue: 'Hồ sơ đang chờ phê duyệt' })}
+        description={t('admin.alertPendingDesc', {
+          defaultValue: 'Vui lòng kiểm tra kỹ thông tin pháp lý và đối tác trước khi phê duyệt.',
+        })}
+      />
+    )
+  }
 
   const ownerColumns = useMemo(
     () => [
@@ -252,7 +352,7 @@ export function AdminApprovalsPage({ forcedType }: AdminApprovalsPageProps) {
       {
         title: t('admin.tableStatus', { defaultValue: 'TRẠNG THÁI' }),
         dataIndex: 'status',
-        render: (val: string) => {
+        render: (val: string, record: ApprovalRequest) => {
           const isPending = val === 'pending'
           const isApproved = val === 'approved' || val === 'active'
           const isRejected = val === 'rejected'
@@ -264,9 +364,32 @@ export function AdminApprovalsPage({ forcedType }: AdminApprovalsPageProps) {
                 ? t('admin.statusRejected', { defaultValue: 'Từ chối' })
                 : val?.toUpperCase()
           return (
-            <Tag color={isApproved ? 'green' : isRejected ? 'red' : 'gold'}>
-              {label}
-            </Tag>
+            <div>
+              <Tag color={isApproved ? 'green' : isRejected ? 'red' : 'gold'}>
+                {label}
+              </Tag>
+              {record.reviewedAt && (
+                <div style={{ fontSize: 11, color: '#888', marginTop: 4 }}>
+                  {record.reviewedAt}
+                </div>
+              )}
+              {record.note && (
+                <div
+                  style={{
+                    fontSize: 11,
+                    color: '#666',
+                    maxWidth: 160,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    marginTop: 2,
+                  }}
+                  title={record.note}
+                >
+                  {record.note}
+                </div>
+              )}
+            </div>
           )
         },
       },
@@ -279,10 +402,20 @@ export function AdminApprovalsPage({ forcedType }: AdminApprovalsPageProps) {
             </Button>
             {record.status === 'pending' && (
               <>
-                <Button size="small" type="primary" icon={<CheckOutlined />} onClick={() => decide(record, true)}>
+                <Button
+                  size="small"
+                  type="primary"
+                  icon={<CheckOutlined />}
+                  onClick={() => handleConfirmApprove(record)}
+                >
                   {t('admin.approve', { defaultValue: 'Duyệt' })}
                 </Button>
-                <Button size="small" danger icon={<CloseOutlined />} onClick={() => decide(record, false)}>
+                <Button
+                  size="small"
+                  danger
+                  icon={<CloseOutlined />}
+                  onClick={() => handleOpenRejectModal(record)}
+                >
                   {t('admin.reject', { defaultValue: 'Từ chối' })}
                 </Button>
               </>
@@ -291,7 +424,7 @@ export function AdminApprovalsPage({ forcedType }: AdminApprovalsPageProps) {
         ),
       },
     ],
-    [decide, handleViewDetail, t],
+    [handleConfirmApprove, handleOpenRejectModal, handleViewDetail, t],
   )
 
   const fieldColumns = useMemo(
@@ -333,7 +466,7 @@ export function AdminApprovalsPage({ forcedType }: AdminApprovalsPageProps) {
       {
         title: t('admin.tableStatus', { defaultValue: 'TRẠNG THÁI' }),
         dataIndex: 'status',
-        render: (val: string) => {
+        render: (val: string, record: ApprovalRequest) => {
           const isPending = val === 'pending'
           const isApproved = val === 'approved' || val === 'active'
           const isRejected = val === 'rejected'
@@ -345,9 +478,32 @@ export function AdminApprovalsPage({ forcedType }: AdminApprovalsPageProps) {
                 ? t('admin.statusRejected', { defaultValue: 'Từ chối' })
                 : val?.toUpperCase()
           return (
-            <Tag color={isApproved ? 'green' : isRejected ? 'red' : 'gold'}>
-              {label}
-            </Tag>
+            <div>
+              <Tag color={isApproved ? 'green' : isRejected ? 'red' : 'gold'}>
+                {label}
+              </Tag>
+              {record.reviewedAt && (
+                <div style={{ fontSize: 11, color: '#888', marginTop: 4 }}>
+                  {record.reviewedAt}
+                </div>
+              )}
+              {record.note && (
+                <div
+                  style={{
+                    fontSize: 11,
+                    color: '#666',
+                    maxWidth: 160,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    marginTop: 2,
+                  }}
+                  title={record.note}
+                >
+                  {record.note}
+                </div>
+              )}
+            </div>
           )
         },
       },
@@ -360,10 +516,20 @@ export function AdminApprovalsPage({ forcedType }: AdminApprovalsPageProps) {
             </Button>
             {record.status === 'pending' && (
               <>
-                <Button size="small" type="primary" icon={<CheckOutlined />} onClick={() => decide(record, true)}>
+                <Button
+                  size="small"
+                  type="primary"
+                  icon={<CheckOutlined />}
+                  onClick={() => handleConfirmApprove(record)}
+                >
                   {t('admin.approve', { defaultValue: 'Duyệt' })}
                 </Button>
-                <Button size="small" danger icon={<CloseOutlined />} onClick={() => decide(record, false)}>
+                <Button
+                  size="small"
+                  danger
+                  icon={<CloseOutlined />}
+                  onClick={() => handleOpenRejectModal(record)}
+                >
                   {t('admin.reject', { defaultValue: 'Từ chối' })}
                 </Button>
               </>
@@ -372,7 +538,7 @@ export function AdminApprovalsPage({ forcedType }: AdminApprovalsPageProps) {
         ),
       },
     ],
-    [decide, handleViewDetail, t],
+    [handleConfirmApprove, handleOpenRejectModal, handleViewDetail, t],
   )
 
   const isDetailLoading = ownerDetailLoading || fieldDetailLoading
@@ -492,6 +658,13 @@ export function AdminApprovalsPage({ forcedType }: AdminApprovalsPageProps) {
           </div>
         ) : selectedRecord?.type === 'owner' && ownerDetail ? (
           <div className="approval-detail">
+            {renderStatusAlert(
+              ownerDetail.status,
+              ownerDetail.reviewedAt,
+              ownerDetail.reviewer?.email,
+              ownerDetail.note,
+            )}
+
             <Descriptions
               title={t('admin.requestInfo', { defaultValue: 'Thông tin yêu cầu' })}
               column={1}
@@ -591,13 +764,13 @@ export function AdminApprovalsPage({ forcedType }: AdminApprovalsPageProps) {
               </Descriptions>
             )}
 
-            {selectedRecord && selectedRecord.status === 'pending' && (
+            {ownerDetail.status === 'pending' && selectedRecord && (
               <div style={{ marginTop: 24, display: 'flex', gap: 12 }}>
                 <Button
                   type="primary"
                   block
                   icon={<CheckOutlined />}
-                  onClick={() => decide(selectedRecord, true)}
+                  onClick={() => handleConfirmApprove(selectedRecord)}
                 >
                   {t('admin.approveAction', { defaultValue: 'Phê duyệt hồ sơ' })}
                 </Button>
@@ -605,7 +778,7 @@ export function AdminApprovalsPage({ forcedType }: AdminApprovalsPageProps) {
                   danger
                   block
                   icon={<CloseOutlined />}
-                  onClick={() => decide(selectedRecord, false)}
+                  onClick={() => handleOpenRejectModal(selectedRecord)}
                 >
                   {t('admin.rejectAction', { defaultValue: 'Từ chối' })}
                 </Button>
@@ -614,6 +787,13 @@ export function AdminApprovalsPage({ forcedType }: AdminApprovalsPageProps) {
           </div>
         ) : selectedRecord?.type === 'field' && fieldDetail ? (
           <div className="approval-detail">
+            {renderStatusAlert(
+              fieldDetail.status,
+              fieldDetail.reviewedAt,
+              fieldDetail.reviewer?.email,
+              fieldDetail.note,
+            )}
+
             <Descriptions
               title={t('admin.requestInfo', { defaultValue: 'Thông tin yêu cầu' })}
               column={1}
@@ -740,13 +920,13 @@ export function AdminApprovalsPage({ forcedType }: AdminApprovalsPageProps) {
               </Descriptions>
             )}
 
-            {selectedRecord && selectedRecord.status === 'pending' && (
+            {fieldDetail.status === 'pending' && selectedRecord && (
               <div style={{ marginTop: 24, display: 'flex', gap: 12 }}>
                 <Button
                   type="primary"
                   block
                   icon={<CheckOutlined />}
-                  onClick={() => decide(selectedRecord, true)}
+                  onClick={() => handleConfirmApprove(selectedRecord)}
                 >
                   {t('admin.approveAction', { defaultValue: 'Phê duyệt hồ sơ' })}
                 </Button>
@@ -754,7 +934,7 @@ export function AdminApprovalsPage({ forcedType }: AdminApprovalsPageProps) {
                   danger
                   block
                   icon={<CloseOutlined />}
-                  onClick={() => decide(selectedRecord, false)}
+                  onClick={() => handleOpenRejectModal(selectedRecord)}
                 >
                   {t('admin.rejectAction', { defaultValue: 'Từ chối' })}
                 </Button>
@@ -763,6 +943,13 @@ export function AdminApprovalsPage({ forcedType }: AdminApprovalsPageProps) {
           </div>
         ) : selectedRecord ? (
           <div className="approval-detail">
+            {renderStatusAlert(
+              selectedRecord.status,
+              selectedRecord.reviewedAt,
+              selectedRecord.reviewerEmail,
+              selectedRecord.note,
+            )}
+
             <Descriptions column={1} bordered size="small">
               <Descriptions.Item label={t('admin.tablePartnerName', { defaultValue: 'Tên đối tác / Sân' })}>
                 {selectedRecord.name}
@@ -785,17 +972,67 @@ export function AdminApprovalsPage({ forcedType }: AdminApprovalsPageProps) {
                 {selectedRecord.status}
               </Descriptions.Item>
             </Descriptions>
-            <div style={{ marginTop: 24, display: 'flex', gap: 12 }}>
-              <Button type="primary" block icon={<CheckOutlined />} onClick={() => decide(selectedRecord, true)}>
-                {t('admin.approveAction', { defaultValue: 'Phê duyệt hồ sơ' })}
-              </Button>
-              <Button danger block icon={<CloseOutlined />} onClick={() => decide(selectedRecord, false)}>
-                {t('admin.rejectAction', { defaultValue: 'Từ chối' })}
-              </Button>
-            </div>
+            {selectedRecord.status === 'pending' && (
+              <div style={{ marginTop: 24, display: 'flex', gap: 12 }}>
+                <Button
+                  type="primary"
+                  block
+                  icon={<CheckOutlined />}
+                  onClick={() => handleConfirmApprove(selectedRecord)}
+                >
+                  {t('admin.approveAction', { defaultValue: 'Phê duyệt hồ sơ' })}
+                </Button>
+                <Button
+                  danger
+                  block
+                  icon={<CloseOutlined />}
+                  onClick={() => handleOpenRejectModal(selectedRecord)}
+                >
+                  {t('admin.rejectAction', { defaultValue: 'Từ chối' })}
+                </Button>
+              </div>
+            )}
           </div>
         ) : null}
       </Drawer>
+
+      <Modal
+        title={t('admin.rejectModalTitle', { defaultValue: 'Từ chối yêu cầu phê duyệt' })}
+        open={Boolean(rejectModalRecord)}
+        onCancel={() => {
+          if (!isSubmittingReject) {
+            setRejectModalRecord(null)
+            setRejectionReason('')
+          }
+        }}
+        onOk={handleConfirmReject}
+        confirmLoading={isSubmittingReject}
+        okText={t('admin.rejectAction', { defaultValue: 'Từ chối' })}
+        cancelText={t('common.cancel', { defaultValue: 'Hủy' })}
+        okButtonProps={{ danger: true }}
+      >
+        <p style={{ marginBottom: 12, color: '#555' }}>
+          {t('admin.rejectModalPrompt', {
+            defaultValue: 'Vui lòng cung cấp lý do từ chối hồ sơ cho đối tác/người yêu cầu:',
+          })}
+        </p>
+        {rejectModalRecord && (
+          <div style={{ padding: '8px 12px', background: '#f5f5f5', borderRadius: 6, marginBottom: 16 }}>
+            <b>{rejectModalRecord.name}</b>
+            <div style={{ fontSize: 12, color: '#888' }}>{rejectModalRecord.applicant}</div>
+          </div>
+        )}
+        <Input.TextArea
+          rows={4}
+          value={rejectionReason}
+          onChange={(e) => setRejectionReason(e.target.value)}
+          placeholder={t('admin.rejectReasonPlaceholder', {
+            defaultValue: 'Nhập lý do từ chối cụ thể (ví dụ: Thiếu giấy phép kinh doanh, Ảnh chụp mờ...)',
+          })}
+          maxLength={500}
+          showCount
+        />
+      </Modal>
     </section>
   )
 }
