@@ -666,5 +666,78 @@
       "cancelled": "Đã hủy",
       "completed": "Đã hoàn tất"
     }
+  },
+  "payment": {
+    "selector": {
+      "title": "Phương thức thanh toán",
+      "vnpayTitle": "Cổng thanh toán VNPay",
+      "vnpayDesc": "Quét mã VNPAY-QR, Thẻ ATM nội địa, Internet Banking hoặc Thẻ Quốc tế.",
+      "cashTitle": "Thanh toán tiền mặt",
+      "cashDesc": "Thanh toán trực tiếp cho ban quản lý sân trước giờ bắt đầu thi đấu."
+    },
+    "modal": {
+      "title": "Thanh toán đặt sân",
+      "bookingCode": "Mã đặt sân:",
+      "amountToPay": "Số tiền thanh toán:",
+      "payVnpayBtn": "Thanh toán qua VNPay",
+      "payCashBtn": "Xác nhận tiền mặt"
+    },
+    "return": {
+      "verifying": "Đang xác thực kết quả thanh toán từ VNPay...",
+      "errorTitle": "Xác thực thanh toán thất bại",
+      "errorDesc": "Không thể xác thực thông tin phản hồi từ cổng thanh toán VNPay.",
+      "goToBookings": "Xem danh sách đặt sân",
+      "goHome": "Về trang chủ",
+      "successTitle": "Thanh toán VNPay thành công!",
+      "successSubTitle": "Đơn đặt sân của bạn đã được thanh toán cọc thành công và cập nhật trạng thái.",
+      "viewBookings": "Lịch đặt sân của tôi",
+      "failedTitle": "Thanh toán không thành công",
+      "failedDefault": "Giao dịch không thành công hoặc xảy ra lỗi trong quá trình xử lý.",
+      "cancelledByUser": "Bạn đã hủy bỏ giao dịch trên cổng thanh toán VNPay.",
+      "retryInBookings": "Quay lại đơn đặt sân",
+      "txDetailsTitle": "Chi tiết giao dịch",
+      "amount": "Số tiền",
+      "txnRef": "Mã tham chiếu",
+      "vnpayTxnNo": "Mã giao dịch VNPay",
+      "bankCode": "Ngân hàng / Cổng",
+      "payDate": "Thời gian thanh toán"
+    },
+    "cashSuccess": "Đã chọn phương thức thanh toán tiền mặt tại sân.",
+    "ownerCashConfirmed": "Xác nhận thu tiền mặt thành công.",
+    "refundSuccess": "Yêu cầu hoàn tiền đã được xử lý thành công.",
+    "errors": {
+      "urlFailed": "Không thể tạo liên kết VNPay.",
+      "general": "Xử lý thanh toán thất bại.",
+      "confirmFailed": "Xác nhận tiền mặt thất bại.",
+      "refundFailed": "Hoàn tiền thất bại."
+    }
+  },
+  "subscription": {
+    "eyebrow": "BILLING NODE",
+    "title": "Gói dịch vụ & Giao dịch",
+    "subtitle": "Quản lý quyền lợi portal và dòng tiền của cơ sở.",
+    "tabs": {
+      "plan": "Gói dịch vụ",
+      "transactions": "Lịch sử giao dịch"
+    },
+    "currentPlanLabel": "GÓI HIỆN TẠI",
+    "renewsOn": "Gia hạn vào {{date}}",
+    "manageBtn": "Quản lý gói",
+    "cancelBtn": "Hủy gói",
+    "inUse": "Đang sử dụng",
+    "selectPlan": "Chọn gói",
+    "subscribeSuccess": "Đăng ký gói hội viên thành công!",
+    "subscribeFailed": "Đăng ký gói hội viên thất bại.",
+    "cancelSuccess": "Hủy gói hội viên thành công.",
+    "cancelFailed": "Hủy gói hội viên thất bại.",
+    "confirmCancelTitle": "Hủy gói hội viên?",
+    "confirmCancelContent": "Sau khi hủy, bạn vẫn có thể sử dụng quyền lợi đến hết thời hạn hiện tại.",
+    "table": {
+      "id": "MÃ GIAO DỊCH",
+      "date": "NGÀY",
+      "description": "NỘI DUNG",
+      "amount": "SỐ TIỀN",
+      "status": "TRẠNG THÁI"
+    }
   }
 }

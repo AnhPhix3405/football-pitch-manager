@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { PlusOutlined } from '@ant-design/icons'
 import { Empty, Modal, Segmented, message } from 'antd'
 import { useTranslation } from 'react-i18next'
@@ -6,11 +7,14 @@ import { PillButton } from '../../components/PillButton'
 import { useBookings, type BookingFilterType } from './hooks/useBookings'
 import { BookingCard } from './components/BookingCard'
 import { smoothScrollToTop } from '../../utils/scroll.utils'
+import { PaymentMethodModal } from '../payment/components/PaymentMethodModal'
+import type { UserBooking } from '../user/user.data'
 
 export function MyBookingsPage() {
   const { t } = useTranslation()
   const { filter, setFilter, visible, cancel } = useBookings()
   const [messageApi, contextHolder] = message.useMessage()
+  const [payingBooking, setPayingBooking] = useState<UserBooking | null>(null)
 
   const handleCancelConfirm = (id: string) =>
     Modal.confirm({
@@ -66,11 +70,26 @@ export function MyBookingsPage() {
               key={booking.id}
               booking={booking}
               onCancel={handleCancelConfirm}
+              onPay={(item) => setPayingBooking(item)}
             />
           ))}
         </div>
       ) : (
         <Empty description={t('booking.card.empty')} />
+      )}
+
+      {payingBooking && (
+        <PaymentMethodModal
+          open={!!payingBooking}
+          bookingId={payingBooking.id}
+          bookingCode={payingBooking.id}
+          amount={payingBooking.price}
+          onClose={() => setPayingBooking(null)}
+          onSuccess={() => {
+            messageApi.success('Thao tác thanh toán hoàn tất.')
+            setPayingBooking(null)
+          }}
+        />
       )}
     </section>
   )
