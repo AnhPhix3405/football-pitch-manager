@@ -627,5 +627,33 @@
       "cancelled": "Đã hủy",
       "completed": "Đã hoàn tất"
     }
+  },
+  "subscription": {
+    "eyebrow": "BILLING NODE",
+    "title": "Gói dịch vụ & Giao dịch",
+    "subtitle": "Quản lý quyền lợi portal và dòng tiền của cơ sở.",
+    "tabs": {
+      "plan": "Gói dịch vụ",
+      "transactions": "Lịch sử giao dịch"
+    },
+    "currentPlanLabel": "GÓI HIỆN TẠI",
+    "renewsOn": "Gia hạn vào {{date}}",
+    "manageBtn": "Quản lý gói",
+    "cancelBtn": "Hủy gói",
+    "inUse": "Đang sử dụng",
+    "selectPlan": "Chọn gói",
+    "subscribeSuccess": "Đăng ký gói hội viên thành công!",
+    "subscribeFailed": "Đăng ký gói hội viên thất bại.",
+    "cancelSuccess": "Hủy gói hội viên thành công.",
+    "cancelFailed": "Hủy gói hội viên thất bại.",
+    "confirmCancelTitle": "Hủy gói hội viên?",
+    "confirmCancelContent": "Sau khi hủy, bạn vẫn có thể sử dụng quyền lợi đến hết thời hạn hiện tại.",
+    "table": {
+      "id": "MÃ GIAO DỊCH",
+      "date": "NGÀY",
+      "description": "NỘI DUNG",
+      "amount": "SỐ TIỀN",
+      "status": "TRẠNG THÁI"
+    }
   }
 }
