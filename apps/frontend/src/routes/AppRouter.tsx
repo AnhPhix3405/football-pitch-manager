@@ -24,6 +24,7 @@ import { OwnerFieldsPage } from '../features/owner/OwnerFieldsPage'
 import { OwnerRegistrationPage } from '../features/owner/OwnerRegistrationPage'
 import { OwnerServicesPage } from '../features/owner/OwnerServicesPage'
 import { OwnerSubscriptionPage } from '../features/owner/OwnerSubscriptionPage'
+import { OwnerTimelinePage } from '../features/owner/OwnerTimelinePage'
 import { MyPostsPage } from '../features/posts/MyPostsPage'
 import { OpponentDiscoveryPage } from '../features/posts/OpponentDiscoveryPage'
 import { PostDetailPage } from '../features/posts/PostDetailPage'
@@ -84,6 +85,7 @@ export function AppRouter() {
             <Route path="services" element={<OwnerServicesPage />} />
             <Route path="bookings" element={<OwnerBookingsPage />} />
             <Route path="bookings/:bookingId" element={<OwnerBookingDetailPage />} />
+            <Route path="timeline" element={<OwnerTimelinePage />} />
             <Route path="subscription" element={<OwnerSubscriptionPage />} />
           </Route>
         </Route>

@@ -1,5 +1,12 @@
 import { apiClient, type ApiResponse } from '../../../config/axios.config'
 import type { BackendFieldItem, BackendFieldListResponse } from '../../fields/service/field.service'
+import type {
+  OwnerBooking,
+  OwnerBookingListResponse,
+  OwnerBookingQuery,
+  OwnerCourt,
+  OwnerCourtTimeline,
+} from '../interface/owner-booking.types'
 
 export interface RegisterOwnerPayload {
   businessName: string
@@ -92,5 +99,75 @@ export async function updateField(id: string, payload: UpdateFieldPayload): Prom
 
 export async function deactivateField(id: string): Promise<BackendFieldItem> {
   const response = await apiClient.delete<ApiResponse<BackendFieldItem>>(`/owner/fields/${id}`)
+  return response.data.data
+}
+
+export async function getOwnerBookings(fieldId: string, params: OwnerBookingQuery = {}): Promise<OwnerBookingListResponse> {
+  const response = await apiClient.get<ApiResponse<OwnerBookingListResponse>>(
+    `/owner/fields/${fieldId}/bookings`,
+    { params },
+  )
+  return response.data.data
+}
+
+export async function getOwnerBookingDetail(fieldId: string, bookingId: string): Promise<OwnerBooking> {
+  const response = await apiClient.get<ApiResponse<OwnerBooking>>(
+    `/owner/fields/${fieldId}/bookings/${bookingId}`,
+  )
+  return response.data.data
+}
+
+export async function getOwnerCourts(fieldId: string, type?: string): Promise<OwnerCourt[]> {
+  const response = await apiClient.get<ApiResponse<OwnerCourt[]>>(
+    `/owner/fields/${fieldId}/courts`,
+    { params: { type, status: 'active' } },
+  )
+  return response.data.data
+}
+
+export async function checkCourtAssignment(
+  fieldId: string,
+  courtId: string,
+  params: { courtType: string; date: string; startTime: string; endTime: string },
+): Promise<{ valid: boolean }> {
+  const response = await apiClient.get<ApiResponse<{ valid: boolean }>>(
+    `/owner/fields/${fieldId}/courts/${courtId}/check-assignment`,
+    { params },
+  )
+  return response.data.data
+}
+
+export async function confirmOwnerBooking(
+  fieldId: string,
+  bookingId: string,
+  payload: { fieldCourtId: string; note?: string },
+): Promise<OwnerBooking> {
+  const response = await apiClient.post<ApiResponse<OwnerBooking>>(
+    `/owner/fields/${fieldId}/bookings/${bookingId}/confirm`,
+    payload,
+  )
+  return response.data.data
+}
+
+export async function rejectOwnerBooking(fieldId: string, bookingId: string, reason: string): Promise<OwnerBooking> {
+  const response = await apiClient.post<ApiResponse<OwnerBooking>>(
+    `/owner/fields/${fieldId}/bookings/${bookingId}/reject`,
+    { reason },
+  )
+  return response.data.data
+}
+
+export async function completeOwnerBooking(fieldId: string, bookingId: string): Promise<OwnerBooking> {
+  const response = await apiClient.post<ApiResponse<OwnerBooking>>(
+    `/owner/fields/${fieldId}/bookings/${bookingId}/complete`,
+  )
+  return response.data.data
+}
+
+export async function getOwnerCourtTimeline(fieldId: string, date: string): Promise<OwnerCourtTimeline> {
+  const response = await apiClient.get<ApiResponse<OwnerCourtTimeline>>(
+    `/owner/fields/${fieldId}/courts/timeline`,
+    { params: { date } },
+  )
   return response.data.data
 }
