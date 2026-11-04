@@ -28,6 +28,9 @@ export function mapOwnerApprovalToRequest(item: AdminOwnerApprovalItem): Approva
     requestType: item.type,
     status: item.status,
     submittedAt: new Date(item.createdAt).toLocaleString('vi-VN'),
+    reviewedAt: item.reviewedAt ? new Date(item.reviewedAt).toLocaleString('vi-VN') : null,
+    note: item.note || null,
+    reviewerEmail: item.reviewer?.email || null,
   }
 }
 
@@ -43,6 +46,9 @@ export function mapFieldApprovalToRequest(item: AdminFieldApprovalItem): Approva
     requestType: item.type,
     status: item.status,
     submittedAt: new Date(item.createdAt).toLocaleString('vi-VN'),
+    reviewedAt: item.reviewedAt ? new Date(item.reviewedAt).toLocaleString('vi-VN') : null,
+    note: item.note || null,
+    reviewerEmail: item.reviewer?.email || null,
   }
 }
 

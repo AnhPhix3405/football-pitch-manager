@@ -472,7 +472,21 @@
     "dateFilterThisMonth": "This month",
     "dateFilterCustom": "Custom range",
     "startDatePlaceholder": "Start date",
-    "endDatePlaceholder": "End date"
+    "endDatePlaceholder": "End date",
+    "statusAll": "All statuses",
+    "alertApprovedTitle": "Request has been approved",
+    "alertRejectedTitle": "Request has been rejected",
+    "alertPendingTitle": "Request pending review",
+    "alertPendingDesc": "Please verify legal information and applicant credentials before approval.",
+    "rejectedAt": "Rejected at",
+    "rejectReason": "Rejection reason",
+    "rejectModalTitle": "Reject Approval Request",
+    "rejectModalPrompt": "Please specify the reason for rejection to notify the requester:",
+    "rejectReasonPlaceholder": "Enter specific rejection reason (e.g. Missing business license, Blurry photos...)",
+    "defaultApproveOwnerNote": "Owner registration approved",
+    "defaultApproveFieldNote": "Field registration approved",
+    "defaultRejectOwnerReason": "Application did not meet verification criteria",
+    "defaultRejectFieldReason": "Field information does not meet requirements"
   },
   "profile": {
     "title": "Profile & Settings",

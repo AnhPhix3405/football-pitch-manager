@@ -472,7 +472,21 @@
     "dateFilterThisMonth": "Tháng này",
     "dateFilterCustom": "Chọn khoảng thời gian",
     "startDatePlaceholder": "Từ ngày",
-    "endDatePlaceholder": "Đến ngày"
+    "endDatePlaceholder": "Đến ngày",
+    "statusAll": "Tất cả trạng thái",
+    "alertApprovedTitle": "Yêu cầu đã được phê duyệt",
+    "alertRejectedTitle": "Yêu cầu đã bị từ chối",
+    "alertPendingTitle": "Hồ sơ đang chờ phê duyệt",
+    "alertPendingDesc": "Vui lòng kiểm tra kỹ thông tin pháp lý và đối tác trước khi phê duyệt.",
+    "rejectedAt": "Thời điểm từ chối",
+    "rejectReason": "Lý do từ chối",
+    "rejectModalTitle": "Từ chối yêu cầu phê duyệt",
+    "rejectModalPrompt": "Vui lòng cung cấp lý do từ chối hồ sơ cho đối tác/người yêu cầu:",
+    "rejectReasonPlaceholder": "Nhập lý do từ chối cụ thể (ví dụ: Thiếu giấy phép kinh doanh, Ảnh chụp mờ...)",
+    "defaultApproveOwnerNote": "Hồ sơ đã được phê duyệt",
+    "defaultApproveFieldNote": "Cụm sân hợp lệ",
+    "defaultRejectOwnerReason": "Hồ sơ chưa đạt yêu cầu xác minh",
+    "defaultRejectFieldReason": "Thông tin cụm sân chưa đạt yêu cầu"
   },
   "profile": {
     "title": "Cài đặt & Hồ sơ",
