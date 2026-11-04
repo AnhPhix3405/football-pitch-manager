@@ -5,6 +5,9 @@ import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { formatPrice } from '../../fields/field.data'
 import type { FootballField } from '../../fields/interface/field.types'
+import { PaymentMethodSelector } from '../../payment/components/PaymentMethodSelector'
+import { PAYMENT_METHOD, type PaymentMethod } from '../../payment/constants/payment.constant'
+import { usePayment } from '../../payment/hooks/usePayment'
 
 const timeSlots = [
   '17:00 - 18:00',
@@ -31,10 +34,12 @@ export function BookingFlow({
   const { t } = useTranslation()
   const [step, setStep] = useState(0)
   const [date, setDate] = useState<Dayjs>(dayjs().add(1, 'day'))
-  const [slot, setSlot] = useState<string>()
+  const [slot, setSlot] = useState<string | undefined>('18:00 - 19:00')
   const [selectedExtras, setSelectedExtras] = useState<string[]>([])
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(PAYMENT_METHOD.VNPAY)
   const [submitting, setSubmitting] = useState(false)
-  const [bookingCode, setBookingCode] = useState('')
+  const [bookingCode, setBookingCode] = useState<string>('')
+  const { processPayment } = usePayment()
 
   const extrasTotal = useMemo(
     () =>
@@ -53,13 +58,26 @@ export function BookingFlow({
     onClose()
   }
 
-  const confirm = () => {
+  const confirm = async () => {
     setSubmitting(true)
-    window.setTimeout(() => {
-      setBookingCode(crypto.randomUUID().slice(0, 6).toUpperCase())
+    const code = crypto.randomUUID().slice(0, 6).toUpperCase()
+    setBookingCode(code)
+
+    if (paymentMethod === PAYMENT_METHOD.VNPAY) {
+      const res = await processPayment(
+        crypto.randomUUID(),
+        PAYMENT_METHOD.VNPAY,
+        `Thanh toan don dat san ${field.name}`,
+      )
+      if (res && 'redirectUrl' in res) {
+        return
+      }
       setSubmitting(false)
-      setStep(2)
-    }, 800)
+      return
+    }
+
+    setSubmitting(false)
+    setStep(2)
   }
 
   return (
@@ -108,15 +126,15 @@ export function BookingFlow({
             </Radio.Group>
           </label>
           <Alert type="info" showIcon message={t('booking.flow.slotAlert')} />
-          <Button
-            type="primary"
-            block
-            size="large"
-            disabled={!slot}
-            onClick={() => setStep(1)}
-          >
-            {t('booking.flow.continue')}
-          </Button>
+          <div className="booking-buttons">
+            <Button
+              type="primary"
+              disabled={!slot}
+              onClick={() => setStep(1)}
+            >
+              {t('booking.flow.continue')}
+            </Button>
+          </div>
         </div>
       )}
 
@@ -154,13 +172,31 @@ export function BookingFlow({
             <span>{t('booking.flow.totalPayment')}</span>
             <strong>{formatPrice(total)}</strong>
           </div>
+
+          <PaymentMethodSelector
+            value={paymentMethod}
+            onChange={setPaymentMethod}
+            disabled={submitting}
+          />
+
           <p className="charge-note">
-            <CreditCardOutlined /> {t('booking.flow.chargeNote')}
+            <CreditCardOutlined />{' '}
+            {paymentMethod === PAYMENT_METHOD.VNPAY
+              ? t('payment.selector.vnpayDesc', {
+                  defaultValue: 'Quét mã QR, Thẻ ATM nội địa, Internet Banking hoặc Thẻ Quốc tế.',
+                })
+              : t('payment.selector.cashDesc', {
+                  defaultValue: 'Thanh toán trực tiếp cho ban quản lý sân trước giờ bắt đầu thi đấu.',
+                })}
           </p>
           <div className="booking-buttons">
-            <Button onClick={() => setStep(0)}>{t('booking.flow.back')}</Button>
+            <Button onClick={() => setStep(0)} disabled={submitting}>
+              {t('booking.flow.back')}
+            </Button>
             <Button type="primary" loading={submitting} onClick={confirm}>
-              {t('booking.flow.confirmBtn')}
+              {paymentMethod === PAYMENT_METHOD.VNPAY
+                ? t('payment.modal.payVnpayBtn', { defaultValue: 'Thanh toán qua VNPay' })
+                : t('booking.flow.confirmBtn', { defaultValue: 'Xác nhận đặt sân' })}
             </Button>
           </div>
         </div>

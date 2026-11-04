@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import {
   CalendarOutlined,
+  CreditCardOutlined,
   DeleteOutlined,
   EnvironmentOutlined,
   EyeOutlined,
@@ -17,9 +18,10 @@ interface BookingCardProps {
   onCancel?: (id: string) => void
   onViewDetails?: (booking: UserBooking) => void
   onReview?: (booking: UserBooking) => void
+  onPay?: (booking: UserBooking) => void
 }
 
-export function BookingCard({ booking, onCancel, onViewDetails, onReview }: BookingCardProps) {
+export function BookingCard({ booking, onCancel, onViewDetails, onReview, onPay }: BookingCardProps) {
   const { t } = useTranslation()
   const [isDetailOpen, setIsDetailOpen] = useState(false)
 
@@ -30,7 +32,6 @@ export function BookingCard({ booking, onCancel, onViewDetails, onReview }: Book
     cancelled: t('booking.status.cancelled', { defaultValue: 'ĐÃ HỦY' }),
     rejected: t('booking.status.rejected', { defaultValue: 'ĐÃ TỪ CHỐI' }),
   }
-
 
   const handleView = () => {
     if (onViewDetails) {
@@ -52,8 +53,22 @@ export function BookingCard({ booking, onCancel, onViewDetails, onReview }: Book
           <span>{statusLabels[booking.status]}</span>
         </div>
 
-        {/* Top Right: Quick Actions (Eye & Trash icons) */}
+        {/* Top Right: Quick Actions */}
         <div className="booking-card__top-actions">
+          {onPay && booking.status === 'pending' && (
+            <Tooltip title={t('booking.card.payDeposit', { defaultValue: 'Thanh toán cọc' })}>
+              <button
+                type="button"
+                className="booking-card__icon-btn"
+                style={{ color: '#8cfc70' }}
+                onClick={() => onPay(booking)}
+                aria-label={t('booking.card.payDeposit', { defaultValue: 'Thanh toán cọc' })}
+              >
+                <CreditCardOutlined />
+              </button>
+            </Tooltip>
+          )}
+
           <Tooltip title={t('booking.card.viewDetails', { defaultValue: 'Xem chi tiết' })}>
             <button
               type="button"
