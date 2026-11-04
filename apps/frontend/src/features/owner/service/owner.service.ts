@@ -1,3 +1,29 @@
+import type {
+  BlockedSlotItem,
+  BlockedSlotQueryParams,
+  CheckAvailabilityQuery,
+  CourtQueryParams,
+  CreateBlockedSlotPayload,
+  CreateCourtPayload,
+  CreateImagePayload,
+  CreatePricingPayload,
+  CreateServicePayload,
+  FieldAvailabilityResult,
+  FieldOpeningHourItem,
+  FieldPricingItem,
+  OwnerCourtItem,
+  OwnerImageItem,
+  OwnerServiceItem,
+  PriceQuoteQuery,
+  PriceQuoteResult,
+  PricingQueryParams,
+  ServiceQueryParams,
+  UpdateCourtPayload,
+  UpdateImagePayload,
+  UpdatePricingPayload,
+  UpdateServicePayload,
+  UpsertOpeningHoursPayload,
+} from '../interface/owner-field.types'
 import { apiClient, type ApiResponse } from '../../../config/axios.config'
 import type { BackendFieldItem, BackendFieldListResponse } from '../../fields/service/field.service'
 import type {
@@ -170,4 +196,130 @@ export async function getOwnerCourtTimeline(fieldId: string, date: string): Prom
     { params: { date } },
   )
   return response.data.data
+}
+
+// 4. Quản lý sân con (Courts - FIELD-03)
+export async function createOwnerCourt(fieldId: string, payload: CreateCourtPayload): Promise<OwnerCourtItem> {
+  const response = await apiClient.post<ApiResponse<OwnerCourtItem>>(`/owner/fields/${fieldId}/courts`, payload);
+  return response.data.data;
+}
+
+export async function getOwnerCourtsList(fieldId: string, params?: CourtQueryParams): Promise<OwnerCourtItem[]> {
+  const response = await apiClient.get<ApiResponse<OwnerCourtItem[]>>(`/owner/fields/${fieldId}/courts`, { params });
+  return response.data.data;
+}
+
+export async function getOwnerCourtDetail(fieldId: string, courtId: string): Promise<OwnerCourtItem> {
+  const response = await apiClient.get<ApiResponse<OwnerCourtItem>>(`/owner/fields/${fieldId}/courts/${courtId}`);
+  return response.data.data;
+}
+
+export async function updateOwnerCourt(fieldId: string, courtId: string, payload: UpdateCourtPayload): Promise<OwnerCourtItem> {
+  const response = await apiClient.patch<ApiResponse<OwnerCourtItem>>(`/owner/fields/${fieldId}/courts/${courtId}`, payload);
+  return response.data.data;
+}
+
+export async function deleteOwnerCourt(fieldId: string, courtId: string): Promise<OwnerCourtItem> {
+  const response = await apiClient.delete<ApiResponse<OwnerCourtItem>>(`/owner/fields/${fieldId}/courts/${courtId}`);
+  return response.data.data;
+}
+
+// 5. Quản lý thư viện hình ảnh cụm sân (Images - FIELD-04)
+export async function addOwnerImage(fieldId: string, payload: CreateImagePayload): Promise<OwnerImageItem> {
+  const response = await apiClient.post<ApiResponse<OwnerImageItem>>(`/owner/fields/${fieldId}/images`, payload);
+  return response.data.data;
+}
+
+export async function getOwnerImages(fieldId: string): Promise<OwnerImageItem[]> {
+  const response = await apiClient.get<ApiResponse<OwnerImageItem[]>>(`/owner/fields/${fieldId}/images`);
+  return response.data.data;
+}
+
+export async function updateOwnerImage(fieldId: string, imageId: string, payload: UpdateImagePayload): Promise<OwnerImageItem> {
+  const response = await apiClient.patch<ApiResponse<OwnerImageItem>>(`/owner/fields/${fieldId}/images/${imageId}`, payload);
+  return response.data.data;
+}
+
+export async function deleteOwnerImage(fieldId: string, imageId: string): Promise<OwnerImageItem> {
+  const response = await apiClient.delete<ApiResponse<OwnerImageItem>>(`/owner/fields/${fieldId}/images/${imageId}`);
+  return response.data.data;
+}
+
+// 6. Quản lý dịch vụ đi kèm (Services - FIELD-05)
+export async function createOwnerService(fieldId: string, payload: CreateServicePayload): Promise<OwnerServiceItem> {
+  const response = await apiClient.post<ApiResponse<OwnerServiceItem>>(`/owner/fields/${fieldId}/services`, payload);
+  return response.data.data;
+}
+
+export async function getOwnerServices(fieldId: string, params?: ServiceQueryParams): Promise<OwnerServiceItem[]> {
+  const response = await apiClient.get<ApiResponse<OwnerServiceItem[]>>(`/owner/fields/${fieldId}/services`, { params });
+  return response.data.data;
+}
+
+export async function updateOwnerService(fieldId: string, serviceId: string, payload: UpdateServicePayload): Promise<OwnerServiceItem> {
+  const response = await apiClient.patch<ApiResponse<OwnerServiceItem>>(`/owner/fields/${fieldId}/services/${serviceId}`, payload);
+  return response.data.data;
+}
+
+export async function deleteOwnerService(fieldId: string, serviceId: string): Promise<OwnerServiceItem> {
+  const response = await apiClient.delete<ApiResponse<OwnerServiceItem>>(`/owner/fields/${fieldId}/services/${serviceId}`);
+  return response.data.data;
+}
+
+// 7. Cấu hình giờ mở cửa theo tuần (Opening Hours - FIELD-06)
+export async function upsertOwnerOpeningHours(fieldId: string, payload: UpsertOpeningHoursPayload): Promise<FieldOpeningHourItem[]> {
+  const response = await apiClient.put<ApiResponse<FieldOpeningHourItem[]>>(`/owner/fields/${fieldId}/opening-hours`, payload);
+  return response.data.data;
+}
+
+export async function getOwnerOpeningHours(fieldId: string): Promise<FieldOpeningHourItem[]> {
+  const response = await apiClient.get<ApiResponse<FieldOpeningHourItem[]>>(`/owner/fields/${fieldId}/opening-hours`);
+  return response.data.data;
+}
+
+// 8. Quản lý khóa lịch sân con chống chồng chéo (Blocked Slots - FIELD-07)
+export async function createOwnerBlockedSlot(fieldId: string, courtId: string, payload: CreateBlockedSlotPayload): Promise<BlockedSlotItem> {
+  const response = await apiClient.post<ApiResponse<BlockedSlotItem>>(`/owner/fields/${fieldId}/courts/${courtId}/blocked-slots`, payload);
+  return response.data.data;
+}
+
+export async function getOwnerBlockedSlots(fieldId: string, courtId: string, params?: BlockedSlotQueryParams): Promise<BlockedSlotItem[]> {
+  const response = await apiClient.get<ApiResponse<BlockedSlotItem[]>>(`/owner/fields/${fieldId}/courts/${courtId}/blocked-slots`, { params });
+  return response.data.data;
+}
+
+export async function deleteOwnerBlockedSlot(fieldId: string, courtId: string, slotId: string): Promise<BlockedSlotItem> {
+  const response = await apiClient.delete<ApiResponse<BlockedSlotItem>>(`/owner/fields/${fieldId}/courts/${courtId}/blocked-slots/${slotId}`);
+  return response.data.data;
+}
+
+// 9. Quản lý bảng giá & Tình trạng sân (Pricing & Availability - PRICE-01..02, AVAIL-01..03)
+export async function createOwnerPricing(fieldId: string, payload: CreatePricingPayload): Promise<FieldPricingItem> {
+  const response = await apiClient.post<ApiResponse<FieldPricingItem>>(`/owner/fields/${fieldId}/pricing`, payload);
+  return response.data.data;
+}
+
+export async function getOwnerPricingList(fieldId: string, params?: PricingQueryParams): Promise<FieldPricingItem[]> {
+  const response = await apiClient.get<ApiResponse<FieldPricingItem[]>>(`/owner/fields/${fieldId}/pricing`, { params });
+  return response.data.data;
+}
+
+export async function updateOwnerPricing(fieldId: string, pricingId: string, payload: UpdatePricingPayload): Promise<FieldPricingItem> {
+  const response = await apiClient.patch<ApiResponse<FieldPricingItem>>(`/owner/fields/${fieldId}/pricing/${pricingId}`, payload);
+  return response.data.data;
+}
+
+export async function deleteOwnerPricing(fieldId: string, pricingId: string): Promise<{ success: boolean }> {
+  const response = await apiClient.delete<ApiResponse<{ success: boolean }>>(`/owner/fields/${fieldId}/pricing/${pricingId}`);
+  return response.data.data;
+}
+
+export async function getPriceQuote(fieldId: string, params: PriceQuoteQuery): Promise<PriceQuoteResult> {
+  const response = await apiClient.get<ApiResponse<PriceQuoteResult>>(`/fields/${fieldId}/pricing/quote`, { params });
+  return response.data.data;
+}
+
+export async function checkFieldAvailability(fieldId: string, params: CheckAvailabilityQuery): Promise<FieldAvailabilityResult> {
+  const response = await apiClient.get<ApiResponse<FieldAvailabilityResult>>(`/fields/${fieldId}/availability`, { params });
+  return response.data.data;
 }

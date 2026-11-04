@@ -1,0 +1,46 @@
+.osp-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.osp-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  background: var(--surface, #131313);
+  border: 1px solid var(--border-soft, #263125);
+  border-radius: 12px;
+  padding: 14px 18px;
+}
+
+.osp-table-card {
+  background: var(--surface, #131313);
+  border: 1px solid var(--border-soft, #263125);
+  border-radius: 12px;
+  overflow: hidden;
+  padding: 16px;
+}
+
+.osp-modal .ant-modal-content {
+  background-color: var(--surface, #131313) !important;
+  border: 1px solid var(--border-soft, #263125);
+  border-radius: 14px;
+  color: var(--white, #ddffdc);
+}
+
+.osp-modal .ant-modal-header {
+  background: transparent !important;
+  border-bottom: 1px solid var(--border-soft, #263125);
+  padding-bottom: 14px;
+}
+
+.osp-modal .ant-modal-title {
+  color: var(--white, #ddffdc) !important;
+}
+
+.osp-modal .ant-form-item-label > label {
+  color: var(--sage, #8cab87) !important;
+}

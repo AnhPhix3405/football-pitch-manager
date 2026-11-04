@@ -18,6 +18,10 @@ import { FieldDiscoveryPage } from '../features/fields/FieldDiscoveryPage'
 import { HomePage } from '../features/home/HomePage'
 import { OwnerBookingDetailPage } from '../features/owner/OwnerBookingDetailPage'
 import { OwnerBookingsPage } from '../features/owner/OwnerBookingsPage'
+import { OwnerCourtsPage } from '../features/owner/OwnerCourtsPage'
+import { OwnerImagesPage } from '../features/owner/OwnerImagesPage'
+import { OwnerOpeningHoursPage } from '../features/owner/OwnerOpeningHoursPage'
+import { OwnerPricingPage } from '../features/owner/OwnerPricingPage'
 import { OwnerDashboardPage } from '../features/owner/OwnerDashboardPage'
 import { OwnerFieldFormPage } from '../features/owner/OwnerFieldFormPage'
 import { OwnerFieldsPage } from '../features/owner/OwnerFieldsPage'
@@ -82,6 +86,11 @@ export function AppRouter() {
             <Route path="fields" element={<OwnerFieldsPage />} />
             <Route path="fields/new" element={<OwnerFieldFormPage />} />
             <Route path="fields/:fieldId/edit" element={<OwnerFieldFormPage />} />
+            <Route path="fields/:fieldId/courts" element={<OwnerCourtsPage />} />
+            <Route path="fields/:fieldId/images" element={<OwnerImagesPage />} />
+            <Route path="fields/:fieldId/services" element={<OwnerServicesPage />} />
+            <Route path="fields/:fieldId/opening-hours" element={<OwnerOpeningHoursPage />} />
+            <Route path="fields/:fieldId/pricing" element={<OwnerPricingPage />} />
             <Route path="services" element={<OwnerServicesPage />} />
             <Route path="bookings" element={<OwnerBookingsPage />} />
             <Route path="bookings/:bookingId" element={<OwnerBookingDetailPage />} />

@@ -1,0 +1,161 @@
+.oim-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.oim-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  background: var(--surface, #131313);
+  border: 1px solid var(--border-soft, #263125);
+  border-radius: 12px;
+  padding: 14px 18px;
+}
+
+.oim-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 18px;
+}
+
+.oim-card {
+  background: var(--surface, #131313);
+  border: 1px solid var(--border-soft, #263125);
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.oim-card.is-thumbnail {
+  border-color: var(--lime, #8cfc70);
+  box-shadow: 0 0 12px rgba(140, 252, 112, 0.15);
+}
+
+.oim-card:hover {
+  transform: translateY(-2px);
+}
+
+.oim-img-wrapper {
+  position: relative;
+  width: 100%;
+  height: 180px;
+  background: var(--ground, #181818);
+  overflow: hidden;
+}
+
+.oim-img-wrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.oim-card:hover .oim-img-wrapper img {
+  transform: scale(1.05);
+}
+
+.oim-badge-order {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(4px);
+  color: var(--white, #ddffdc);
+  border: 1px solid var(--border-soft, #263125);
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.oim-badge-thumb {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: var(--lime, #8cfc70);
+  color: #000;
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.oim-card-body {
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.oim-card-meta {
+  font-size: 11px;
+  color: var(--sage, #8cab87);
+  display: flex;
+  justify-content: space-between;
+}
+
+.oim-card-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-soft, #263125);
+}
+
+.oim-modal .ant-modal-content {
+  background-color: var(--surface, #131313) !important;
+  border: 1px solid var(--border-soft, #263125);
+  border-radius: 14px;
+  color: var(--white, #ddffdc);
+}
+
+.oim-modal .ant-modal-header {
+  background: transparent !important;
+  border-bottom: 1px solid var(--border-soft, #263125);
+  padding-bottom: 14px;
+}
+
+.oim-modal .ant-modal-title {
+  color: var(--white, #ddffdc) !important;
+}
+
+.oim-modal .ant-form-item-label > label {
+  color: var(--sage, #8cab87) !important;
+}
+
+.oim-sample-presets {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.oim-sample-preset-btn {
+  height: 50px;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--border-soft, #263125);
+  cursor: pointer;
+  position: relative;
+}
+
+.oim-sample-preset-btn:hover {
+  border-color: var(--lime, #8cfc70);
+}
+
+.oim-sample-preset-btn img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}

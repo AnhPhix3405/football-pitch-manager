@@ -1,0 +1,55 @@
+.oohm-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.oohm-card {
+  background: var(--surface, #131313);
+  border: 1px solid var(--border-soft, #263125);
+  border-radius: 14px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.oohm-day-row {
+  display: grid;
+  grid-template-columns: 140px 1fr 140px;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 16px;
+  background: var(--ground, #181818);
+  border: 1px solid var(--border-soft, #263125);
+  border-radius: 10px;
+}
+
+@media (max-width: 680px) {
+  .oohm-day-row {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+}
+
+.oohm-day-name {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--white, #ddffdc);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.oohm-time-inputs {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.oohm-status-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}

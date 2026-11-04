@@ -1,0 +1,108 @@
+.opm-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.opm-card {
+  background: var(--surface, #131313);
+  border: 1px solid var(--border-soft, #263125);
+  border-radius: 14px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.opm-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.opm-rules-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  gap: 16px;
+}
+
+.opm-rule-card {
+  background: var(--ground, #181818);
+  border: 1px solid var(--border-soft, #263125);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
+  transition: all 0.2s ease;
+}
+
+.opm-rule-card:hover {
+  border-color: var(--lime, #8cfc70);
+  transform: translateY(-2px);
+}
+
+.opm-rule-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.opm-rule-price {
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--lime, #8cfc70);
+}
+
+.opm-rule-time {
+  font-size: 13.5px;
+  color: var(--white, #ddffdc);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.opm-calc-box {
+  background: var(--ground, #181818);
+  border: 1px solid var(--border-soft, #263125);
+  border-radius: 12px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.opm-calc-result {
+  background: var(--surface, #131313);
+  border: 1px solid var(--border-soft, #263125);
+  border-radius: 10px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.opm-modal .ant-modal-content {
+  background-color: var(--surface, #131313) !important;
+  border: 1px solid var(--border-soft, #263125);
+  border-radius: 14px;
+  color: var(--white, #ddffdc);
+}
+
+.opm-modal .ant-modal-header {
+  background: transparent !important;
+  border-bottom: 1px solid var(--border-soft, #263125);
+  padding-bottom: 14px;
+}
+
+.opm-modal .ant-modal-title {
+  color: var(--white, #ddffdc) !important;
+}
+
+.opm-modal .ant-form-item-label > label {
+  color: var(--sage, #8cab87) !important;
+}

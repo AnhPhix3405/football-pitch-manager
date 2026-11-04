@@ -1,0 +1,116 @@
+.ocm-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.ocm-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  background: var(--surface, #131313);
+  border: 1px solid var(--border-soft, #263125);
+  border-radius: 12px;
+  padding: 14px 18px;
+}
+
+.ocm-filters {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.ocm-filter-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--sage, #8cab87);
+}
+
+.ocm-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 18px;
+}
+
+.ocm-card {
+  background: var(--surface, #131313);
+  border: 1px solid var(--border-soft, #263125);
+  border-radius: 12px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 14px;
+  transition: all 0.2s ease;
+}
+
+.ocm-card:hover {
+  border-color: var(--lime, #8cfc70);
+  transform: translateY(-2px);
+}
+
+.ocm-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.ocm-card-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--white, #ddffdc);
+  margin: 0;
+}
+
+.ocm-card-badges {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.ocm-card-meta {
+  font-size: 12px;
+  color: var(--muted, #677d64);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  background: var(--ground, #181818);
+  border-radius: 8px;
+  border: 1px solid var(--border-soft, #263125);
+}
+
+.ocm-card-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-soft, #263125);
+}
+
+.ocm-modal .ant-modal-content {
+  background-color: var(--surface, #131313) !important;
+  border: 1px solid var(--border-soft, #263125);
+  border-radius: 14px;
+  color: var(--white, #ddffdc);
+}
+
+.ocm-modal .ant-modal-header {
+  background: transparent !important;
+  border-bottom: 1px solid var(--border-soft, #263125);
+  padding-bottom: 14px;
+}
+
+.ocm-modal .ant-modal-title {
+  color: var(--white, #ddffdc) !important;
+}
+
+.ocm-modal .ant-form-item-label > label {
+  color: var(--sage, #8cab87) !important;
+}

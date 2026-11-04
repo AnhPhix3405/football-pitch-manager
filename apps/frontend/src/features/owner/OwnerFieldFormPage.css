@@ -1,0 +1,546 @@
+/* Owner Field Form Page - Harmonized with App Dashboard Theme */
+.offp-wrapper {
+  width: min(1200px, 100%);
+  margin: 0 auto;
+  color: var(--white);
+  padding-bottom: 80px;
+}
+
+/* Top Breadcrumb */
+.offp-top-bar {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.offp-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--sage);
+}
+
+.offp-breadcrumb a {
+  color: var(--sage);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.offp-breadcrumb a:hover {
+  color: var(--lime);
+}
+
+.offp-breadcrumb-current {
+  color: var(--lime);
+  font-weight: 600;
+}
+
+/* Page Header */
+.offp-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--border-soft);
+  margin-bottom: 28px;
+}
+
+.offp-header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.offp-header-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: rgba(140, 252, 112, 0.1);
+  border: 1px solid rgba(140, 252, 112, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--lime);
+  font-size: 24px;
+}
+
+.offp-title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--white);
+  letter-spacing: -0.025em;
+}
+
+.offp-subtitle {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--sage);
+}
+
+.offp-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Two-column layout */
+.offp-grid {
+  display: grid;
+  grid-template-columns: 7fr 5fr;
+  gap: 28px;
+  align-items: start;
+}
+
+@media (max-width: 992px) {
+  .offp-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Common Card Styling */
+.offp-card {
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+  margin-bottom: 24px;
+}
+
+.offp-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border-soft);
+  margin-bottom: 20px;
+}
+
+.offp-card-header-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--white);
+}
+
+.offp-card-header-icon {
+  color: var(--lime);
+  font-size: 18px;
+}
+
+.offp-step-badge {
+  background: var(--ground);
+  border: 1px solid var(--border-soft);
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--sage);
+}
+
+/* Form inputs styling */
+.offp-field-group {
+  margin-bottom: 20px;
+}
+
+.offp-field-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.offp-field-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--white);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.offp-badge-required {
+  background: rgba(244, 63, 94, 0.12);
+  border: 1px solid rgba(244, 63, 94, 0.3);
+  color: #fb7185;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.offp-badge-optional {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 400;
+}
+
+.offp-char-count {
+  font-size: 11px;
+  color: var(--muted);
+  font-family: monospace;
+}
+
+.offp-input-dark {
+  background-color: var(--ground) !important;
+  border: 1px solid var(--border-soft) !important;
+  border-radius: 12px !important;
+  color: var(--white) !important;
+  padding: 10px 14px !important;
+  font-size: 14px !important;
+}
+
+.offp-input-dark:focus,
+.offp-input-dark:hover {
+  border-color: var(--lime) !important;
+  box-shadow: 0 0 0 2px rgba(140, 252, 112, 0.15) !important;
+}
+
+.offp-textarea-dark {
+  background-color: var(--ground) !important;
+  border: 1px solid var(--border-soft) !important;
+  border-radius: 12px !important;
+  color: var(--white) !important;
+  font-size: 14px !important;
+  padding: 12px 14px !important;
+}
+
+.offp-textarea-dark:focus,
+.offp-textarea-dark:hover {
+  border-color: var(--lime) !important;
+}
+
+/* GPS Coordinates box */
+.offp-gps-box {
+  background: var(--ground);
+  border: 1px solid var(--border-soft);
+  border-radius: 12px;
+  padding: 16px;
+  margin-top: 8px;
+}
+
+.offp-gps-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.offp-gps-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--white);
+}
+
+.offp-gps-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.offp-btn-tool {
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-radius: 8px;
+  color: var(--sage);
+  font-size: 12px;
+  padding: 4px 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+
+.offp-btn-tool:hover {
+  border-color: var(--lime);
+  color: var(--lime);
+}
+
+.offp-gps-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* Deposit Switch & Options */
+.offp-deposit-toggle-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--ground);
+  border: 1px solid var(--border-soft);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.offp-deposit-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.offp-deposit-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.offp-badge-recommended {
+  background: rgba(140, 252, 112, 0.12);
+  border: 1px solid rgba(140, 252, 112, 0.3);
+  color: var(--lime);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 9999px;
+}
+
+.offp-deposit-type-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.offp-type-card {
+  background: var(--ground);
+  border: 1px solid var(--border-soft);
+  border-radius: 12px;
+  padding: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: all 0.2s;
+}
+
+.offp-type-card.active {
+  background: rgba(140, 252, 112, 0.08);
+  border-color: var(--lime);
+}
+
+.offp-type-card-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.offp-type-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--lime);
+  font-size: 14px;
+}
+
+.offp-type-card.active .offp-type-icon {
+  background: var(--lime);
+  color: #051403;
+}
+
+.offp-quick-presets {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.offp-preset-btn {
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-radius: 8px;
+  color: var(--sage);
+  font-size: 12px;
+  padding: 4px 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.offp-preset-btn:hover,
+.offp-preset-btn.active {
+  background: rgba(140, 252, 112, 0.15);
+  border-color: rgba(140, 252, 112, 0.35);
+  color: var(--lime);
+  font-weight: 600;
+}
+
+/* Map Card */
+.offp-map-container {
+  height: 256px;
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+  background-color: #0a0f18;
+  border: 1px solid var(--border-soft);
+}
+
+.offp-map-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: brightness(0.7) contrast(1.1);
+}
+
+.offp-map-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(0deg, rgba(14, 18, 15, 0.8) 0%, rgba(14, 18, 15, 0.2) 50%, rgba(0, 0, 0, 0.3) 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.offp-map-pin {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+}
+
+.offp-map-pin-icon {
+  width: 36px;
+  height: 36px;
+  background: var(--lime);
+  color: #051403;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 0 6px rgba(140, 252, 112, 0.25), 0 4px 12px rgba(0, 0, 0, 0.5);
+  font-size: 18px;
+}
+
+.offp-map-pin-label {
+  margin-top: 6px;
+  background: rgba(19, 19, 19, 0.95);
+  border: 1px solid var(--border-soft);
+  padding: 4px 10px;
+  border-radius: 8px;
+  color: var(--white);
+  font-size: 11px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.offp-map-coords-pill {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  background: rgba(19, 19, 19, 0.85);
+  border: 1px solid var(--border-soft);
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-family: monospace;
+  color: var(--lime);
+}
+
+/* Guideline List */
+.offp-guidelines-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.offp-guideline-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--sage);
+  line-height: 1.5;
+}
+
+.offp-guideline-bullet {
+  color: var(--lime);
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+/* Bottom Action Bar (Fit perfectly with Sidebar width 250px) */
+.offp-bottom-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(19, 19, 19, 0.95);
+  backdrop-filter: blur(16px);
+  border-top: 1px solid var(--border-soft);
+  padding: 14px 24px;
+  z-index: 100;
+}
+
+@media (min-width: 993px) {
+  .offp-bottom-bar {
+    left: 250px; /* Aligns flush with the 250px sticky sidebar */
+  }
+}
+
+.offp-bottom-bar-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+}
+
+.offp-btn-secondary {
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-radius: 10px;
+  color: var(--white);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 18px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.offp-btn-secondary:hover {
+  background: var(--overlay);
+  border-color: var(--border);
+  color: var(--lime);
+}
+
+.offp-btn-primary {
+  background: var(--lime);
+  border: none;
+  border-radius: 10px;
+  color: #051403;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 8px 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(140, 252, 112, 0.3);
+  transition: all 0.2s;
+}
+
+.offp-btn-primary:hover {
+  background: #a3ff8d;
+  box-shadow: 0 6px 16px rgba(140, 252, 112, 0.4);
+}
