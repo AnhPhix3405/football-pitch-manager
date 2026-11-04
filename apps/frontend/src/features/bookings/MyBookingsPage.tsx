@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { PlusOutlined } from '@ant-design/icons'
-import { Empty, Modal, Segmented, message } from 'antd'
+import { Empty, Modal, Segmented, Spin, message } from 'antd'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { PillButton } from '../../components/PillButton'
@@ -12,7 +12,7 @@ import type { UserBooking } from '../user/user.data'
 
 export function MyBookingsPage() {
   const { t } = useTranslation()
-  const { filter, setFilter, visible, cancel } = useBookings()
+  const { filter, setFilter, visible, cancel, loading } = useBookings()
   const [messageApi, contextHolder] = message.useMessage()
   const [payingBooking, setPayingBooking] = useState<UserBooking | null>(null)
 
@@ -23,9 +23,17 @@ export function MyBookingsPage() {
       okText: t('booking.cancelModal.ok'),
       okButtonProps: { danger: true },
       cancelText: t('booking.cancelModal.cancel'),
-      onOk: () => {
-        cancel(id)
-        messageApi.success(t('booking.cancelModal.success'))
+      onOk: async () => {
+        try {
+          await cancel(id)
+          messageApi.success(t('booking.cancelModal.success'))
+        } catch {
+          messageApi.error(
+            t('booking.cancelModal.error', {
+              defaultValue: 'Hủy đặt sân thất bại. Vui lòng thử lại.',
+            }),
+          )
+        }
       },
     })
 
@@ -63,7 +71,11 @@ export function MyBookingsPage() {
         ]}
       />
 
-      {visible.length ? (
+      {loading && visible.length === 0 ? (
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '60px 0' }}>
+          <Spin size="large" />
+        </div>
+      ) : visible.length ? (
         <div className="booking-card-grid">
           {visible.map((booking) => (
             <BookingCard
@@ -75,7 +87,7 @@ export function MyBookingsPage() {
           ))}
         </div>
       ) : (
-        <Empty description={t('booking.card.empty')} />
+        <Empty description={t('booking.card.empty')} style={{ padding: '40px 0' }} />
       )}
 
       {payingBooking && (

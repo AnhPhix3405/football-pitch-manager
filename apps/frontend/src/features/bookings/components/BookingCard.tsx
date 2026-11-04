@@ -10,34 +10,29 @@ import {
 } from '@ant-design/icons'
 import { Modal, Tooltip } from 'antd'
 import { useTranslation } from 'react-i18next'
+import { Link, useNavigate } from 'react-router-dom'
+import { BOOKING_STATUS, type BookingStatus } from '~/constants/booking.constant'
 import { formatPrice } from '../../fields/field.data'
-import type { BookingStatus, UserBooking } from '../../user/user.data'
-
-interface BookingCardProps {
-  booking: UserBooking
-  onCancel?: (id: string) => void
-  onViewDetails?: (booking: UserBooking) => void
-  onReview?: (booking: UserBooking) => void
-  onPay?: (booking: UserBooking) => void
-}
+import type { BookingCardProps } from '../interface/booking.types'
 
 export function BookingCard({ booking, onCancel, onViewDetails, onReview, onPay }: BookingCardProps) {
   const { t } = useTranslation()
+  const navigate = useNavigate()
   const [isDetailOpen, setIsDetailOpen] = useState(false)
 
   const statusLabels: Record<BookingStatus, string> = {
-    confirmed: t('booking.status.confirmed', { defaultValue: 'ĐÃ XÁC NHẬN' }),
-    pending: t('booking.status.pending', { defaultValue: 'CHỜ ĐẶT CỌC' }),
-    completed: t('booking.status.completed', { defaultValue: 'HOÀN TẤT' }),
-    cancelled: t('booking.status.cancelled', { defaultValue: 'ĐÃ HỦY' }),
-    rejected: t('booking.status.rejected', { defaultValue: 'ĐÃ TỪ CHỐI' }),
+    [BOOKING_STATUS.CONFIRMED]: t('booking.status.confirmed', { defaultValue: 'ĐÃ XÁC NHẬN' }),
+    [BOOKING_STATUS.PENDING]: t('booking.status.pending', { defaultValue: 'CHỜ ĐẶT CỌC' }),
+    [BOOKING_STATUS.COMPLETED]: t('booking.status.completed', { defaultValue: 'HOÀN TẤT' }),
+    [BOOKING_STATUS.CANCELLED]: t('booking.status.cancelled', { defaultValue: 'ĐÃ HỦY' }),
+    [BOOKING_STATUS.REJECTED]: t('booking.status.rejected', { defaultValue: 'ĐÃ TỪ CHỐI' }),
   }
 
   const handleView = () => {
     if (onViewDetails) {
       onViewDetails(booking)
     } else {
-      setIsDetailOpen(true)
+      navigate(`/bookings/${booking.id}`)
     }
   }
 
@@ -50,7 +45,7 @@ export function BookingCard({ booking, onCancel, onViewDetails, onReview, onPay 
         {/* Top Left: Status as Glass Pill */}
         <div className={`booking-card__status-pill booking-card__status-pill--${booking.status}`}>
           <span className="booking-card__status-dot" />
-          <span>{statusLabels[booking.status]}</span>
+          <span>{statusLabels[booking.status] || booking.status}</span>
         </div>
 
         {/* Top Right: Quick Actions */}
@@ -80,7 +75,7 @@ export function BookingCard({ booking, onCancel, onViewDetails, onReview, onPay 
             </button>
           </Tooltip>
 
-          {onReview && booking.status === 'completed' && (
+          {onReview && booking.status === BOOKING_STATUS.COMPLETED && (
             <Tooltip title={t('reviews.ratePitch', { defaultValue: 'Đánh giá sân bóng' })}>
               <button
                 type="button"
@@ -94,7 +89,7 @@ export function BookingCard({ booking, onCancel, onViewDetails, onReview, onPay 
             </Tooltip>
           )}
 
-          {onCancel && (booking.status === 'confirmed' || booking.status === 'pending') && (
+          {onCancel && (booking.status === BOOKING_STATUS.CONFIRMED || booking.status === BOOKING_STATUS.PENDING) && (
             <Tooltip title={t('booking.card.cancel', { defaultValue: 'Hủy lịch đặt' })}>
               <button
                 type="button"
@@ -111,7 +106,11 @@ export function BookingCard({ booking, onCancel, onViewDetails, onReview, onPay 
 
       <div className="booking-card__body">
         <div className="booking-card__meta-top">
-          <h3 className="booking-card__title">{booking.field}</h3>
+          <h3 className="booking-card__title">
+            <Link to={`/bookings/${booking.id}`} style={{ color: 'inherit' }}>
+              {booking.field}
+            </Link>
+          </h3>
           <p className="booking-card__location">
             <EnvironmentOutlined /> {booking.location}
           </p>
@@ -136,7 +135,7 @@ export function BookingCard({ booking, onCancel, onViewDetails, onReview, onPay 
         </div>
       </div>
 
-      {/* Booking Details Modal */}
+      {/* Booking Details Modal Fallback */}
       <Modal
         open={isDetailOpen}
         title={t('booking.detailModal.title', { defaultValue: 'Chi tiết lịch đặt sân' })}
@@ -150,7 +149,7 @@ export function BookingCard({ booking, onCancel, onViewDetails, onReview, onPay 
             <h4>{booking.field}</h4>
             <span className={`booking-card__status-pill booking-card__status-pill--${booking.status}`}>
               <span className="booking-card__status-dot" />
-              <span>{statusLabels[booking.status]}</span>
+              <span>{statusLabels[booking.status] || booking.status}</span>
             </span>
           </div>
 
