@@ -6960,3 +6960,18 @@ input:focus-visible {
     align-items: center;
     gap: 5px;
 }
+
+.owner-timeline { overflow-x: auto; border: 1px solid var(--border, #e5e7eb); border-radius: 14px; background: var(--surface, #fff); padding: 16px; }
+.owner-timeline__ruler, .owner-timeline__row { display: grid; grid-template-columns: 150px minmax(760px, 1fr); gap: 14px; }
+.owner-timeline__ruler { align-items: end; padding-bottom: 10px; }
+.owner-timeline__hours { display: flex; justify-content: space-between; color: var(--muted, #667085); font-size: 11px; }
+.owner-timeline__row { align-items: center; min-height: 76px; border-top: 1px solid var(--border, #e5e7eb); }
+.owner-timeline__court { display: flex; flex-direction: column; gap: 4px; }
+.owner-timeline__court small { color: var(--muted, #667085); }
+.owner-timeline__track { position: relative; height: 54px; border-radius: 8px; background: repeating-linear-gradient(90deg, transparent 0, transparent calc(6.25% - 1px), #e9edf2 calc(6.25% - 1px), #e9edf2 6.25%), #f7f9fb; }
+.owner-timeline__slot { position: absolute; top: 5px; bottom: 5px; min-width: 3px; overflow: hidden; display: flex; flex-direction: column; justify-content: center; padding: 2px 6px; border-radius: 6px; color: #17324d; background: #dbeafe; border: 1px solid #93c5fd; text-decoration: none; font-size: 10px; white-space: nowrap; }
+.owner-timeline__slot--pending { background: #fef3c7; border-color: #fcd34d; }
+.owner-timeline__slot--blocked { background: #ffedd5; border-color: #fdba74; color: #7c2d12; }
+.owner-timeline__slot span { overflow: hidden; text-overflow: ellipsis; }
+.owner-timeline__legend { display: flex; gap: 8px; padding-top: 12px; }
+@media (max-width: 640px) { .owner-timeline__ruler, .owner-timeline__row { grid-template-columns: 110px minmax(760px, 1fr); gap: 8px; } }
