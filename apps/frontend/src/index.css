@@ -6961,9 +6961,6 @@ input:focus-visible {
     gap: 5px;
 }
 
-gap: 5px;
-}
-
 .owner-timeline { overflow-x: auto; border: 1px solid var(--border, #e5e7eb); border-radius: 14px; background: var(--surface, #fff); padding: 16px; }
 .owner-timeline__ruler, .owner-timeline__row { display: grid; grid-template-columns: 150px minmax(760px, 1fr); gap: 14px; }
 .owner-timeline__ruler { align-items: end; padding-bottom: 10px; }
