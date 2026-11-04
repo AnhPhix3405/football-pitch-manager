@@ -566,5 +566,33 @@
     "btnInvite": "Challenge",
     "btnViewField": "View Pitch",
     "noData": "No leaderboard data found."
+  },
+  "subscription": {
+    "eyebrow": "BILLING NODE",
+    "title": "Subscriptions & Billing",
+    "subtitle": "Manage facility portal benefits and cash flow.",
+    "tabs": {
+      "plan": "Subscription Plans",
+      "transactions": "Transaction History"
+    },
+    "currentPlanLabel": "CURRENT PLAN",
+    "renewsOn": "Renews on {{date}}",
+    "manageBtn": "Manage Plan",
+    "cancelBtn": "Cancel Plan",
+    "inUse": "In Use",
+    "selectPlan": "Select Plan",
+    "subscribeSuccess": "Subscription activated successfully!",
+    "subscribeFailed": "Failed to activate subscription.",
+    "cancelSuccess": "Subscription cancelled successfully.",
+    "cancelFailed": "Failed to cancel subscription.",
+    "confirmCancelTitle": "Cancel Subscription?",
+    "confirmCancelContent": "After cancelling, your benefits will remain active until the end of the billing period.",
+    "table": {
+      "id": "TX ID",
+      "date": "DATE",
+      "description": "DESCRIPTION",
+      "amount": "AMOUNT",
+      "status": "STATUS"
+    }
   }
 }
