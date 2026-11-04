@@ -13,6 +13,7 @@ import {
   rejectFieldRequest,
   rejectOwnerRegistration,
 } from '../service/admin.service'
+import type { ApprovalStatusFilter } from '../constants/status-filter.constant'
 
 export function mapOwnerApprovalToRequest(item: AdminOwnerApprovalItem): ApprovalRequest {
   return {
@@ -48,6 +49,7 @@ export function mapFieldApprovalToRequest(item: AdminFieldApprovalItem): Approva
 export function useAdminApprovals(
   type: 'owner' | 'field',
   query = '',
+  status: ApprovalStatusFilter = 'pending',
   fromDate?: string,
   toDate?: string,
 ) {
@@ -59,7 +61,7 @@ export function useAdminApprovals(
 
   useEffect(() => {
     setPage(1)
-  }, [type, query, fromDate, toDate])
+  }, [type, query, status, fromDate, toDate])
 
   const loadData = useCallback(async () => {
     try {
@@ -68,7 +70,7 @@ export function useAdminApprovals(
       if (type === 'owner') {
         const data = await getOwnerApprovals({
           search: query || undefined,
-          status: 'pending',
+          status: status === 'all' ? undefined : status,
           fromDate,
           toDate,
           page,
@@ -79,7 +81,7 @@ export function useAdminApprovals(
       } else {
         const data = await getFieldApprovals({
           search: query || undefined,
-          status: 'pending',
+          status: status === 'all' ? undefined : status,
           fromDate,
           toDate,
           page,
@@ -93,7 +95,7 @@ export function useAdminApprovals(
     } finally {
       setLoading(false)
     }
-  }, [type, query, fromDate, toDate, page])
+  }, [type, query, status, fromDate, toDate, page])
 
   useEffect(() => {
     loadData()
