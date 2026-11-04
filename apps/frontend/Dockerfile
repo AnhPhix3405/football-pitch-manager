@@ -21,6 +21,9 @@ FROM nginx:alpine AS runner
 # Xóa trang mặc định của Nginx
 RUN rm -rf /usr/share/nginx/html/*
 
+# Copy cấu hình Nginx hỗ trợ SPA HTML5 History mode (try_files)
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
 # Copy sản phẩm build tĩnh sang Nginx
 COPY --from=builder /app/dist /usr/share/nginx/html
 
