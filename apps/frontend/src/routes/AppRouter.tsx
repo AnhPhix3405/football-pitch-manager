@@ -1,4 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes, useParams } from 'react-router-dom'
+import { AdminDashboardPage } from '../features/admin/AdminDashboardPage'
+import { AdminManagementPage } from '../features/admin/AdminManagementPage'
+import { AdminReportsPage } from '../features/admin/AdminReportsPage'
 
 function RedirectFieldDetail() {
   const { fieldId } = useParams()
@@ -93,12 +96,12 @@ export function AppRouter() {
         </Route>
         <Route element={<RoleRoute allowedRoles={['admin']} />}>
           <Route path="admin" element={<AdminLayout />}>
-            <Route index element={<Navigate to="/admin/approvals/owners" replace />} />
+            <Route index element={<AdminDashboardPage />} />
             <Route path="approvals" element={<Navigate to="/admin/approvals/owners" replace />} />
             <Route path="approvals/owners" element={<AdminApprovalsPage forcedType="owner" />} />
             <Route path="approvals/fields" element={<AdminApprovalsPage forcedType="field" />} />
-            <Route path="management" element={<Navigate to="/admin/approvals/owners" replace />} />
-            <Route path="reports" element={<Navigate to="/admin/approvals/owners" replace />} />
+            <Route path="management" element={<AdminManagementPage />} />
+            <Route path="reports" element={<AdminReportsPage />} />
           </Route>
         </Route>
         <Route path="owner/register" element={<OwnerRegistrationPage />} />

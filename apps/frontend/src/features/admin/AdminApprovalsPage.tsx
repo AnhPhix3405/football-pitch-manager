@@ -42,6 +42,8 @@ import type {
   AdminOwnerApprovalItem,
 } from './interface/admin.interface'
 
+import type { ApprovalStatusFilter } from './constants/status-filter.constant'
+
 interface AdminApprovalsPageProps {
   forcedType?: 'owner' | 'field'
 }
@@ -50,6 +52,7 @@ export function AdminApprovalsPage({ forcedType }: AdminApprovalsPageProps) {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const [type, setType] = useState<'owner' | 'field'>(forcedType || 'owner')
+  const [statusFilter, setStatusFilter] = useState<ApprovalStatusFilter>('pending')
   const [query, setQuery] = useState('')
   const [datePreset, setDatePreset] = useState<DateFilterPreset>('all')
   const [customRange, setCustomRange] = useState<[Dayjs | null, Dayjs | null] | null>(null)
@@ -118,7 +121,7 @@ export function AdminApprovalsPage({ forcedType }: AdminApprovalsPageProps) {
     refetch,
     approve,
     reject,
-  } = useAdminApprovals(type, query, fromDate, toDate)
+  } = useAdminApprovals(type, query, statusFilter, fromDate, toDate)
 
   const mappedApiRequests: ApprovalRequest[] = useMemo(() => {
     if (apiApprovals.length === 0) return []
@@ -274,12 +277,16 @@ export function AdminApprovalsPage({ forcedType }: AdminApprovalsPageProps) {
             <Button size="small" icon={<EyeOutlined />} onClick={() => handleViewDetail(record)}>
               {t('common.details', { defaultValue: 'Xem' })}
             </Button>
-            <Button size="small" type="primary" icon={<CheckOutlined />} onClick={() => decide(record, true)}>
-              {t('admin.approve', { defaultValue: 'Duyệt' })}
-            </Button>
-            <Button size="small" danger icon={<CloseOutlined />} onClick={() => decide(record, false)}>
-              {t('admin.reject', { defaultValue: 'Từ chối' })}
-            </Button>
+            {record.status === 'pending' && (
+              <>
+                <Button size="small" type="primary" icon={<CheckOutlined />} onClick={() => decide(record, true)}>
+                  {t('admin.approve', { defaultValue: 'Duyệt' })}
+                </Button>
+                <Button size="small" danger icon={<CloseOutlined />} onClick={() => decide(record, false)}>
+                  {t('admin.reject', { defaultValue: 'Từ chối' })}
+                </Button>
+              </>
+            )}
           </div>
         ),
       },
@@ -351,12 +358,16 @@ export function AdminApprovalsPage({ forcedType }: AdminApprovalsPageProps) {
             <Button size="small" icon={<EyeOutlined />} onClick={() => handleViewDetail(record)}>
               {t('common.details', { defaultValue: 'Xem' })}
             </Button>
-            <Button size="small" type="primary" icon={<CheckOutlined />} onClick={() => decide(record, true)}>
-              {t('admin.approve', { defaultValue: 'Duyệt' })}
-            </Button>
-            <Button size="small" danger icon={<CloseOutlined />} onClick={() => decide(record, false)}>
-              {t('admin.reject', { defaultValue: 'Từ chối' })}
-            </Button>
+            {record.status === 'pending' && (
+              <>
+                <Button size="small" type="primary" icon={<CheckOutlined />} onClick={() => decide(record, true)}>
+                  {t('admin.approve', { defaultValue: 'Duyệt' })}
+                </Button>
+                <Button size="small" danger icon={<CloseOutlined />} onClick={() => decide(record, false)}>
+                  {t('admin.reject', { defaultValue: 'Từ chối' })}
+                </Button>
+              </>
+            )}
           </div>
         ),
       },
@@ -414,6 +425,17 @@ export function AdminApprovalsPage({ forcedType }: AdminApprovalsPageProps) {
             onChange={(event) => setQuery(event.target.value)}
             placeholder={t('admin.searchPlaceholder', { defaultValue: 'Tìm hồ sơ...' })}
             style={{ maxWidth: 220 }}
+          />
+          <Select
+            value={statusFilter}
+            onChange={(val) => setStatusFilter(val)}
+            style={{ width: 150 }}
+            options={[
+              { value: 'pending', label: t('admin.statusPending', { defaultValue: 'Chờ duyệt' }) },
+              { value: 'approved', label: t('admin.statusApproved', { defaultValue: 'Đã duyệt' }) },
+              { value: 'rejected', label: t('admin.statusRejected', { defaultValue: 'Từ chối' }) },
+              { value: 'all', label: t('admin.statusAll', { defaultValue: 'Tất cả trạng thái' }) },
+            ]}
           />
           <Select
             value={datePreset}
@@ -569,7 +591,7 @@ export function AdminApprovalsPage({ forcedType }: AdminApprovalsPageProps) {
               </Descriptions>
             )}
 
-            {selectedRecord && (
+            {selectedRecord && selectedRecord.status === 'pending' && (
               <div style={{ marginTop: 24, display: 'flex', gap: 12 }}>
                 <Button
                   type="primary"
@@ -718,7 +740,7 @@ export function AdminApprovalsPage({ forcedType }: AdminApprovalsPageProps) {
               </Descriptions>
             )}
 
-            {selectedRecord && (
+            {selectedRecord && selectedRecord.status === 'pending' && (
               <div style={{ marginTop: 24, display: 'flex', gap: 12 }}>
                 <Button
                   type="primary"

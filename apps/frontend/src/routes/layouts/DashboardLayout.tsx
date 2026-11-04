@@ -45,8 +45,11 @@ function Navigation({ close, mode }: { close?: () => void; mode: 'user' | 'owner
   ]
 
   const adminNavItems = [
+    { to: '/admin', label: t('nav.dashboard', { defaultValue: 'Tổng quan' }), icon: <HomeOutlined /> },
     { to: '/admin/approvals/owners', label: t('nav.ownerApprovals', { defaultValue: 'Duyệt chủ sân' }), icon: <CheckSquareOutlined /> },
     { to: '/admin/approvals/fields', label: t('nav.fieldApprovals', { defaultValue: 'Duyệt sân bóng' }), icon: <ShopOutlined /> },
+    { to: '/admin/management', label: t('nav.management', { defaultValue: 'Quản lý & Kiểm duyệt' }), icon: <TeamOutlined /> },
+    { to: '/admin/reports', label: t('nav.reports', { defaultValue: 'Báo cáo & Giám sát' }), icon: <CalendarOutlined /> },
   ]
 
   const navItems = mode === 'owner' ? ownerNavItems : mode === 'admin' ? adminNavItems : userNavItems
@@ -54,7 +57,7 @@ function Navigation({ close, mode }: { close?: () => void; mode: 'user' | 'owner
   return (
     <nav className="dashboard-nav">
       {navItems.map((item) => (
-        <NavLink end={item.to === '/app' || item.to === '/owner'} key={item.to} to={item.to} onClick={close}>
+        <NavLink end={item.to === '/app' || item.to === '/owner' || item.to === '/admin'} key={item.to} to={item.to} onClick={close}>
           {item.icon}
           <span>{item.label}</span>
         </NavLink>
