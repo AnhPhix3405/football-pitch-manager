@@ -30,6 +30,7 @@ import { OpponentDiscoveryPage } from '../features/posts/OpponentDiscoveryPage'
 import { PostDetailPage } from '../features/posts/PostDetailPage'
 import { ProfileSettingsPage } from '../features/profile/ProfileSettingsPage'
 import { RankingPage } from '../features/rankings/RankingPage'
+import { VNPayReturnPage } from '../features/payment/VNPayReturnPage'
 import { AdminLayout } from './layouts/AdminLayout'
 import { OwnerLayout } from './layouts/OwnerLayout'
 import { PublicLayout } from './layouts/PublicLayout'
@@ -52,6 +53,7 @@ export function AppRouter() {
           <Route path="rankings" element={<RankingPage />} />
           <Route path="posts" element={<MyPostsPage />} />
           <Route path="posts/:postId" element={<PostDetailPage />} />
+          <Route path="payment/vnpay-return" element={<VNPayReturnPage />} />
 
           {/* Protected user routes with new Navbar layout */}
           <Route element={<ProtectedRoute />}>

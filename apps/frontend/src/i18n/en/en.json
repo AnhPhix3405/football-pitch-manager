@@ -628,6 +628,51 @@
       "completed": "Completed"
     }
   },
+  "payment": {
+    "selector": {
+      "title": "Payment Method",
+      "vnpayTitle": "VNPay Gateway",
+      "vnpayDesc": "Scan VNPAY-QR, Local ATM Card, Internet Banking or International Cards.",
+      "cashTitle": "Cash at Venue",
+      "cashDesc": "Pay directly to pitch management before kickoff."
+    },
+    "modal": {
+      "title": "Booking Payment",
+      "bookingCode": "Booking Code:",
+      "amountToPay": "Amount to Pay:",
+      "payVnpayBtn": "Pay via VNPay",
+      "payCashBtn": "Confirm Cash Payment"
+    },
+    "return": {
+      "verifying": "Verifying payment result from VNPay...",
+      "errorTitle": "Payment Verification Failed",
+      "errorDesc": "Unable to verify response from VNPay payment gateway.",
+      "goToBookings": "View My Bookings",
+      "goHome": "Back to Home",
+      "successTitle": "VNPay Payment Successful!",
+      "successSubTitle": "Your booking deposit has been processed and status is updated.",
+      "viewBookings": "My Bookings",
+      "failedTitle": "Payment Unsuccessful",
+      "failedDefault": "Transaction was not successful or an error occurred during processing.",
+      "cancelledByUser": "You cancelled the transaction on VNPay portal.",
+      "retryInBookings": "Return to Bookings",
+      "txDetailsTitle": "Transaction Details",
+      "amount": "Amount",
+      "txnRef": "Reference Code",
+      "vnpayTxnNo": "VNPay Transaction No.",
+      "bankCode": "Bank / Gateway",
+      "payDate": "Payment Date"
+    },
+    "cashSuccess": "Cash payment at venue selected.",
+    "ownerCashConfirmed": "Cash payment confirmed successfully.",
+    "refundSuccess": "Refund processed successfully.",
+    "errors": {
+      "urlFailed": "Could not create VNPay payment link.",
+      "general": "Payment processing failed.",
+      "confirmFailed": "Cash confirmation failed.",
+      "refundFailed": "Refund failed."
+    }
+  },
   "subscription": {
     "eyebrow": "BILLING NODE",
     "title": "Subscriptions & Billing",
