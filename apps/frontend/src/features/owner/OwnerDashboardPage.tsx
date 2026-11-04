@@ -9,10 +9,11 @@ import { Button, Progress, Tag } from 'antd'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { formatPrice } from '../fields/field.data'
-import { ownerBookings } from './owner.data'
+import { useOwnerBookings } from './hooks/useOwnerBookings'
 
 export function OwnerDashboardPage() {
   const { t } = useTranslation()
+  const { fieldId, bookings } = useOwnerBookings('all')
 
   const metrics = [
     {
@@ -73,16 +74,16 @@ export function OwnerDashboardPage() {
               {t('owner.viewAll')} <ArrowRightOutlined />
             </Link>
           </header>
-          {ownerBookings.map((booking) => (
-            <Link className="owner-booking-row" to={`/owner/bookings/${booking.id}`} key={booking.id}>
+          {bookings.slice(0, 4).map((booking) => (
+            <Link className="owner-booking-row" to={`/owner/bookings/${booking.id}?fieldId=${fieldId}`} key={booking.id}>
               <div>
-                <b>{booking.customer}</b>
+                <b>{booking.id}</b>
                 <small>
-                  {booking.field} · {booking.time}
+                  {booking.courtName || `${booking.requestedCourtType}v${booking.requestedCourtType}`} · {booking.startTime}–{booking.endTime}
                 </small>
               </div>
-              <Tag color={booking.status === 'confirmed' ? 'green' : 'gold'}>{booking.status}</Tag>
-              <strong>{formatPrice(booking.amount)}</strong>
+              <Tag color={booking.status === 'confirmed' || booking.status === 'completed' ? 'green' : 'gold'}>{booking.status}</Tag>
+              <strong>{formatPrice(booking.totalPrice)}</strong>
             </Link>
           ))}
         </section>
