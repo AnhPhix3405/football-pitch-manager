@@ -13,18 +13,47 @@ import type {
   AdminOverviewData,
   AdminOverviewQueryParams,
 } from '../interface/admin-overview.interface'
+import type {
+  AdminDeletePostResponse,
+  AdminPostItem,
+  AdminPostsListResponse,
+  AdminPostsQueryParams,
+  AdminReviewItem,
+  AdminReviewsListResponse,
+  AdminReviewsQueryParams,
+  AdminReviewType,
+  AdminUserDetail,
+  AdminUserItem,
+  AdminUsersListResponse,
+  AdminUsersQueryParams,
+  ModerateReviewPayload,
+  UpdateUserStatusPayload,
+} from '../interface/admin-management.interface'
 
 export type {
   AdminApprovalQueryParams,
+  AdminDeletePostResponse,
   AdminFieldApprovalItem,
   AdminOverviewData,
   AdminOverviewQueryParams,
   AdminOwnerApprovalItem,
   AdminOwnerApprovalListResponse,
+  AdminPostItem,
+  AdminPostsListResponse,
+  AdminPostsQueryParams,
+  AdminReviewItem,
+  AdminReviewsListResponse,
+  AdminReviewsQueryParams,
   AdminTargetField,
+  AdminUserDetail,
+  AdminUserItem,
+  AdminUsersListResponse,
+  AdminUsersQueryParams,
+  ModerateReviewPayload,
   RequesterSummary,
   ReviewerSummary,
   TargetOwnerProfile,
+  UpdateUserStatusPayload,
 }
 
 export async function getAdminOverview(
@@ -104,5 +133,80 @@ export async function rejectFieldRequest(id: string, reason: string): Promise<Ad
   const response = await apiClient.post<ApiResponse<AdminFieldApprovalItem>>(`/admin/field-approvals/${id}/reject`, {
     reason,
   })
+  return response.data.data
+}
+
+export async function getAdminUsers(
+  params?: AdminUsersQueryParams,
+): Promise<AdminUsersListResponse> {
+  const response = await apiClient.get<ApiResponse<AdminUsersListResponse>>(
+    '/admin/users',
+    { params },
+  )
+  return response.data.data
+}
+
+export async function getAdminUserDetail(
+  userId: string,
+): Promise<AdminUserDetail> {
+  const response = await apiClient.get<ApiResponse<AdminUserDetail>>(
+    `/admin/users/${userId}`,
+  )
+  return response.data.data
+}
+
+export async function updateAdminUserStatus(
+  userId: string,
+  payload: UpdateUserStatusPayload,
+): Promise<AdminUserItem> {
+  const response = await apiClient.patch<ApiResponse<AdminUserItem>>(
+    `/admin/users/${userId}/status`,
+    payload,
+  )
+  return response.data.data
+}
+
+export async function getAdminPosts(
+  params?: AdminPostsQueryParams,
+): Promise<AdminPostsListResponse> {
+  const response = await apiClient.get<ApiResponse<AdminPostsListResponse>>(
+    '/admin/posts',
+    { params },
+  )
+  return response.data.data
+}
+
+export async function deleteAdminPost(
+  postId: string,
+): Promise<AdminDeletePostResponse> {
+  const response = await apiClient.delete<ApiResponse<AdminDeletePostResponse>>(
+    `/admin/posts/${postId}`,
+  )
+  return response.data.data
+}
+
+export async function getAdminReviews(
+  params?: AdminReviewsQueryParams,
+): Promise<AdminReviewsListResponse> {
+  const response = await apiClient.get<ApiResponse<AdminReviewsListResponse>>(
+    '/admin/reviews',
+    { params },
+  )
+  return response.data.data
+}
+
+export async function moderateAdminReview(
+  reviewType: AdminReviewType,
+  reviewId: string,
+  payload: ModerateReviewPayload,
+): Promise<unknown> {
+  const endpoint =
+    reviewType === 'field'
+      ? `/reviews/fields/${reviewId}/moderate`
+      : `/reviews/users/${reviewId}/moderate`
+  const response = await apiClient.patch<ApiResponse<unknown>>(
+    endpoint,
+    payload,
+  )
   return response.data.data
 }

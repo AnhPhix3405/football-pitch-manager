@@ -138,7 +138,10 @@ apiClient.interceptors.response.use(
       }
     }
 
-    if (status === 401 && originalRequest?.url?.includes('/auth/refresh')) {
+    if (
+      (status === 401 || status === 403) &&
+      originalRequest?.url?.includes('/auth/refresh')
+    ) {
       handleSessionExpired()
     }
 

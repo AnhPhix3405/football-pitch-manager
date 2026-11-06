@@ -23,10 +23,12 @@ export class AccountStatusGuard implements CanActivate {
       return true;
     }
 
-    const request = context.switchToHttp().getRequest();
+    const request = context
+      .switchToHttp()
+      .getRequest<{ user?: { status?: string } }>();
     const user = request.user;
 
-    if (!user) {
+    if (!user || !user.status) {
       return true;
     }
 
@@ -34,6 +36,14 @@ export class AccountStatusGuard implements CanActivate {
       throw new ApplicationException({
         code: 'ACCOUNT_BANNED',
         messageKey: 'error.accountBanned',
+        status: HttpStatus.FORBIDDEN,
+      });
+    }
+
+    if (user.status === 'suspended') {
+      throw new ApplicationException({
+        code: 'ACCOUNT_SUSPENDED',
+        messageKey: 'error.accountSuspended',
         status: HttpStatus.FORBIDDEN,
       });
     }

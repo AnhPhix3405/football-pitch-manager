@@ -131,6 +131,40 @@ describe('RefreshTokenService', () => {
     }
   });
 
+  it('throws ACCOUNT_SUSPENDED (403) if user is suspended', async () => {
+    tokenService.verifyRefreshToken.mockResolvedValue({
+      sub: sampleUserId,
+      email: 'user@example.com',
+      role: 'user',
+      status: 'suspended',
+      sessionId: sampleSessionId,
+      type: 'refresh',
+    });
+    const mockSuspendedUser: Partial<UserEntity> = {
+      id: sampleUserId,
+      email: 'user@example.com',
+      role: 'user',
+      status: 'suspended',
+      authProvider: 'local',
+    };
+    userRepository.findById.mockResolvedValue(mockSuspendedUser as UserEntity);
+
+    try {
+      await service.execute(rawRefreshToken);
+      throw new Error('Should have thrown');
+    } catch (error: unknown) {
+      expect(error).toBeInstanceOf(ApplicationException);
+      const appError = error as ApplicationException;
+      expect(appError.getStatus()).toBe(HttpStatus.FORBIDDEN);
+      expect(appError.getResponse()).toEqual(
+        expect.objectContaining({
+          code: 'ACCOUNT_SUSPENDED',
+          messageKey: 'error.accountSuspended',
+        }),
+      );
+    }
+  });
+
   it('successfully refreshes tokens and rotates the existing session', async () => {
     tokenService.verifyRefreshToken.mockResolvedValue({
       sub: sampleUserId,

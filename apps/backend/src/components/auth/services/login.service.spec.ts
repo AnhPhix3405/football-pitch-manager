@@ -158,6 +158,33 @@ describe('LoginService', () => {
     );
   });
 
+  it('throws 403 Forbidden with ACCOUNT_SUSPENDED when user status is suspended', async () => {
+    const mockSuspendedUser: Partial<UserEntity> = {
+      id: 'suspended-user-id',
+      email: 'suspended@example.com',
+      passwordHash: hashedPassword,
+      role: 'user',
+      status: 'suspended',
+      authProvider: 'local',
+    };
+    repository.findByEmailWithPasswordHash.mockResolvedValue(
+      mockSuspendedUser as UserEntity,
+    );
+
+    const promise = service.execute({
+      email: 'suspended@example.com',
+      password: rawPassword,
+    });
+
+    await expectApplicationException(
+      promise,
+      HttpStatus.FORBIDDEN,
+      'ACCOUNT_SUSPENDED',
+      'error.accountSuspended',
+      rawPassword,
+    );
+  });
+
   it('ensures no exceptions leak the raw password in error object or message', async () => {
     const sensitivePassword = 'SuperSecretRawPassword!@#123';
     repository.findByEmailWithPasswordHash.mockResolvedValue(null);

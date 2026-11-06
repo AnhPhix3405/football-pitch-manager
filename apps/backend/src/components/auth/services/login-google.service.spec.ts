@@ -217,6 +217,36 @@ describe('LoginGoogleService', () => {
       'error.accountBanned',
     );
   });
+
+  it('throws 403 Forbidden with ACCOUNT_SUSPENDED when user status is suspended', async () => {
+    googleAuthService.verify.mockResolvedValue({
+      providerId: 'suspended-google-sub',
+      email: 'suspended@gmail.com',
+      name: 'Suspended User',
+      avatar: null,
+    });
+
+    const suspendedUser: Partial<UserEntity> = {
+      id: 'suspended-user-id',
+      email: 'suspended@gmail.com',
+      role: 'user',
+      status: 'suspended',
+      authProvider: 'google',
+      providerId: 'suspended-google-sub',
+    };
+    userRepository.findByProvider.mockResolvedValue(
+      suspendedUser as UserEntity,
+    );
+
+    const promise = service.execute({ idToken: 'suspended-token' });
+
+    await expectApplicationException(
+      promise,
+      HttpStatus.FORBIDDEN,
+      'ACCOUNT_SUSPENDED',
+      'error.accountSuspended',
+    );
+  });
 });
 
 const expectApplicationException = async (

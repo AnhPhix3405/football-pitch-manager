@@ -21,6 +21,15 @@ export class LoginService {
       });
     }
 
+    const isPasswordValid = await compare(input.password, user.passwordHash);
+    if (!isPasswordValid) {
+      throw new ApplicationException({
+        code: 'INVALID_CREDENTIALS',
+        messageKey: 'error.invalidCredentials',
+        status: HttpStatus.UNAUTHORIZED,
+      });
+    }
+
     if (user.status === 'banned') {
       throw new ApplicationException({
         code: 'ACCOUNT_BANNED',
@@ -29,12 +38,11 @@ export class LoginService {
       });
     }
 
-    const isPasswordValid = await compare(input.password, user.passwordHash);
-    if (!isPasswordValid) {
+    if (user.status === 'suspended') {
       throw new ApplicationException({
-        code: 'INVALID_CREDENTIALS',
-        messageKey: 'error.invalidCredentials',
-        status: HttpStatus.UNAUTHORIZED,
+        code: 'ACCOUNT_SUSPENDED',
+        messageKey: 'error.accountSuspended',
+        status: HttpStatus.FORBIDDEN,
       });
     }
 

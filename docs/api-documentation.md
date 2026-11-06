@@ -187,6 +187,10 @@ Tài liệu chi tiết toàn bộ các API HTTP REST và WebSocket Gateway của
     }
   }
   ```
+- **Mã lỗi đặc thù:**
+  - `INVALID_CREDENTIALS` (`401 Unauthorized`): Sai email hoặc mật khẩu.
+  - `ACCOUNT_SUSPENDED` (`403 Forbidden`): Tài khoản đang ở trạng thái `suspended` (không cấp phát token).
+  - `ACCOUNT_BANNED` (`403 Forbidden`): Tài khoản bị cấm vĩnh viễn (`banned`).
 
 #### 3.1.3. Đăng nhập bằng Google (`POST /auth/google`)
 - **Quyền truy cập:** Public
@@ -2017,4 +2021,109 @@ Tài liệu chi tiết toàn bộ các API HTTP REST và WebSocket Gateway của
     ]
   }
   ```
+
+---
+
+### 3.19. Quản Lý Hệ Thống & Kiểm Duyệt (`AdminManagementModule` — `ADMIN-USER`, `ADMIN-POST`, `ADMIN-REV`)
+
+#### 3.19.1. Danh sách người dùng toàn hệ thống (`GET /admin/users`)
+- **Quyền truy cập:** `admin` (`JwtAuthGuard`, `AccountStatusGuard`, `RolesGuard`)
+- **Query Parameters (`AdminUsersQueryDto`):**
+  - `search` (tùy chọn): Tìm theo `full_name`, `email`, hoặc `phone`.
+  - `role` (tùy chọn): `'all' | 'user' | 'owner' | 'admin'` (mặc định `'all'`).
+  - `status` (tùy chọn): `'all' | 'active' | 'suspended' | 'inactive' | 'pending_verification'` (mặc định `'all'`).
+  - `page` (mặc định `1`), `limit` (mặc định `10`, tối đa `50`).
+- **Response (`200 OK` - `AdminUsersListResponseDto`):**
+  ```json
+  {
+    "items": [
+      {
+        "id": "uuid",
+        "fullName": "Nguyễn Minh Quân",
+        "email": "quan.nguyen@gmail.com",
+        "phone": "0901234567",
+        "avatarUrl": null,
+        "role": "user",
+        "status": "active",
+        "reportsCount": 1,
+        "createdAt": "2026-08-12T08:30:00.000Z"
+      }
+    ],
+    "meta": {
+      "page": 1,
+      "limit": 10,
+      "total": 125,
+      "totalPages": 13
+    },
+    "summary": {
+      "totalUsers": 125,
+      "activeUsers": 118,
+      "suspendedUsers": 7,
+      "flaggedUsers": 4
+    }
+  }
+  ```
+
+#### 3.19.2. Chi tiết hồ sơ & thống kê người dùng (`GET /admin/users/:id`)
+- **Quyền truy cập:** `admin`
+- **Response (`200 OK` - `AdminUserDetailResponseDto`):**
+  ```json
+  {
+    "id": "uuid",
+    "fullName": "Nguyễn Minh Quân",
+    "email": "quan.nguyen@gmail.com",
+    "phone": "0901234567",
+    "avatarUrl": null,
+    "bio": "Đội trưởng FC Bình Thạnh",
+    "skillLevel": "intermediate",
+    "preferredPositions": ["CM", "CB"],
+    "reliabilityScore": 98.5,
+    "role": "user",
+    "status": "active",
+    "reportsCount": 1,
+    "stats": {
+      "bookingsCount": 14,
+      "fieldsCount": 0,
+      "postsCount": 3
+    },
+    "createdAt": "2026-08-12T08:30:00.000Z",
+    "updatedAt": "2026-10-01T10:00:00.000Z"
+  }
+  ```
+
+#### 3.19.3. Khóa / Mở khóa tài khoản người dùng (`PATCH /admin/users/:id/status`)
+- **Quyền truy cập:** `admin`
+- **Request Body (`UpdateUserStatusDto`):**
+  ```json
+  {
+    "status": "suspended",
+    "reason": "Tài khoản phát tán spam bài đăng tìm đối"
+  }
+  ```
+- **Quy tắc nghiệp vụ:**
+  - Chặn Admin tự khóa tài khoản của chính mình (`400 Bad Request - ADMIN_CANNOT_SUSPEND_SELF`).
+  - Khi `status = 'suspended'`, tự động thu hồi toàn bộ phiên đăng nhập đang hoạt động (`auth_sessions`) trong cùng một transaction.
+- **Response (`200 OK` - `AdminUserItemDto`)**
+
+#### 3.19.4. Danh sách bài đăng cộng đồng cho Admin (`GET /admin/posts`)
+- **Quyền truy cập:** `admin`
+- **Query Parameters (`AdminPostsQueryDto`):** `search`, `status` (`'all' | 'open' | 'matched' | 'closed'`), `page`, `limit`.
+- **Response (`200 OK` - `AdminPostsListResponseDto`):** Trả về `items`, `meta`, và `summary` (`totalPosts`, `openPosts`, `matchedPosts`, `closedPosts`).
+
+#### 3.19.5. Gỡ / đóng bài đăng vi phạm (`DELETE /admin/posts/:id`)
+- **Quyền truy cập:** `admin`
+- **Response (`200 OK` - `AdminDeletePostResponseDto`):**
+  ```json
+  {
+    "id": "uuid",
+    "status": "closed",
+    "deletedAt": "2026-11-06T10:30:00.000Z"
+  }
+  ```
+
+#### 3.19.6. Danh sách kiểm duyệt đánh giá bị báo cáo (`GET /admin/reviews`)
+- **Quyền truy cập:** `admin`
+- **Query Parameters (`AdminReviewsQueryDto`):** `search`, `status` (`'all' | 'pending' | 'resolved'`), `reviewType` (`'all' | 'field' | 'user'`), `page`, `limit`.
+- **Response (`200 OK` - `AdminReviewsListResponseDto`):** Hợp nhất (`UNION ALL`) các đánh giá có `is_flagged = true` từ `field_reviews` và `user_reviews`, kèm `summary` (`totalFlagged`, `pendingCount`, `resolvedCount`).
+
 

@@ -5,6 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { I18nModule } from 'nestjs-i18n';
 import { StorageModule } from './common/storage/storage.module';
 import { AdminApprovalModule } from './components/admin-approval/admin-approval.module';
+import { AdminManagementModule } from './components/admin-management/admin-management.module';
 import { AdminOverviewModule } from './components/admin-overview/admin-overview.module';
 import { AiModule } from './components/ai/ai.module';
 import { AuthModule } from './components/auth/auth.module';
@@ -45,6 +46,7 @@ import { typeOrmDataSourceOptions } from './database/config/typeorm.options';
     OwnerProfileModule,
     UserProfileModule,
     AdminApprovalModule,
+    AdminManagementModule,
     AdminOverviewModule,
     FieldModule,
     BookingModule,

@@ -62,6 +62,14 @@ export class LoginGoogleService {
       });
     }
 
+    if (user.status === 'suspended') {
+      throw new ApplicationException({
+        code: 'ACCOUNT_SUSPENDED',
+        messageKey: 'error.accountSuspended',
+        status: HttpStatus.FORBIDDEN,
+      });
+    }
+
     return {
       id: user.id,
       email: user.email,

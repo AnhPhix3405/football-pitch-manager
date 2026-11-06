@@ -62,6 +62,14 @@ export class RefreshTokenService {
       });
     }
 
+    if (user.status === 'suspended') {
+      throw new ApplicationException({
+        code: 'ACCOUNT_SUSPENDED',
+        messageKey: 'error.accountSuspended',
+        status: HttpStatus.FORBIDDEN,
+      });
+    }
+
     const ttlSeconds = parseDurationToSeconds(this.refreshExpiresIn);
 
     // If session id is in payload, rotate the existing session; otherwise create session

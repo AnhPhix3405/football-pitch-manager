@@ -1,499 +1,1095 @@
 import {
+  CheckCircleOutlined,
   DeleteOutlined,
   EyeOutlined,
+  ReloadOutlined,
   SearchOutlined,
+  StarFilled,
   StopOutlined,
   UndoOutlined,
-  UserOutlined,
 } from '@ant-design/icons'
-import {
-  Button,
-  Descriptions,
-  Input,
-  Modal,
-  Segmented,
-  Select,
-  Table,
-  Tag,
-  message,
-} from 'antd'
-import { useCallback, useMemo, useState } from 'react'
+import { Descriptions, Modal } from 'antd'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { managedUsers, moderationItems } from './admin.data'
+import { useAdminManagement } from '../../hooks/useAdminManagement'
+import {
+  MANAGEMENT_TABS,
+  POST_STATUS_FILTERS,
+  REVIEW_STATUS_FILTERS,
+  REVIEW_TYPE_FILTERS,
+  USER_ROLE_FILTERS,
+  USER_STATUS_FILTERS,
+} from './constants/admin-management.constant'
 import type {
-  ManagedUserItem,
-  ManagedUserRole,
-  ManagedUserStatus,
-  ManagementTab,
-  ModerationContentItem,
-} from './interface/management.interface'
+  AdminPostItem,
+  AdminPostStatusFilter,
+  AdminReviewStatusFilter,
+  AdminReviewTypeFilter,
+  AdminUserItem,
+  AdminUserRoleFilter,
+  AdminUserStatusFilter,
+} from './interface/admin-management.interface'
+import {
+  formatAdminDate,
+  formatAdminDateTime,
+  formatPlaySlot,
+  getPostStatusBadgeTone,
+  getReviewStatusBadgeTone,
+  getUserRoleBadgeTone,
+  getUserStatusBadgeTone,
+} from './utils/admin-management.util'
+import './AdminManagementPage.css'
 
 export function AdminManagementPage() {
-  const { t } = useTranslation()
-  const [tab, setTab] = useState<ManagementTab>('users')
-  const [query, setQuery] = useState('')
-  const [roleFilter, setRoleFilter] = useState<string>('all')
-  const [statusFilter, setStatusFilter] = useState<string>('all')
-  const [moderationStatus, setModerationStatus] = useState<string>('all')
+  const { t, i18n } = useTranslation()
+  const locale = i18n.language?.startsWith('en') ? 'en-US' : 'vi-VN'
+  const [moderationNote, setModerationNote] = useState('')
 
-  const [users, setUsers] = useState<ManagedUserItem[]>(managedUsers as ManagedUserItem[])
-  const [items, setItems] = useState<ModerationContentItem[]>(moderationItems as ModerationContentItem[])
-  const [selectedUser, setSelectedUser] = useState<ManagedUserItem | null>(null)
-  const [selectedContent, setSelectedContent] = useState<ModerationContentItem | null>(null)
-  const [messageApi, contextHolder] = message.useMessage()
+  const {
+    activeTab,
+    setActiveTab,
+    searchQuery,
+    setSearchQuery,
+    roleFilter,
+    setRoleFilter,
+    userStatusFilter,
+    setUserStatusFilter,
+    postStatusFilter,
+    setPostStatusFilter,
+    reviewStatusFilter,
+    setReviewStatusFilter,
+    reviewTypeFilter,
+    setReviewTypeFilter,
+    page,
+    setPage,
+    resetFilters,
+    usersData,
+    postsData,
+    reviewsData,
+    selectedUser,
+    selectedUserDetail,
+    selectedPost,
+    selectedReview,
+    isLoading,
+    isDetailLoading,
+    isSubmitting,
+    error,
+    feedbackMessage,
+    clearFeedback,
+    inspectUser,
+    closeUserModal,
+    openPostModal,
+    closePostModal,
+    openReviewModal,
+    closeReviewModal,
+    handleToggleUserStatus,
+    handleDeletePost,
+    handleModerateReview,
+    refetchCurrentTab,
+  } = useAdminManagement()
 
-  const filteredUsers = useMemo(() => {
-    return users.filter((u) => {
-      const matchQuery =
-        !query ||
-        `${u.name} ${u.email} ${u.id}`.toLowerCase().includes(query.toLowerCase())
-      const matchRole = roleFilter === 'all' || u.role === roleFilter
-      const matchStatus = statusFilter === 'all' || u.status === statusFilter
-      return matchQuery && matchRole && matchStatus
+  const confirmToggleUser = (user: AdminUserItem) => {
+    const isSuspended = user.status === 'suspended'
+    Modal.confirm({
+      title: isSuspended
+        ? `${t('admin.actionUnlock')}: ${user.fullName}?`
+        : `${t('admin.actionLock')}: ${user.fullName}?`,
+      content: isSuspended
+        ? t('admin.confirmActivateUserContent', {
+            defaultValue:
+              'Tài khoản sẽ được mở quyền đăng nhập và sử dụng hệ thống bình thường.',
+          })
+        : t('admin.confirmSuspendUserContent', {
+            defaultValue:
+              'Tài khoản sẽ bị khóa và thu hồi toàn bộ phiên đăng nhập đang hoạt động.',
+          }),
+      okText: isSuspended ? t('admin.actionUnlock') : t('admin.actionLock'),
+      okButtonProps: { danger: !isSuspended },
+      cancelText: t('admin.actionClose'),
+      onOk: async () => {
+        await handleToggleUserStatus(user)
+      },
     })
-  }, [users, query, roleFilter, statusFilter])
+  }
 
-  const filteredContent = useMemo(() => {
-    const targetType = tab === 'posts' ? 'post' : 'review'
-    return items.filter((item) => {
-      if (item.type !== targetType) return false
-      const matchQuery =
-        !query ||
-        `${item.id} ${item.author} ${item.reason} ${item.content}`
-          .toLowerCase()
-          .includes(query.toLowerCase())
-      const matchStatus =
-        moderationStatus === 'all' || item.status === moderationStatus
-      return matchQuery && matchStatus
+  const confirmRemovePost = (post: AdminPostItem) => {
+    Modal.confirm({
+      title: `${t('admin.actionRemovePost')}: "${post.title}"?`,
+      content: t('admin.confirmRemoveContentBody', {
+        defaultValue:
+          'Bài đăng sẽ được đóng và gỡ khỏi danh sách tìm đối cộng đồng.',
+      }),
+      okText: t('admin.actionRemovePost'),
+      okButtonProps: { danger: true },
+      cancelText: t('admin.actionClose'),
+      onOk: async () => {
+        await handleDeletePost(post)
+      },
     })
-  }, [items, tab, query, moderationStatus])
+  }
 
-  const toggleUserStatus = useCallback(
-    (user: ManagedUserItem) => {
-      const isSuspended = user.status === 'suspended'
-      const nextStatus: ManagedUserStatus = isSuspended ? 'active' : 'suspended'
+  const renderRoleLabel = (role: string) => {
+    if (role === 'admin') return t('admin.roleAdmin')
+    if (role === 'owner') return t('admin.roleOwner')
+    return t('admin.roleUser')
+  }
 
-      Modal.confirm({
-        title: isSuspended
-          ? t('admin.confirmActivateUserTitle', { defaultValue: `Khôi phục tài khoản ${user.name}?` })
-          : t('admin.confirmSuspendUserTitle', { defaultValue: `Tạm khóa tài khoản ${user.name}?` }),
-        content: isSuspended
-          ? t('admin.confirmActivateUserContent', {
-              defaultValue: 'Tài khoản sẽ được mở quyền đăng nhập và sử dụng hệ thống bình thường.',
-            })
-          : t('admin.confirmSuspendUserContent', {
-              defaultValue: 'Tài khoản sẽ bị vô hiệu hóa phiên đăng nhập cho đến khi được mở lại.',
-            }),
-        okText: isSuspended
-          ? t('admin.activateAction', { defaultValue: 'Khôi phục' })
-          : t('admin.suspendAction', { defaultValue: 'Khóa tài khoản' }),
-        okButtonProps: { danger: !isSuspended },
-        cancelText: t('common.cancel', { defaultValue: 'Hủy' }),
-        onOk: () => {
-          setUsers((prev) =>
-            prev.map((item) =>
-              item.id === user.id ? { ...item, status: nextStatus } : item,
-            ),
-          )
-          messageApi.success(
-            isSuspended
-              ? t('admin.activateSuccess', { defaultValue: 'Đã khôi phục tài khoản thành công.' })
-              : t('admin.suspendSuccess', { defaultValue: 'Đã tạm khóa tài khoản thành công.' }),
-          )
-        },
-      })
-    },
-    [messageApi, t],
-  )
+  const renderUserStatusLabel = (status: string) => {
+    if (status === 'suspended') return t('admin.statusSuspended')
+    if (status === 'active') return t('admin.statusActive')
+    if (status === 'pending_verification')
+      return t('admin.statusPendingVerification')
+    return t('admin.statusInactive')
+  }
 
-  const handleModerateContent = useCallback(
-    (contentItem: ModerationContentItem) => {
-      Modal.confirm({
-        title: t('admin.confirmRemoveContentTitle', { defaultValue: 'Gỡ bỏ nội dung này?' }),
-        content: t('admin.confirmRemoveContentBody', {
-          defaultValue: 'Nội dung sẽ bị ẩn khỏi hệ thống và trạng thái báo cáo chuyển thành Đã xử lý.',
-        }),
-        okText: t('admin.removeContent', { defaultValue: 'Gỡ nội dung' }),
-        okButtonProps: { danger: true },
-        cancelText: t('common.cancel', { defaultValue: 'Hủy' }),
-        onOk: () => {
-          setItems((prev) =>
-            prev.map((item) =>
-              item.id === contentItem.id ? { ...item, status: 'resolved' } : item,
-            ),
-          )
-          messageApi.success(t('admin.removeContentSuccess', { defaultValue: 'Đã xử lý gỡ nội dung vi phạm.' }))
-        },
-      })
-    },
-    [messageApi, t],
-  )
+  const renderPostStatusLabel = (status: string) => {
+    if (status === 'open') return t('admin.postStatusOpen')
+    if (status === 'matched') return t('admin.postStatusMatched')
+    return t('admin.postStatusClosed')
+  }
 
-  const userColumns = useMemo(
-    () => [
-      {
-        title: t('admin.tableUser', { defaultValue: 'NGƯỜI DÙNG' }),
-        key: 'user',
-        render: (_: unknown, item: ManagedUserItem) => (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div
-              style={{
-                width: 36,
-                height: 36,
-                borderRadius: '50%',
-                background: '#1a2219',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#8cfc70',
-              }}
-            >
-              <UserOutlined />
-            </div>
-            <div>
-              <b>{item.name}</b>
-              <div className="table-sub">
-                {item.email} · {item.id}
-              </div>
-            </div>
-          </div>
-        ),
-      },
-      {
-        title: t('admin.tableRole', { defaultValue: 'VAI TRÒ' }),
-        dataIndex: 'role',
-        key: 'role',
-        render: (role: ManagedUserRole) => {
-          const colorMap = { user: 'blue', owner: 'gold', admin: 'red' }
-          return <Tag color={colorMap[role] || 'default'}>{role?.toUpperCase()}</Tag>
-        },
-      },
-      {
-        title: t('admin.tableJoinedAt', { defaultValue: 'THAM GIA' }),
-        dataIndex: 'joinedAt',
-        key: 'joinedAt',
-      },
-      {
-        title: t('admin.tableReports', { defaultValue: 'BÁO CÁO' }),
-        dataIndex: 'reports',
-        key: 'reports',
-        render: (reports: number) => (
-          <span className={reports > 0 ? 'warning-text' : ''}>
-            {reports > 0 ? <Tag color="error">{reports} báo cáo</Tag> : <Tag color="default">0</Tag>}
-          </span>
-        ),
-      },
-      {
-        title: t('admin.tableStatus', { defaultValue: 'TRẠNG THÁI' }),
-        dataIndex: 'status',
-        key: 'status',
-        render: (status: ManagedUserStatus) => (
-          <Tag color={status === 'active' ? 'green' : 'red'}>
-            {status === 'active'
-              ? t('admin.statusActive', { defaultValue: 'Hoạt động' })
-              : t('admin.statusSuspended', { defaultValue: 'Tạm khóa' })}
-          </Tag>
-        ),
-      },
-      {
-        title: t('admin.tableActions', { defaultValue: 'THAO TÁC' }),
-        key: 'actions',
-        render: (_: unknown, item: ManagedUserItem) => (
-          <div className="table-actions" style={{ display: 'flex', gap: 8 }}>
-            <Button
-              size="small"
-              icon={<EyeOutlined />}
-              onClick={() => setSelectedUser(item)}
-            >
-              {t('common.details', { defaultValue: 'Xem' })}
-            </Button>
-            <Button
-              size="small"
-              danger={item.status !== 'suspended'}
-              icon={item.status === 'suspended' ? <UndoOutlined /> : <StopOutlined />}
-              onClick={() => toggleUserStatus(item)}
-            >
-              {item.status === 'suspended'
-                ? t('admin.activate', { defaultValue: 'Mở khóa' })
-                : t('admin.suspend', { defaultValue: 'Khóa' })}
-            </Button>
-          </div>
-        ),
-      },
-    ],
-    [t, toggleUserStatus],
-  )
+  const renderReviewStatusLabel = (status: string) => {
+    return status === 'resolved'
+      ? t('admin.reviewStatusResolved')
+      : t('admin.reviewStatusPending')
+  }
+
+  const currentMeta =
+    activeTab === 'users'
+      ? usersData?.meta
+      : activeTab === 'posts'
+        ? postsData?.meta
+        : reviewsData?.meta
 
   return (
-    <section className="admin-page">
-      {contextHolder}
-      <header className="user-page__head">
+    <section className="admin-mgmt-page">
+      <header className="admin-mgmt-header">
         <div>
-          <span className="eyebrow">PLATFORM GOVERNANCE</span>
-          <h1>{t('admin.managementTitle', { defaultValue: 'Quản lý & Kiểm duyệt' })}</h1>
-          <p>
-            {t('admin.managementSubtitle', {
-              defaultValue: 'Điều hành người dùng, bài đăng và đánh giá trên toàn hệ thống.',
-            })}
-          </p>
+          <span className="admin-mgmt-eyebrow">{t('admin.mgmtEyebrow')}</span>
+          <h1 className="admin-mgmt-title">{t('admin.mgmtTitle')}</h1>
+          <p className="admin-mgmt-subtitle">{t('admin.mgmtSubtitle')}</p>
         </div>
+        <button
+          type="button"
+          className="admin-mgmt-btn"
+          onClick={refetchCurrentTab}
+          disabled={isLoading}
+        >
+          <ReloadOutlined spin={isLoading} />
+          {t('admin.refreshData')}
+        </button>
       </header>
 
-      <div
-        className="admin-toolbar"
-        style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: 12,
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        }}
-      >
-        <Segmented
-          value={tab}
-          onChange={(val) => {
-            setTab(val as ManagementTab)
-            setQuery('')
-          }}
-          options={[
-            { value: 'users', label: t('admin.tabUsers', { defaultValue: 'Người dùng' }) },
-            { value: 'posts', label: t('admin.tabPosts', { defaultValue: 'Bài đăng' }) },
-            { value: 'reviews', label: t('admin.tabReviews', { defaultValue: 'Đánh giá' }) },
-          ]}
-        />
+      {/* Summary KPI Strip */}
+      {activeTab === 'users' && (
+        <div className="admin-mgmt-kpi-grid">
+          <div className="admin-mgmt-kpi-card">
+            <span className="admin-mgmt-kpi-label">
+              {t('admin.kpiTotalUsers')}
+            </span>
+            <strong className="admin-mgmt-kpi-value">
+              {usersData?.summary.totalUsers ?? 0}
+            </strong>
+          </div>
+          <div className="admin-mgmt-kpi-card admin-mgmt-kpi-card--accent">
+            <span className="admin-mgmt-kpi-label">
+              {t('admin.kpiActiveUsers')}
+            </span>
+            <strong className="admin-mgmt-kpi-value">
+              {usersData?.summary.activeUsers ?? 0}
+            </strong>
+          </div>
+          <div className="admin-mgmt-kpi-card admin-mgmt-kpi-card--danger">
+            <span className="admin-mgmt-kpi-label">
+              {t('admin.kpiSuspendedUsers')}
+            </span>
+            <strong className="admin-mgmt-kpi-value">
+              {usersData?.summary.suspendedUsers ?? 0}
+            </strong>
+          </div>
+          <div className="admin-mgmt-kpi-card admin-mgmt-kpi-card--warning">
+            <span className="admin-mgmt-kpi-label">
+              {t('admin.kpiFlaggedUsers')}
+            </span>
+            <strong className="admin-mgmt-kpi-value">
+              {usersData?.summary.flaggedUsers ?? 0}
+            </strong>
+          </div>
+        </div>
+      )}
 
+      {activeTab === 'posts' && (
+        <div className="admin-mgmt-kpi-grid">
+          <div className="admin-mgmt-kpi-card">
+            <span className="admin-mgmt-kpi-label">
+              {t('admin.kpiTotalPosts')}
+            </span>
+            <strong className="admin-mgmt-kpi-value">
+              {postsData?.summary.totalPosts ?? 0}
+            </strong>
+          </div>
+          <div className="admin-mgmt-kpi-card admin-mgmt-kpi-card--accent">
+            <span className="admin-mgmt-kpi-label">
+              {t('admin.kpiOpenPosts')}
+            </span>
+            <strong className="admin-mgmt-kpi-value">
+              {postsData?.summary.openPosts ?? 0}
+            </strong>
+          </div>
+          <div className="admin-mgmt-kpi-card admin-mgmt-kpi-card--warning">
+            <span className="admin-mgmt-kpi-label">
+              {t('admin.kpiMatchedPosts')}
+            </span>
+            <strong className="admin-mgmt-kpi-value">
+              {postsData?.summary.matchedPosts ?? 0}
+            </strong>
+          </div>
+          <div className="admin-mgmt-kpi-card">
+            <span className="admin-mgmt-kpi-label">
+              {t('admin.kpiClosedPosts')}
+            </span>
+            <strong className="admin-mgmt-kpi-value">
+              {postsData?.summary.closedPosts ?? 0}
+            </strong>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'reviews' && (
+        <div className="admin-mgmt-kpi-grid">
+          <div className="admin-mgmt-kpi-card">
+            <span className="admin-mgmt-kpi-label">
+              {t('admin.kpiTotalFlagged')}
+            </span>
+            <strong className="admin-mgmt-kpi-value">
+              {reviewsData?.summary.totalFlagged ?? 0}
+            </strong>
+          </div>
+          <div className="admin-mgmt-kpi-card admin-mgmt-kpi-card--warning">
+            <span className="admin-mgmt-kpi-label">
+              {t('admin.kpiPendingReviews')}
+            </span>
+            <strong className="admin-mgmt-kpi-value">
+              {reviewsData?.summary.pendingCount ?? 0}
+            </strong>
+          </div>
+          <div className="admin-mgmt-kpi-card admin-mgmt-kpi-card--accent">
+            <span className="admin-mgmt-kpi-label">
+              {t('admin.kpiResolvedReviews')}
+            </span>
+            <strong className="admin-mgmt-kpi-value">
+              {reviewsData?.summary.resolvedCount ?? 0}
+            </strong>
+          </div>
+        </div>
+      )}
+
+      {/* Feedback / Error Banners */}
+      {error && (
+        <div className="admin-mgmt-banner admin-mgmt-banner--error" role="alert">
+          <span>{error}</span>
+          <button
+            type="button"
+            className="admin-mgmt-btn admin-mgmt-btn--danger"
+            onClick={refetchCurrentTab}
+          >
+            {t('admin.retryButton')}
+          </button>
+        </div>
+      )}
+
+      {feedbackMessage && (
         <div
-          style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: 8,
-            alignItems: 'center',
-            flex: 1,
-            justifyContent: 'flex-end',
-          }}
+          className="admin-mgmt-banner admin-mgmt-banner--success"
+          role="status"
         >
-          <Input
-            prefix={<SearchOutlined />}
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={
-              tab === 'users'
-                ? t('admin.searchUsersPlaceholder', { defaultValue: 'Tìm tên, email, ID...' })
-                : t('admin.searchContentPlaceholder', { defaultValue: 'Tìm mã, tác giả, nội dung...' })
-            }
-            style={{ maxWidth: 220 }}
-          />
+          <span>{feedbackMessage}</span>
+          <button
+            type="button"
+            className="admin-mgmt-btn"
+            onClick={clearFeedback}
+          >
+            {t('admin.actionClose')}
+          </button>
+        </div>
+      )}
 
-          {tab === 'users' ? (
-            <>
-              <Select
-                value={roleFilter}
-                onChange={setRoleFilter}
-                style={{ width: 130 }}
-                options={[
-                  { value: 'all', label: t('admin.roleAll', { defaultValue: 'Tất cả vai trò' }) },
-                  { value: 'user', label: 'Cầu thủ (User)' },
-                  { value: 'owner', label: 'Chủ sân (Owner)' },
-                ]}
-              />
-              <Select
-                value={statusFilter}
-                onChange={setStatusFilter}
-                style={{ width: 140 }}
-                options={[
-                  { value: 'all', label: t('admin.statusAll', { defaultValue: 'Tất cả trạng thái' }) },
-                  { value: 'active', label: t('admin.statusActive', { defaultValue: 'Hoạt động' }) },
-                  { value: 'suspended', label: t('admin.statusSuspended', { defaultValue: 'Tạm khóa' }) },
-                ]}
-              />
-            </>
-          ) : (
-            <Select
-              value={moderationStatus}
-              onChange={setModerationStatus}
-              style={{ width: 140 }}
-              options={[
-                { value: 'all', label: t('admin.statusAll', { defaultValue: 'Tất cả trạng thái' }) },
-                { value: 'pending', label: t('admin.statusPending', { defaultValue: 'Chờ xử lý' }) },
-                { value: 'resolved', label: t('admin.statusResolved', { defaultValue: 'Đã xử lý' }) },
-              ]}
+      {/* Toolbar: Tabs + Search + Filters */}
+      <div className="admin-mgmt-toolbar">
+        <div className="admin-mgmt-tabs" role="tablist">
+          {MANAGEMENT_TABS.map((tabKey) => {
+            const label =
+              tabKey === 'users'
+                ? t('admin.tabUsers')
+                : tabKey === 'posts'
+                  ? t('admin.tabPosts')
+                  : t('admin.tabReviews')
+            return (
+              <button
+                key={tabKey}
+                type="button"
+                role="tab"
+                aria-selected={activeTab === tabKey}
+                className={`admin-mgmt-tab-btn ${
+                  activeTab === tabKey ? 'admin-mgmt-tab-btn--active' : ''
+                }`}
+                onClick={() => setActiveTab(tabKey)}
+              >
+                {label}
+              </button>
+            )
+          })}
+        </div>
+
+        <div className="admin-mgmt-filters">
+          <div className="admin-mgmt-search-wrap">
+            <SearchOutlined className="admin-mgmt-search-icon" />
+            <input
+              type="search"
+              className="admin-mgmt-search-input"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={
+                activeTab === 'users'
+                  ? t('admin.searchUsersPlaceholder')
+                  : activeTab === 'posts'
+                    ? t('admin.searchPostsPlaceholder')
+                    : t('admin.searchReviewsPlaceholder')
+              }
             />
+          </div>
+
+          {activeTab === 'users' && (
+            <>
+              <select
+                className="admin-mgmt-select"
+                value={roleFilter}
+                onChange={(e) =>
+                  setRoleFilter(e.target.value as AdminUserRoleFilter)
+                }
+                aria-label={t('admin.colRole')}
+              >
+                {USER_ROLE_FILTERS.map((role) => (
+                  <option key={role} value={role}>
+                    {role === 'all'
+                      ? t('admin.filterAllRoles')
+                      : renderRoleLabel(role)}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                className="admin-mgmt-select"
+                value={userStatusFilter}
+                onChange={(e) =>
+                  setUserStatusFilter(e.target.value as AdminUserStatusFilter)
+                }
+                aria-label={t('admin.colStatus')}
+              >
+                {USER_STATUS_FILTERS.map((st) => (
+                  <option key={st} value={st}>
+                    {st === 'all'
+                      ? t('admin.filterAllStatuses')
+                      : renderUserStatusLabel(st)}
+                  </option>
+                ))}
+              </select>
+            </>
+          )}
+
+          {activeTab === 'posts' && (
+            <select
+              className="admin-mgmt-select"
+              value={postStatusFilter}
+              onChange={(e) =>
+                setPostStatusFilter(e.target.value as AdminPostStatusFilter)
+              }
+              aria-label={t('admin.colStatus')}
+            >
+              {POST_STATUS_FILTERS.map((st) => (
+                <option key={st} value={st}>
+                  {st === 'all'
+                    ? t('admin.filterAllStatuses')
+                    : renderPostStatusLabel(st)}
+                </option>
+              ))}
+            </select>
+          )}
+
+          {activeTab === 'reviews' && (
+            <>
+              <select
+                className="admin-mgmt-select"
+                value={reviewTypeFilter}
+                onChange={(e) =>
+                  setReviewTypeFilter(e.target.value as AdminReviewTypeFilter)
+                }
+                aria-label={t('admin.filterAllReviewTypes')}
+              >
+                {REVIEW_TYPE_FILTERS.map((rt) => (
+                  <option key={rt} value={rt}>
+                    {rt === 'all'
+                      ? t('admin.filterAllReviewTypes')
+                      : rt === 'field'
+                        ? t('admin.reviewTypeField')
+                        : t('admin.reviewTypeUser')}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                className="admin-mgmt-select"
+                value={reviewStatusFilter}
+                onChange={(e) =>
+                  setReviewStatusFilter(
+                    e.target.value as AdminReviewStatusFilter,
+                  )
+                }
+                aria-label={t('admin.colStatus')}
+              >
+                {REVIEW_STATUS_FILTERS.map((st) => (
+                  <option key={st} value={st}>
+                    {st === 'all'
+                      ? t('admin.filterAllStatuses')
+                      : renderReviewStatusLabel(st)}
+                  </option>
+                ))}
+              </select>
+            </>
           )}
         </div>
       </div>
 
-      {tab === 'users' ? (
-        <Table
-          rowKey="id"
-          dataSource={filteredUsers}
-          columns={userColumns}
-          scroll={{ x: 900 }}
-          pagination={{ pageSize: 10 }}
-        />
-      ) : (
-        <div className="moderation-list">
-          {filteredContent.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '48px 0', color: '#888' }}>
-              {t('common.noData', { defaultValue: 'Không có nội dung vi phạm cần kiểm duyệt.' })}
+      {/* Main Data Surface */}
+      <div className="admin-mgmt-surface">
+        {isLoading ? (
+          <div className="admin-mgmt-skeleton-list" aria-busy="true">
+            {Array.from({ length: 6 }).map((_, idx) => (
+              <div key={idx} className="admin-mgmt-skeleton-row" />
+            ))}
+          </div>
+        ) : activeTab === 'users' ? (
+          (usersData?.items.length ?? 0) === 0 ? (
+            <div className="admin-mgmt-empty">
+              <p>{t('admin.emptyUsers')}</p>
+              <button
+                type="button"
+                className="admin-mgmt-btn"
+                onClick={resetFilters}
+              >
+                {t('admin.actionResetFilters')}
+              </button>
             </div>
           ) : (
-            filteredContent.map((item) => (
-              <article key={item.id}>
-                <header>
-                  <Tag color={item.type === 'post' ? 'blue' : 'purple'}>
-                    {item.type.toUpperCase()}
-                  </Tag>
-                  <Tag color={item.status === 'pending' ? 'gold' : 'green'}>
-                    {item.status === 'pending'
-                      ? t('admin.statusPending', { defaultValue: 'Chờ xử lý' })
-                      : t('admin.statusResolved', { defaultValue: 'Đã xử lý' })}
-                  </Tag>
-                  <time>{item.reportedAt}</time>
-                </header>
-                <h2>{item.reason}</h2>
-                <p>{item.content}</p>
-                <footer>
-                  <span>
-                    {t('admin.postedBy', { defaultValue: 'Đăng bởi' })} <b>{item.author}</b>
-                  </span>
-                  <div style={{ display: 'flex', gap: 8 }}>
-                    <Button
-                      icon={<EyeOutlined />}
-                      onClick={() => setSelectedContent(item)}
-                    >
-                      {t('admin.viewContext', { defaultValue: 'Xem ngữ cảnh' })}
-                    </Button>
-                    {item.status === 'pending' && (
-                      <Button
-                        danger
-                        icon={<DeleteOutlined />}
-                        onClick={() => handleModerateContent(item)}
-                      >
-                        {t('admin.removeContent', { defaultValue: 'Gỡ nội dung' })}
-                      </Button>
-                    )}
-                  </div>
-                </footer>
-              </article>
-            ))
-          )}
-        </div>
-      )}
+            <div className="admin-mgmt-table-wrap">
+              <table className="admin-mgmt-table">
+                <thead>
+                  <tr>
+                    <th>{t('admin.colUser')}</th>
+                    <th>{t('admin.colRole')}</th>
+                    <th>{t('admin.colReports')}</th>
+                    <th>{t('admin.colCreatedAt')}</th>
+                    <th>{t('admin.colStatus')}</th>
+                    <th>{t('admin.colActions')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {usersData?.items.map((user) => {
+                    const roleTone = getUserRoleBadgeTone(user.role)
+                    const statusTone = getUserStatusBadgeTone(user.status)
+                    return (
+                      <tr key={user.id}>
+                        <td>
+                          <div className="admin-mgmt-user-cell">
+                            <div className="admin-mgmt-avatar">
+                              {user.fullName.charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                              <div className="admin-mgmt-primary-text">
+                                {user.fullName}
+                              </div>
+                              <div className="admin-mgmt-sub-text">
+                                {user.email}
+                                {user.phone ? ` • ${user.phone}` : ''}
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <span
+                            className={`admin-mgmt-badge admin-mgmt-badge--${roleTone}`}
+                          >
+                            {renderRoleLabel(user.role)}
+                          </span>
+                        </td>
+                        <td>
+                          <span
+                            className={`admin-mgmt-badge ${
+                              user.reportsCount > 0
+                                ? 'admin-mgmt-badge--locked'
+                                : 'admin-mgmt-badge--resolved'
+                            }`}
+                          >
+                            {user.reportsCount}
+                          </span>
+                        </td>
+                        <td>{formatAdminDate(user.createdAt, locale)}</td>
+                        <td>
+                          <span
+                            className={`admin-mgmt-badge admin-mgmt-badge--${statusTone}`}
+                          >
+                            {renderUserStatusLabel(user.status)}
+                          </span>
+                        </td>
+                        <td>
+                          <div className="admin-mgmt-actions">
+                            <button
+                              type="button"
+                              className="admin-mgmt-btn"
+                              onClick={() => void inspectUser(user)}
+                            >
+                              <EyeOutlined />
+                              {t('admin.actionInspect')}
+                            </button>
+                            {user.role !== 'admin' && (
+                              <button
+                                type="button"
+                                className={`admin-mgmt-btn ${
+                                  user.status === 'suspended'
+                                    ? 'admin-mgmt-btn--primary'
+                                    : 'admin-mgmt-btn--danger'
+                                }`}
+                                disabled={isSubmitting}
+                                onClick={() => confirmToggleUser(user)}
+                              >
+                                {user.status === 'suspended' ? (
+                                  <>
+                                    <UndoOutlined />
+                                    {t('admin.actionUnlock')}
+                                  </>
+                                ) : (
+                                  <>
+                                    <StopOutlined />
+                                    {t('admin.actionLock')}
+                                  </>
+                                )}
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )
+        ) : activeTab === 'posts' ? (
+          (postsData?.items.length ?? 0) === 0 ? (
+            <div className="admin-mgmt-empty">
+              <p>{t('admin.emptyPosts')}</p>
+              <button
+                type="button"
+                className="admin-mgmt-btn"
+                onClick={resetFilters}
+              >
+                {t('admin.actionResetFilters')}
+              </button>
+            </div>
+          ) : (
+            <div className="admin-mgmt-table-wrap">
+              <table className="admin-mgmt-table">
+                <thead>
+                  <tr>
+                    <th>{t('admin.colPostTitle')}</th>
+                    <th>{t('admin.colAuthor')}</th>
+                    <th>{t('admin.colMatchSchedule')}</th>
+                    <th>{t('admin.colCreatedAt')}</th>
+                    <th>{t('admin.colStatus')}</th>
+                    <th>{t('admin.colActions')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {postsData?.items.map((post) => {
+                    const postTone = getPostStatusBadgeTone(post.status)
+                    return (
+                      <tr key={post.id}>
+                        <td>
+                          <div className="admin-mgmt-primary-text">
+                            {post.title}
+                          </div>
+                          <div className="admin-mgmt-sub-text">
+                            {post.content.length > 80
+                              ? `${post.content.slice(0, 80)}...`
+                              : post.content}
+                          </div>
+                        </td>
+                        <td>
+                          <div className="admin-mgmt-primary-text">
+                            {post.authorName}
+                          </div>
+                          <div className="admin-mgmt-sub-text">
+                            {post.authorEmail}
+                          </div>
+                        </td>
+                        <td>
+                          <div className="admin-mgmt-primary-text">
+                            {formatPlaySlot(
+                              post.playDate,
+                              post.startTime,
+                              post.endTime,
+                            )}
+                          </div>
+                          <div className="admin-mgmt-sub-text">
+                            {post.fieldName ?? '—'} • {post.currentPlayers}/
+                            {post.maxPlayers ?? '—'}
+                          </div>
+                        </td>
+                        <td>{formatAdminDateTime(post.createdAt, locale)}</td>
+                        <td>
+                          <span
+                            className={`admin-mgmt-badge admin-mgmt-badge--${postTone}`}
+                          >
+                            {renderPostStatusLabel(post.status)}
+                          </span>
+                        </td>
+                        <td>
+                          <div className="admin-mgmt-actions">
+                            <button
+                              type="button"
+                              className="admin-mgmt-btn"
+                              onClick={() => openPostModal(post)}
+                            >
+                              <EyeOutlined />
+                              {t('admin.actionInspect')}
+                            </button>
+                            {post.status !== 'closed' && (
+                              <button
+                                type="button"
+                                className="admin-mgmt-btn admin-mgmt-btn--danger"
+                                disabled={isSubmitting}
+                                onClick={() => confirmRemovePost(post)}
+                              >
+                                <DeleteOutlined />
+                                {t('admin.actionRemovePost')}
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )
+        ) : (reviewsData?.items.length ?? 0) === 0 ? (
+          <div className="admin-mgmt-empty">
+            <p>{t('admin.emptyReviews')}</p>
+            <button
+              type="button"
+              className="admin-mgmt-btn"
+              onClick={resetFilters}
+            >
+              {t('admin.actionResetFilters')}
+            </button>
+          </div>
+        ) : (
+          <div className="admin-mgmt-table-wrap">
+            <table className="admin-mgmt-table">
+              <thead>
+                <tr>
+                  <th>{t('admin.colReviewContent')}</th>
+                  <th>{t('admin.colAuthor')}</th>
+                  <th>{t('admin.colTarget')}</th>
+                  <th>{t('admin.colCreatedAt')}</th>
+                  <th>{t('admin.colStatus')}</th>
+                  <th>{t('admin.colActions')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {reviewsData?.items.map((review) => {
+                  const tone = getReviewStatusBadgeTone(
+                    review.moderationStatus,
+                  )
+                  return (
+                    <tr key={`${review.reviewType}-${review.id}`}>
+                      <td>
+                        <div className="admin-mgmt-primary-text">
+                          <StarFilled
+                            style={{ color: '#fbbf24', marginRight: 5 }}
+                          />
+                          {review.rating}/5 •{' '}
+                          {review.reviewType === 'field'
+                            ? t('admin.reviewTypeField')
+                            : t('admin.reviewTypeUser')}
+                        </div>
+                        <div className="admin-mgmt-sub-text">
+                          {review.comment || '—'}
+                        </div>
+                      </td>
+                      <td>
+                        <div className="admin-mgmt-primary-text">
+                          {review.authorName}
+                        </div>
+                        <div className="admin-mgmt-sub-text">
+                          {review.authorEmail}
+                        </div>
+                      </td>
+                      <td>
+                        <div className="admin-mgmt-primary-text">
+                          {review.targetName}
+                        </div>
+                        <div
+                          className="admin-mgmt-sub-text"
+                          style={{ color: '#f87171' }}
+                        >
+                          {review.flagReason ?? '—'}
+                        </div>
+                      </td>
+                      <td>{formatAdminDateTime(review.createdAt, locale)}</td>
+                      <td>
+                        <span
+                          className={`admin-mgmt-badge admin-mgmt-badge--${tone}`}
+                        >
+                          {renderReviewStatusLabel(review.moderationStatus)}
+                        </span>
+                      </td>
+                      <td>
+                        <div className="admin-mgmt-actions">
+                          <button
+                            type="button"
+                            className="admin-mgmt-btn admin-mgmt-btn--primary"
+                            onClick={() => {
+                              setModerationNote('')
+                              openReviewModal(review)
+                            }}
+                          >
+                            <EyeOutlined />
+                            {t('admin.actionModerate')}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
 
-      {/* Modal chi tiết Người dùng */}
+        {/* Pagination Footer */}
+        {currentMeta && currentMeta.total > 0 && (
+          <div className="admin-mgmt-pagination">
+            <span>
+              {t('admin.paginationShowing', {
+                page: currentMeta.page,
+                totalPages: currentMeta.totalPages,
+                total: currentMeta.total,
+              })}
+            </span>
+            <div className="admin-mgmt-actions">
+              <button
+                type="button"
+                className="admin-mgmt-btn"
+                disabled={page <= 1 || isLoading}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+              >
+                {t('admin.paginationPrev')}
+              </button>
+              <button
+                type="button"
+                className="admin-mgmt-btn"
+                disabled={page >= currentMeta.totalPages || isLoading}
+                onClick={() =>
+                  setPage((p) => Math.min(currentMeta.totalPages, p + 1))
+                }
+              >
+                {t('admin.paginationNext')}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* User Detail Modal */}
       <Modal
         open={Boolean(selectedUser)}
-        title={t('admin.userDetailTitle', { defaultValue: 'Chi tiết hồ sơ người dùng' })}
-        onCancel={() => setSelectedUser(null)}
+        title={t('admin.userDetailEyebrow')}
+        onCancel={closeUserModal}
         footer={[
-          <Button key="close" onClick={() => setSelectedUser(null)}>
-            {t('common.close', { defaultValue: 'Đóng' })}
-          </Button>,
-          selectedUser && (
-            <Button
+          <button
+            key="close"
+            type="button"
+            className="admin-mgmt-btn"
+            onClick={closeUserModal}
+          >
+            {t('admin.actionClose')}
+          </button>,
+          selectedUser && selectedUser.role !== 'admin' ? (
+            <button
               key="toggle"
-              danger={selectedUser.status !== 'suspended'}
+              type="button"
+              style={{ marginLeft: 8 }}
+              disabled={isSubmitting}
+              className={`admin-mgmt-btn ${
+                selectedUser.status === 'suspended'
+                  ? 'admin-mgmt-btn--primary'
+                  : 'admin-mgmt-btn--danger'
+              }`}
               onClick={() => {
-                const u = selectedUser
-                setSelectedUser(null)
-                toggleUserStatus(u)
+                const target = selectedUser
+                closeUserModal()
+                confirmToggleUser(target)
               }}
             >
               {selectedUser.status === 'suspended'
-                ? t('admin.activate', { defaultValue: 'Mở khóa tài khoản' })
-                : t('admin.suspend', { defaultValue: 'Tạm khóa tài khoản' })}
-            </Button>
-          ),
+                ? t('admin.actionUnlock')
+                : t('admin.actionLock')}
+            </button>
+          ) : null,
         ]}
       >
         {selectedUser && (
-          <Descriptions column={1} bordered size="small" style={{ marginTop: 12 }}>
-            <Descriptions.Item label={t('admin.userId', { defaultValue: 'Mã tài khoản' })}>
-              <b>{selectedUser.id}</b>
+          <div>
+            {selectedUserDetail && (
+              <div className="admin-mgmt-modal-stats">
+                <div className="admin-mgmt-modal-stat-box">
+                  <div className="admin-mgmt-modal-stat-val">
+                    {selectedUserDetail.stats.bookingsCount}
+                  </div>
+                  <div className="admin-mgmt-modal-stat-lbl">
+                    {t('admin.userStatsBookings')}
+                  </div>
+                </div>
+                <div className="admin-mgmt-modal-stat-box">
+                  <div className="admin-mgmt-modal-stat-val">
+                    {selectedUserDetail.stats.fieldsCount}
+                  </div>
+                  <div className="admin-mgmt-modal-stat-lbl">
+                    {t('admin.userStatsFields')}
+                  </div>
+                </div>
+                <div className="admin-mgmt-modal-stat-box">
+                  <div className="admin-mgmt-modal-stat-val">
+                    {selectedUserDetail.stats.postsCount}
+                  </div>
+                  <div className="admin-mgmt-modal-stat-lbl">
+                    {t('admin.userStatsPosts')}
+                  </div>
+                </div>
+                <div className="admin-mgmt-modal-stat-box">
+                  <div className="admin-mgmt-modal-stat-val">
+                    {selectedUserDetail.reliabilityScore}
+                  </div>
+                  <div className="admin-mgmt-modal-stat-lbl">
+                    {t('admin.userReliability')}
+                  </div>
+                </div>
+              </div>
+            )}
+            <Descriptions column={1} bordered size="small">
+              <Descriptions.Item label="ID">
+                <code>{selectedUser.id}</code>
+              </Descriptions.Item>
+              <Descriptions.Item label={t('admin.colUser')}>
+                <strong>{selectedUser.fullName}</strong>
+              </Descriptions.Item>
+              <Descriptions.Item label={t('admin.email')}>
+                {selectedUser.email}
+              </Descriptions.Item>
+              <Descriptions.Item label={t('admin.phone')}>
+                {selectedUserDetail?.phone ?? selectedUser.phone ?? '—'}
+              </Descriptions.Item>
+              <Descriptions.Item label={t('admin.colRole')}>
+                {renderRoleLabel(selectedUser.role)}
+              </Descriptions.Item>
+              <Descriptions.Item label={t('admin.colReports')}>
+                {selectedUser.reportsCount}
+              </Descriptions.Item>
+              <Descriptions.Item label={t('admin.colCreatedAt')}>
+                {formatAdminDateTime(selectedUser.createdAt, locale)}
+              </Descriptions.Item>
+              <Descriptions.Item label={t('admin.colStatus')}>
+                {renderUserStatusLabel(selectedUser.status)}
+              </Descriptions.Item>
+              {isDetailLoading && (
+                <Descriptions.Item label="...">{'Loading...'}</Descriptions.Item>
+              )}
+            </Descriptions>
+          </div>
+        )}
+      </Modal>
+
+      {/* Post Detail Modal */}
+      <Modal
+        open={Boolean(selectedPost)}
+        title={t('admin.postDetailEyebrow')}
+        onCancel={closePostModal}
+        footer={[
+          <button
+            key="close"
+            type="button"
+            className="admin-mgmt-btn"
+            onClick={closePostModal}
+          >
+            {t('admin.actionClose')}
+          </button>,
+          selectedPost && selectedPost.status !== 'closed' ? (
+            <button
+              key="remove"
+              type="button"
+              style={{ marginLeft: 8 }}
+              disabled={isSubmitting}
+              className="admin-mgmt-btn admin-mgmt-btn--danger"
+              onClick={() => {
+                const target = selectedPost
+                closePostModal()
+                confirmRemovePost(target)
+              }}
+            >
+              <DeleteOutlined />
+              {t('admin.actionRemovePost')}
+            </button>
+          ) : null,
+        ]}
+      >
+        {selectedPost && (
+          <Descriptions
+            column={1}
+            bordered
+            size="small"
+            style={{ marginTop: 12 }}
+          >
+            <Descriptions.Item label="ID">
+              <code>{selectedPost.id}</code>
             </Descriptions.Item>
-            <Descriptions.Item label={t('admin.fullName', { defaultValue: 'Họ và tên' })}>
-              {selectedUser.name}
+            <Descriptions.Item label={t('admin.colPostTitle')}>
+              <strong>{selectedPost.title}</strong>
             </Descriptions.Item>
-            <Descriptions.Item label={t('admin.email', { defaultValue: 'Email đăng nhập' })}>
-              {selectedUser.email}
+            <Descriptions.Item label={t('admin.colAuthor')}>
+              {selectedPost.authorName} ({selectedPost.authorEmail})
             </Descriptions.Item>
-            <Descriptions.Item label={t('admin.role', { defaultValue: 'Vai trò' })}>
-              <Tag>{selectedUser.role.toUpperCase()}</Tag>
+            <Descriptions.Item label={t('admin.colMatchSchedule')}>
+              {formatPlaySlot(
+                selectedPost.playDate,
+                selectedPost.startTime,
+                selectedPost.endTime,
+              )}{' '}
+              • {selectedPost.fieldName ?? '—'}
             </Descriptions.Item>
-            <Descriptions.Item label={t('admin.joinedAt', { defaultValue: 'Ngày tham gia' })}>
-              {selectedUser.joinedAt}
+            <Descriptions.Item label={t('admin.colStatus')}>
+              {renderPostStatusLabel(selectedPost.status)}
             </Descriptions.Item>
-            <Descriptions.Item label={t('admin.reportCount', { defaultValue: 'Lượt bị tố cáo' })}>
-              {selectedUser.reports}
-            </Descriptions.Item>
-            <Descriptions.Item label={t('admin.accountStatus', { defaultValue: 'Trạng thái' })}>
-              <Tag color={selectedUser.status === 'active' ? 'green' : 'red'}>
-                {selectedUser.status === 'active'
-                  ? t('admin.statusActive', { defaultValue: 'Hoạt động bình thường' })
-                  : t('admin.statusSuspended', { defaultValue: 'Đang bị tạm khóa' })}
-              </Tag>
+            <Descriptions.Item label={t('admin.pitchDescription')}>
+              {selectedPost.content}
             </Descriptions.Item>
           </Descriptions>
         )}
       </Modal>
 
-      {/* Modal chi tiết Nội dung vi phạm */}
+      {/* Review Moderation Modal */}
       <Modal
-        open={Boolean(selectedContent)}
-        title={t('admin.contentDetailTitle', { defaultValue: 'Ngữ cảnh nội dung bị báo cáo' })}
-        onCancel={() => setSelectedContent(null)}
+        open={Boolean(selectedReview)}
+        title={t('admin.reviewDetailEyebrow')}
+        onCancel={closeReviewModal}
         footer={[
-          <Button key="close" onClick={() => setSelectedContent(null)}>
-            {t('common.close', { defaultValue: 'Đóng' })}
-          </Button>,
-          selectedContent && selectedContent.status === 'pending' && (
-            <Button
-              key="remove"
-              danger
-              icon={<DeleteOutlined />}
-              onClick={() => {
-                const c = selectedContent
-                setSelectedContent(null)
-                handleModerateContent(c)
-              }}
+          <button
+            key="close"
+            type="button"
+            className="admin-mgmt-btn"
+            onClick={closeReviewModal}
+          >
+            {t('admin.actionClose')}
+          </button>,
+          selectedReview ? (
+            <button
+              key="dismiss"
+              type="button"
+              style={{ marginLeft: 8 }}
+              disabled={isSubmitting}
+              className="admin-mgmt-btn admin-mgmt-btn--primary"
+              onClick={() =>
+                void handleModerateReview(
+                  selectedReview,
+                  'dismiss',
+                  moderationNote,
+                )
+              }
             >
-              {t('admin.removeContent', { defaultValue: 'Gỡ nội dung vi phạm' })}
-            </Button>
-          ),
+              <CheckCircleOutlined />
+              {t('admin.actionDismissReport')}
+            </button>
+          ) : null,
+          selectedReview &&
+          selectedReview.moderationStatus === 'pending' ? (
+            <button
+              key="hide"
+              type="button"
+              style={{ marginLeft: 8 }}
+              disabled={isSubmitting}
+              className="admin-mgmt-btn admin-mgmt-btn--danger"
+              onClick={() =>
+                void handleModerateReview(
+                  selectedReview,
+                  'hide',
+                  moderationNote,
+                )
+              }
+            >
+              <DeleteOutlined />
+              {t('admin.actionHideReview')}
+            </button>
+          ) : null,
         ]}
       >
-        {selectedContent && (
-          <Descriptions column={1} bordered size="small" style={{ marginTop: 12 }}>
-            <Descriptions.Item label={t('admin.reportId', { defaultValue: 'Mã báo cáo' })}>
-              <b>{selectedContent.id}</b>
-            </Descriptions.Item>
-            <Descriptions.Item label={t('admin.reportType', { defaultValue: 'Loại nội dung' })}>
-              <Tag color={selectedContent.type === 'post' ? 'blue' : 'purple'}>
-                {selectedContent.type.toUpperCase()}
-              </Tag>
-            </Descriptions.Item>
-            <Descriptions.Item label={t('admin.author', { defaultValue: 'Tác giả' })}>
-              {selectedContent.author}
-            </Descriptions.Item>
-            <Descriptions.Item label={t('admin.reportedAt', { defaultValue: 'Thời gian tố cáo' })}>
-              {selectedContent.reportedAt}
-            </Descriptions.Item>
-            <Descriptions.Item label={t('admin.violationReason', { defaultValue: 'Lý do vi phạm' })}>
-              <b style={{ color: '#ff4d4f' }}>{selectedContent.reason}</b>
-            </Descriptions.Item>
-            <Descriptions.Item label={t('admin.contentDetail', { defaultValue: 'Nội dung chi tiết' })}>
-              <div style={{ background: '#141414', padding: 8, borderRadius: 4 }}>
-                {selectedContent.content}
-              </div>
-            </Descriptions.Item>
-            <Descriptions.Item label={t('admin.tableStatus', { defaultValue: 'Trạng thái xử lý' })}>
-              <Tag color={selectedContent.status === 'pending' ? 'gold' : 'green'}>
-                {selectedContent.status === 'pending'
-                  ? t('admin.statusPending', { defaultValue: 'Chờ xử lý' })
-                  : t('admin.statusResolved', { defaultValue: 'Đã giải quyết' })}
-              </Tag>
-            </Descriptions.Item>
-          </Descriptions>
+        {selectedReview && (
+          <div style={{ marginTop: 12 }}>
+            <Descriptions column={1} bordered size="small">
+              <Descriptions.Item label="ID">
+                <code>{selectedReview.id}</code>
+              </Descriptions.Item>
+              <Descriptions.Item label={t('admin.requestType')}>
+                {selectedReview.reviewType === 'field'
+                  ? t('admin.reviewTypeField')
+                  : t('admin.reviewTypeUser')}{' '}
+                ({selectedReview.rating}/5 ★)
+              </Descriptions.Item>
+              <Descriptions.Item label={t('admin.colAuthor')}>
+                {selectedReview.authorName} ({selectedReview.authorEmail})
+              </Descriptions.Item>
+              <Descriptions.Item label={t('admin.colTarget')}>
+                <strong>{selectedReview.targetName}</strong>
+              </Descriptions.Item>
+              <Descriptions.Item label={t('admin.rejectReason')}>
+                <span style={{ color: '#f87171', fontWeight: 600 }}>
+                  {selectedReview.flagReason ?? '—'}
+                </span>
+              </Descriptions.Item>
+              <Descriptions.Item label={t('admin.colReviewContent')}>
+                {selectedReview.comment || '—'}
+              </Descriptions.Item>
+              <Descriptions.Item label={t('admin.colStatus')}>
+                {renderReviewStatusLabel(selectedReview.moderationStatus)}
+              </Descriptions.Item>
+            </Descriptions>
+
+            <div style={{ marginTop: 14 }}>
+              <label
+                htmlFor="admin-moderation-note"
+                style={{ fontSize: 12, fontWeight: 600 }}
+              >
+                {t('admin.moderationNoteLabel')}
+              </label>
+              <textarea
+                id="admin-moderation-note"
+                className="admin-mgmt-note-area"
+                value={moderationNote}
+                onChange={(e) => setModerationNote(e.target.value)}
+                placeholder={t('admin.moderationNotePlaceholder')}
+              />
+            </div>
+          </div>
         )}
       </Modal>
     </section>
