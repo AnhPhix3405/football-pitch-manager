@@ -89,7 +89,8 @@ Tài liệu chi tiết toàn bộ các API HTTP REST và WebSocket Gateway của
 | | `GET` | `/owner-profiles/me` | User / Active | Lấy hồ sơ chủ sân của tài khoản hiện tại |
 | | `PATCH` | `/owner-profiles/me` | User / Active | Cập nhật hồ sơ chủ sân của tài khoản hiện tại |
 | | `GET` | `/owner-profiles/:id` | Public | Xem hồ sơ công khai của một chủ sân |
-| **Phê duyệt quản trị (Admin)**| `GET` | `/admin/owner-approvals` | Admin | Lấy danh sách hồ sơ đăng ký chủ sân cần duyệt |
+| **Phê duyệt quản trị (Admin)**| `GET` | `/admin/overview` | Admin | Lấy số liệu tổng quan vận hành hệ thống (KPI, biểu đồ, health, queue, audit) |
+| | `GET` | `/admin/owner-approvals` | Admin | Lấy danh sách hồ sơ đăng ký chủ sân cần duyệt |
 | | `GET` | `/admin/owner-approvals/:id` | Admin | Xem chi tiết hồ sơ đăng ký chủ sân |
 | | `POST` | `/admin/owner-approvals/:id/approve` | Admin | Phê duyệt hồ sơ đăng ký chủ sân |
 | | `POST` | `/admin/owner-approvals/:id/reject` | Admin | Từ chối hồ sơ đăng ký chủ sân |
@@ -953,7 +954,105 @@ Tài liệu chi tiết toàn bộ các API HTTP REST và WebSocket Gateway của
 
 ---
 
-### 3.6. Phê Duyệt Quản Trị (Admin Approvals)
+### 3.6. Quản Trị Hệ Thống & Phê Duyệt (Admin Overview & Approvals)
+
+#### 3.6.0. Lấy số liệu tổng quan vận hành hệ thống (`GET /admin/overview`)
+- **Quyền truy cập:** `admin` (Active)
+- **Query Parameters (`AdminOverviewQueryDto`):**
+  - `days` *(number, optional, default: `30`, min: `7`, max: `90`)*: Số ngày lấy dữ liệu biểu đồ hoạt động (`7`, `14`, `30`).
+  - `queueLimit` *(number, optional, default: `5`, min: `1`, max: `20`)*: Số lượng bản ghi tối đa trong hàng đợi ưu tiên.
+  - `auditLimit` *(number, optional, default: `10`, min: `1`, max: `50`)*: Số lượng sự kiện audit gần đây.
+- **Response (`200 OK` - `AdminOverviewResponseDto`):**
+  ```json
+  {
+    "success": true,
+    "data": {
+      "metrics": {
+        "users": {
+          "total": 1250,
+          "newThisMonth": 84,
+          "previousMonth": 72,
+          "growthPercent": 16.67,
+          "byRole": {
+            "user": 1180,
+            "owner": 68,
+            "admin": 2
+          }
+        },
+        "fields": {
+          "active": 148,
+          "total": 165,
+          "pending": 12,
+          "newThisMonth": 9
+        },
+        "gmv": {
+          "currentMonthGmv": 248000000,
+          "previousMonthGmv": 213000000,
+          "growthPercent": 16.43,
+          "totalPaidRevenue": 185000000
+        },
+        "queue": {
+          "totalPending": 15,
+          "pendingOwnerApprovals": 6,
+          "pendingFieldApprovals": 7,
+          "flaggedReviews": 2
+        }
+      },
+      "activityTimeline": [
+        {
+          "date": "2026-10-08",
+          "bookingsCount": 24,
+          "gmv": 9600000,
+          "newUsersCount": 5
+        }
+      ],
+      "systemHealth": {
+        "status": "operational",
+        "uptimeSeconds": 86400,
+        "services": [
+          {
+            "name": "API Gateway",
+            "status": "up",
+            "score": 100,
+            "latencyMs": 2
+          },
+          {
+            "name": "Database Cluster",
+            "status": "up",
+            "score": 99,
+            "latencyMs": 8
+          },
+          {
+            "name": "Realtime Service",
+            "status": "up",
+            "score": 99,
+            "latencyMs": 3
+          }
+        ]
+      },
+      "priorityQueue": [
+        {
+          "id": "d3b07384-d113-40e1-95b6-75399589d6e4",
+          "category": "OWNER_APPROVAL",
+          "subType": "owner_register",
+          "title": "Sân Bóng Đá Tân Bình Sport Complex",
+          "requesterEmail": "owner@example.com",
+          "status": "pending",
+          "createdAt": "2026-11-05T10:00:00.000Z"
+        }
+      ],
+      "recentAudits": [
+        {
+          "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+          "action": "APPROVE_FIELD",
+          "actor": "admin@pitchmaster.vn",
+          "target": "Sân bóng Chánh Hưng",
+          "timestamp": "2026-11-06T09:30:00.000Z"
+        }
+      ]
+    }
+  }
+  ```
 
 #### 3.6.1. Lấy danh sách duyệt hồ sơ chủ sân (`GET /admin/owner-approvals`)
 - **Quyền truy cập:** `admin` (Active)

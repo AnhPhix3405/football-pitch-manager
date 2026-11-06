@@ -13,7 +13,7 @@ export * from './useOwnerOpeningHours'
 export * from './useOwnerBlockedSlots'
 export * from './useOwnerPricing'
 export * from '../features/admin/hooks/useAdminApprovals'
+export * from './useAdminOverview'
 export * from './useChatSocket'
 export * from './useChatConversations'
 export * from './useCreatePost'
-

@@ -9,16 +9,32 @@ import type {
   ReviewerSummary,
   TargetOwnerProfile,
 } from '../interface/admin.interface'
+import type {
+  AdminOverviewData,
+  AdminOverviewQueryParams,
+} from '../interface/admin-overview.interface'
 
 export type {
   AdminApprovalQueryParams,
   AdminFieldApprovalItem,
+  AdminOverviewData,
+  AdminOverviewQueryParams,
   AdminOwnerApprovalItem,
   AdminOwnerApprovalListResponse,
   AdminTargetField,
   RequesterSummary,
   ReviewerSummary,
   TargetOwnerProfile,
+}
+
+export async function getAdminOverview(
+  params?: AdminOverviewQueryParams,
+): Promise<AdminOverviewData> {
+  const response = await apiClient.get<ApiResponse<AdminOverviewData>>(
+    '/admin/overview',
+    { params },
+  )
+  return response.data.data
 }
 
 export async function getOwnerApprovals(params?: AdminApprovalQueryParams): Promise<AdminOwnerApprovalListResponse> {
