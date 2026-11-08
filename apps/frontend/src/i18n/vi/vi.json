@@ -23,7 +23,15 @@
     "reports": "Báo cáo & Audit",
     "ownerApprovals": "Duyệt chủ sân",
     "fieldApprovals": "Duyệt sân bóng",
-    "timeline": "Lịch vận hành"
+    "timeline": "Lịch vận hành",
+    "portalAdmin": "Cổng quản trị",
+    "portalOwner": "Quản lý sân",
+    "portalApp": "PitchMaster",
+    "overview": "Tổng quan",
+    "sectionOverview": "TỔNG QUAN",
+    "sectionApprovals": "KIỂM DUYỆT",
+    "sectionGovernance": "QUẢN TRỊ & BÁO CÁO",
+    "operational": "HỆ THỐNG HOẠT ĐỘNG"
   },
   "common": {
     "online": "HỆ THỐNG TRỰC TUYẾN",
@@ -430,8 +438,14 @@
   "admin": {
     "dashboardTitle": "Command Center",
     "dashboardSubtitle": "Giám sát hoạt động và tình trạng toàn hệ thống.",
-    "approvalsTitle": "Phê duyệt chủ sân",
+    "approvalsTitle": "Phê duyệt chủ sân & sân",
     "approvalsSubtitle": "Duyệt hồ sơ đăng ký hợp tác từ các cụm sân mới.",
+    "kpiPending": "Chờ phê duyệt",
+    "kpiApproved": "Đã phê duyệt",
+    "kpiRejected": "Đã từ chối",
+    "kpiTotal": "Tổng hồ sơ",
+    "quickReasons": "Lý do phổ biến:",
+    "copySuccess": "Đã sao chép vào bộ nhớ tạm",
     "managementTitle": "Quản lý hệ thống",
     "managementSubtitle": "Quản lý cơ sở dữ liệu người dùng và phân quyền.",
     "reportsTitle": "Báo cáo & Audit",

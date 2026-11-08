@@ -23,7 +23,15 @@
     "reports": "Reports & Audit",
     "ownerApprovals": "Owner Approvals",
     "fieldApprovals": "Field Approvals",
-    "timeline": "Operations Timeline"
+    "timeline": "Operations Timeline",
+    "portalAdmin": "Admin Portal",
+    "portalOwner": "Owner Portal",
+    "portalApp": "PitchMaster",
+    "overview": "Overview",
+    "sectionOverview": "OVERVIEW",
+    "sectionApprovals": "VERIFICATION",
+    "sectionGovernance": "GOVERNANCE & REPORTS",
+    "operational": "SYSTEM OPERATIONAL"
   },
   "common": {
     "online": "SYSTEM ONLINE",
@@ -430,8 +438,14 @@
   "admin": {
     "dashboardTitle": "Command Center",
     "dashboardSubtitle": "Monitor operations and whole system status.",
-    "approvalsTitle": "Owner Approvals",
+    "approvalsTitle": "Partner & Field Approvals",
     "approvalsSubtitle": "Review registration applications from new pitch complexes.",
+    "kpiPending": "Pending Verification",
+    "kpiApproved": "Approved",
+    "kpiRejected": "Rejected",
+    "kpiTotal": "Total Requests",
+    "quickReasons": "Common reasons:",
+    "copySuccess": "Copied to clipboard",
     "managementTitle": "System Management",
     "managementSubtitle": "Manage user database and platform permissions.",
     "reportsTitle": "Reports & Audit",

@@ -1,0 +1,402 @@
+.admin-approvals-page {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  color: #eaf4ed;
+  padding-bottom: 32px;
+}
+
+.admin-approvals-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.admin-approvals-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #28c96f;
+  margin-bottom: 6px;
+}
+
+.admin-approvals-eyebrow__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #28c96f;
+  box-shadow: 0 0 6px #28c96f;
+}
+
+.admin-approvals-title {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #f4faf6;
+}
+
+.admin-approvals-subtitle {
+  margin: 6px 0 0;
+  font-size: 14px;
+  color: #92ab9d;
+}
+
+/* KPI Summary Grid */
+.admin-approvals-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+}
+
+.admin-approvals-kpi-card {
+  background: linear-gradient(180deg, rgba(23, 35, 29, 0.95), rgba(16, 26, 21, 0.98));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.admin-approvals-kpi-card:hover {
+  transform: translateY(-2px);
+}
+
+.admin-approvals-kpi-card--pending {
+  border-color: rgba(245, 158, 11, 0.35);
+  box-shadow: 0 4px 20px rgba(245, 158, 11, 0.06);
+}
+
+.admin-approvals-kpi-card--approved {
+  border-color: rgba(40, 201, 111, 0.32);
+  box-shadow: 0 4px 20px rgba(40, 201, 111, 0.06);
+}
+
+.admin-approvals-kpi-card--rejected {
+  border-color: rgba(239, 68, 68, 0.32);
+  box-shadow: 0 4px 20px rgba(239, 68, 68, 0.06);
+}
+
+.admin-approvals-kpi-card--total {
+  border-color: rgba(148, 163, 184, 0.25);
+}
+
+.admin-approvals-kpi-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #8da697;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.admin-approvals-kpi-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1.1;
+}
+
+.admin-approvals-kpi-sub {
+  font-size: 12px;
+  color: #799484;
+}
+
+/* Toolbar */
+.admin-approvals-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  background: rgba(20, 31, 25, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  backdrop-filter: blur(8px);
+}
+
+.admin-approvals-toolbar__left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.admin-approvals-toolbar__right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+/* Table Container & Antd Overrides */
+.admin-approvals-table-wrap {
+  background: rgba(17, 27, 21, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.24);
+}
+
+.admin-approvals-table .ant-table {
+  background: transparent !important;
+  color: #eaf4ed !important;
+}
+
+.admin-approvals-table .ant-table-thead > tr > th {
+  background: rgba(12, 20, 16, 0.95) !important;
+  color: #8fa899 !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.06em !important;
+  text-transform: uppercase !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  padding: 14px 16px !important;
+}
+
+.admin-approvals-table .ant-table-tbody > tr > td {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+  padding: 14px 16px !important;
+  color: #eaf4ed !important;
+  transition: background 0.15s ease !important;
+}
+
+.admin-approvals-table .ant-table-tbody > tr:hover > td {
+  background: rgba(40, 201, 111, 0.05) !important;
+}
+
+.admin-approvals-table .ant-pagination {
+  margin: 16px 20px !important;
+}
+
+.admin-approvals-table .ant-pagination-item {
+  background: transparent !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+.admin-approvals-table .ant-pagination-item a {
+  color: #8fa899 !important;
+}
+
+.admin-approvals-table .ant-pagination-item-active {
+  border-color: #28c96f !important;
+  background: rgba(40, 201, 111, 0.12) !important;
+}
+
+.admin-approvals-table .ant-pagination-item-active a {
+  color: #28c96f !important;
+}
+
+/* Cell Components */
+.approval-partner-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.approval-partner-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(40, 201, 111, 0.2), rgba(20, 100, 55, 0.3));
+  border: 1px solid rgba(40, 201, 111, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 700;
+  color: #28c96f;
+  flex-shrink: 0;
+}
+
+.approval-partner-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.approval-partner-name {
+  font-weight: 600;
+  font-size: 14px;
+  color: #ffffff;
+}
+
+.approval-license-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: #8da697;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+}
+
+.approval-contact-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.approval-contact-name {
+  font-weight: 500;
+  color: #eaf4ed;
+}
+
+.approval-contact-sub {
+  font-size: 12px;
+  color: #799484;
+}
+
+.approval-bank-badge {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 2px;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 12px;
+}
+
+.approval-status-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.approval-status-tag--pending {
+  background: rgba(245, 158, 11, 0.12);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.approval-status-tag--pending .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #fbbf24;
+  box-shadow: 0 0 6px #fbbf24;
+}
+
+.approval-status-tag--approved {
+  background: rgba(40, 201, 111, 0.12);
+  color: #4ade80;
+  border: 1px solid rgba(40, 201, 111, 0.3);
+}
+
+.approval-status-tag--rejected {
+  background: rgba(239, 68, 68, 0.12);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+/* Audit Drawer Styles */
+.admin-audit-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  color: #eaf4ed;
+}
+
+.admin-audit-section {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.admin-audit-section-title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #28c96f;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-audit-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.admin-audit-field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.admin-audit-field-label {
+  font-size: 11px;
+  color: #799484;
+}
+
+.admin-audit-field-value {
+  font-size: 13px;
+  font-weight: 500;
+  color: #ffffff;
+}
+
+.admin-audit-field-value--mono {
+  font-family: ui-monospace, SFMono-Regular, monospace;
+}
+
+.admin-audit-actions {
+  display: flex;
+  gap: 12px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  position: sticky;
+  bottom: 0;
+  background: rgba(18, 28, 22, 0.98);
+  backdrop-filter: blur(8px);
+}
+
+/* Quick Rejection Tags */
+.admin-reject-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.admin-reject-tag-btn {
+  font-size: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #d1e2d7;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.admin-reject-tag-btn:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #fca5a5;
+}

@@ -1,15 +1,23 @@
 import {
+  BankOutlined,
+  CheckCircleOutlined,
   CheckOutlined,
+  ClockCircleOutlined,
+  CloseCircleOutlined,
   CloseOutlined,
+  CopyOutlined,
   EyeOutlined,
+  FileTextOutlined,
   ReloadOutlined,
+  SafetyCertificateOutlined,
   SearchOutlined,
+  ShopOutlined,
+  UserOutlined,
 } from '@ant-design/icons'
 import {
   Alert,
   Button,
   DatePicker,
-  Descriptions,
   Drawer,
   Input,
   Modal,
@@ -18,12 +26,25 @@ import {
   Spin,
   Table,
   Tag,
+  Tooltip,
   message,
 } from 'antd'
+import type { Dayjs } from 'dayjs'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import type { ApprovalRequest } from './admin.data'
+import './AdminApprovalsPage.css'
+import {
+  FIELD_REJECTION_REASONS,
+  OWNER_REJECTION_REASONS,
+} from './constants/admin-approval-reasons.constant'
+import type { DateFilterPreset } from './constants/date-filter.constant'
+import {
+  ADMIN_APPROVALS_PAGE_SIZE,
+  ADMIN_APPROVALS_PAGE_SIZE_OPTIONS,
+} from './constants/pagination.constant'
+import type { ApprovalStatusFilter } from './constants/status-filter.constant'
 import {
   mapFieldApprovalToRequest,
   mapOwnerApprovalToRequest,
@@ -31,26 +52,21 @@ import {
 } from './hooks/useAdminApprovals'
 import { useAdminFieldApprovalDetail } from './hooks/useAdminFieldApprovalDetail'
 import { useAdminOwnerApprovalDetail } from './hooks/useAdminOwnerApprovalDetail'
-import type { Dayjs } from 'dayjs'
-import type { DateFilterPreset } from './constants/date-filter.constant'
-import { getDateRangeFromPreset } from './utils/date-range.util'
-import {
-  ADMIN_APPROVALS_PAGE_SIZE,
-  ADMIN_APPROVALS_PAGE_SIZE_OPTIONS,
-} from './constants/pagination.constant'
 import type {
   AdminFieldApprovalItem,
   AdminOwnerApprovalItem,
 } from './interface/admin.interface'
-import type { ApprovalStatusFilter } from './constants/status-filter.constant'
+import { getDateRangeFromPreset } from './utils/date-range.util'
 
 interface AdminApprovalsPageProps {
   forcedType?: 'owner' | 'field'
 }
 
 export function AdminApprovalsPage({ forcedType }: AdminApprovalsPageProps) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const navigate = useNavigate()
+  const isEn = i18n.language.startsWith('en')
+
   const [type, setType] = useState<'owner' | 'field'>(forcedType || 'owner')
   const [statusFilter, setStatusFilter] = useState<ApprovalStatusFilter>('pending')
   const [query, setQuery] = useState('')
@@ -109,7 +125,7 @@ export function AdminApprovalsPage({ forcedType }: AdminApprovalsPageProps) {
       },
       {
         value: 'custom',
-        label: t('admin.dateFilterCustom', { defaultValue: 'Chọn khoảng thời gian' }),
+        label: t('admin.dateFilterCustom', { defaultValue: 'Tùy chọn khoảng ngày' }),
       },
     ],
     [t],
@@ -140,11 +156,34 @@ export function AdminApprovalsPage({ forcedType }: AdminApprovalsPageProps) {
         item.type === type &&
         (statusFilter !== 'pending' || !resolved.includes(item.id)) &&
         (!query ||
-          `${item.name} ${item.applicant} ${item.phone || ''}`
+          `${item.name} ${item.applicant} ${item.phone || ''} ${item.license || ''}`
             .toLowerCase()
             .includes(query.toLowerCase())),
     )
   }, [mappedApiRequests, query, resolved, statusFilter, type])
+
+  // KPI calculations
+  const kpiStats = useMemo(() => {
+    const pending = mappedApiRequests.filter(
+      (i) => i.status === 'pending' && !resolved.includes(i.id),
+    ).length
+    const approved = mappedApiRequests.filter(
+      (i) => i.status === 'approved' || i.status === 'active' || (i.status === 'pending' && resolved.includes(i.id)),
+    ).length
+    const rejected = mappedApiRequests.filter((i) => i.status === 'rejected').length
+    const totalCount = total || mappedApiRequests.length
+
+    return { pending, approved, rejected, total: totalCount }
+  }, [mappedApiRequests, resolved, total])
+
+  const handleCopyText = useCallback(
+    (text?: string | null) => {
+      if (!text) return
+      void navigator.clipboard.writeText(text)
+      messageApi.success(t('admin.copySuccess', { defaultValue: 'Đã sao chép vào bộ nhớ tạm' }))
+    },
+    [messageApi, t],
+  )
 
   const handleCloseDrawer = useCallback(() => {
     setIsDrawerOpen(false)
@@ -161,13 +200,13 @@ export function AdminApprovalsPage({ forcedType }: AdminApprovalsPageProps) {
         try {
           await fetchOwnerDetail(record.id)
         } catch {
-          messageApi.error(t('admin.loadDetailError', { defaultValue: 'Không thể tải chi tiết hồ sơ phê duyệt' }))
+          messageApi.error(t('admin.loadDetailError', { defaultValue: 'Không thể tải chi tiết hồ sơ' }))
         }
       } else {
         try {
           await fetchFieldDetail(record.id)
         } catch {
-          messageApi.error(t('admin.loadFieldDetailError', { defaultValue: 'Không thể tải chi tiết cụm sân' }))
+          messageApi.error(t('admin.loadFieldDetailError', { defaultValue: 'Không thể tải chi tiết sân' }))
         }
       }
     },
@@ -177,20 +216,32 @@ export function AdminApprovalsPage({ forcedType }: AdminApprovalsPageProps) {
   const handleConfirmApprove = useCallback(
     (request: ApprovalRequest) =>
       Modal.confirm({
-        title: t('admin.confirmApproveTitle', { defaultValue: `Phê duyệt ${request.name}?`, name: request.name }),
-        content: t('admin.confirmApproveContent', { defaultValue: 'Tài khoản hoặc sân sẽ được kích hoạt trên hệ thống.' }),
-        okText: t('admin.approve', { defaultValue: 'Duyệt' }),
+        title: t('admin.confirmApproveTitle', {
+          defaultValue: `Phê duyệt ${request.name}?`,
+          name: request.name,
+        }),
+        content: t('admin.confirmApproveContent', {
+          defaultValue: 'Hồ sơ đối tác sẽ được kích hoạt chính thức trên toàn hệ thống.',
+        }),
+        okText: t('admin.approve', { defaultValue: 'Xác nhận duyệt' }),
         cancelText: t('common.cancel', { defaultValue: 'Hủy' }),
+        okButtonProps: { style: { backgroundColor: '#22c55e', borderColor: '#22c55e' } },
         onOk: async () => {
           try {
             if (request.type === 'owner') {
-              await approve(request.id, t('admin.defaultApproveOwnerNote', { defaultValue: 'Hồ sơ đã được phê duyệt' }))
+              await approve(
+                request.id,
+                t('admin.defaultApproveOwnerNote', { defaultValue: 'Hồ sơ đối tác hợp lệ và đã được phê duyệt' }),
+              )
             } else {
-              await approve(request.id, t('admin.defaultApproveFieldNote', { defaultValue: 'Cụm sân hợp lệ' }))
+              await approve(
+                request.id,
+                t('admin.defaultApproveFieldNote', { defaultValue: 'Cụm sân hợp lệ và đã kích hoạt' }),
+              )
             }
             setResolved((items) => [...items, request.id])
             handleCloseDrawer()
-            messageApi.success(t('admin.approveSuccess', { defaultValue: 'Đã phê duyệt hồ sơ.' }))
+            messageApi.success(t('admin.approveSuccess', { defaultValue: 'Đã phê duyệt hồ sơ thành công.' }))
           } catch (err) {
             messageApi.error(
               err instanceof Error
@@ -213,8 +264,8 @@ export function AdminApprovalsPage({ forcedType }: AdminApprovalsPageProps) {
     const reason =
       rejectionReason.trim() ||
       (rejectModalRecord.type === 'owner'
-        ? t('admin.defaultRejectOwnerReason', { defaultValue: 'Hồ sơ chưa đạt yêu cầu xác minh' })
-        : t('admin.defaultRejectFieldReason', { defaultValue: 'Thông tin cụm sân chưa đạt yêu cầu' }))
+        ? t('admin.defaultRejectOwnerReason', { defaultValue: 'Hồ sơ chưa đạt yêu cầu xác minh pháp lý' })
+        : t('admin.defaultRejectFieldReason', { defaultValue: 'Thông tin cụm sân chưa đạt tiêu chuẩn' }))
 
     try {
       setIsSubmittingReject(true)
@@ -249,10 +300,10 @@ export function AdminApprovalsPage({ forcedType }: AdminApprovalsPageProps) {
         <Alert
           type="success"
           showIcon
-          style={{ marginBottom: 16 }}
-          message={t('admin.alertApprovedTitle', { defaultValue: 'Yêu cầu đã được phê duyệt' })}
+          className="mb-4 rounded-lg border border-green-500/30 bg-green-500/10 text-white"
+          message={<span className="font-semibold text-green-400">{t('admin.alertApprovedTitle', { defaultValue: 'Hồ sơ đã được phê duyệt' })}</span>}
           description={
-            <div style={{ fontSize: 13, marginTop: 4 }}>
+            <div className="mt-1 space-y-1 text-xs text-green-200/80">
               {reviewedAt && (
                 <div>
                   <strong>{t('admin.reviewedAt', { defaultValue: 'Thời điểm duyệt' })}:</strong>{' '}
@@ -280,10 +331,10 @@ export function AdminApprovalsPage({ forcedType }: AdminApprovalsPageProps) {
         <Alert
           type="error"
           showIcon
-          style={{ marginBottom: 16 }}
-          message={t('admin.alertRejectedTitle', { defaultValue: 'Yêu cầu đã bị từ chối' })}
+          className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 text-white"
+          message={<span className="font-semibold text-red-400">{t('admin.alertRejectedTitle', { defaultValue: 'Hồ sơ đã bị từ chối' })}</span>}
           description={
-            <div style={{ fontSize: 13, marginTop: 4 }}>
+            <div className="mt-1 space-y-1 text-xs text-red-200/80">
               {reviewedAt && (
                 <div>
                   <strong>{t('admin.rejectedAt', { defaultValue: 'Thời điểm từ chối' })}:</strong>{' '}
@@ -308,13 +359,17 @@ export function AdminApprovalsPage({ forcedType }: AdminApprovalsPageProps) {
 
     return (
       <Alert
-        type="info"
+        type="warning"
         showIcon
-        style={{ marginBottom: 16 }}
-        message={t('admin.alertPendingTitle', { defaultValue: 'Hồ sơ đang chờ phê duyệt' })}
-        description={t('admin.alertPendingDesc', {
-          defaultValue: 'Vui lòng kiểm tra kỹ thông tin pháp lý và đối tác trước khi phê duyệt.',
-        })}
+        className="mb-4 rounded-lg border border-amber-500/30 bg-amber-500/10 text-white"
+        message={<span className="font-semibold text-amber-400">{t('admin.alertPendingTitle', { defaultValue: 'Hồ sơ đang chờ thẩm định' })}</span>}
+        description={
+          <span className="text-xs text-amber-200/80">
+            {t('admin.alertPendingDesc', {
+              defaultValue: 'Kiểm tra kỹ thông tin pháp nhân kinh doanh và tài khoản thụ hưởng trước khi phê duyệt.',
+            })}
+          </span>
+        }
       />
     )
   }
@@ -322,32 +377,76 @@ export function AdminApprovalsPage({ forcedType }: AdminApprovalsPageProps) {
   const ownerColumns = useMemo(
     () => [
       {
-        title: t('admin.tablePartnerName', { defaultValue: 'TÊN ĐỐI TÁC / DOANH NGHIỆP' }),
+        title: t('admin.tablePartnerName', { defaultValue: 'ĐỐI TÁC / DOANH NGHIỆP' }),
         dataIndex: 'name',
-        render: (val: string) => <b>{val}</b>,
+        render: (val: string, record: ApprovalRequest) => (
+          <div className="approval-partner-cell">
+            <div className="approval-partner-avatar">
+              <ShopOutlined />
+            </div>
+            <div className="approval-partner-info">
+              <span className="approval-partner-name">{val}</span>
+              {record.license ? (
+                <span className="approval-license-chip">
+                  <SafetyCertificateOutlined /> GPKD: {record.license}
+                </span>
+              ) : (
+                <span className="text-xs text-slate-500 italic">
+                  {t('admin.notUpdated', { defaultValue: 'Chưa cập nhật GPKD' })}
+                </span>
+              )}
+            </div>
+          </div>
+        ),
       },
       {
         title: t('admin.tableRequester', { defaultValue: 'NGƯỜI LIÊN HỆ' }),
         dataIndex: 'applicant',
         render: (val: string, record: ApprovalRequest) => (
-          <div>
-            <div>{val}</div>
-            {record.phone && <small style={{ color: '#888' }}>{record.phone}</small>}
+          <div className="approval-contact-cell">
+            <span className="approval-contact-name">{val}</span>
+            {record.phone && (
+              <span className="approval-contact-sub flex items-center gap-1">
+                {record.phone}
+                <Tooltip title={t('common.copy', { defaultValue: 'Sao chép' })}>
+                  <CopyOutlined
+                    className="cursor-pointer text-slate-400 hover:text-green-400"
+                    onClick={() => handleCopyText(record.phone)}
+                  />
+                </Tooltip>
+              </span>
+            )}
           </div>
         ),
       },
       {
-        title: t('admin.tableLegalInfo', { defaultValue: 'GPKD / TÀI KHOẢN' }),
+        title: t('admin.tableLegalInfo', { defaultValue: 'TÀI KHOẢN ĐỐI SOÁT' }),
         render: (_: unknown, record: ApprovalRequest) => (
           <div>
-            <div>{record.license ? `GPKD: ${record.license}` : t('admin.notUpdated', { defaultValue: 'Chưa cập nhật' })}</div>
-            {record.bankAccount && <small style={{ color: '#888' }}>STK: {record.bankAccount}</small>}
+            {record.bankAccount ? (
+              <div className="approval-bank-badge">
+                <span className="text-[10px] text-slate-400 uppercase flex items-center gap-1">
+                  <BankOutlined /> {t('admin.bankAccount', { defaultValue: 'Ngân hàng' })}
+                </span>
+                <span className="text-white font-mono">{record.bankAccount}</span>
+              </div>
+            ) : (
+              <span className="text-xs text-slate-500 italic">
+                {t('admin.notUpdated', { defaultValue: 'Chưa cập nhật' })}
+              </span>
+            )}
           </div>
         ),
       },
       {
         title: t('admin.tableSubmittedAt', { defaultValue: 'NGÀY NỘP' }),
         dataIndex: 'submittedAt',
+        render: (val: string) => (
+          <div className="flex items-center gap-1.5 text-xs text-slate-300">
+            <ClockCircleOutlined className="text-slate-500" />
+            <span>{val}</span>
+          </div>
+        ),
       },
       {
         title: t('admin.tableStatus', { defaultValue: 'TRẠNG THÁI' }),
@@ -356,6 +455,13 @@ export function AdminApprovalsPage({ forcedType }: AdminApprovalsPageProps) {
           const isPending = val === 'pending'
           const isApproved = val === 'approved' || val === 'active'
           const isRejected = val === 'rejected'
+
+          const tagClass = isPending
+            ? 'approval-status-tag--pending'
+            : isApproved
+              ? 'approval-status-tag--approved'
+              : 'approval-status-tag--rejected'
+
           const label = isPending
             ? t('admin.statusPending', { defaultValue: 'Chờ duyệt' })
             : isApproved
@@ -363,27 +469,16 @@ export function AdminApprovalsPage({ forcedType }: AdminApprovalsPageProps) {
               : isRejected
                 ? t('admin.statusRejected', { defaultValue: 'Từ chối' })
                 : val?.toUpperCase()
+
           return (
             <div>
-              <Tag color={isApproved ? 'green' : isRejected ? 'red' : 'gold'}>
+              <span className={`approval-status-tag ${tagClass}`}>
+                {isPending && <span className="dot" />}
                 {label}
-              </Tag>
-              {record.reviewedAt && (
-                <div style={{ fontSize: 11, color: '#888', marginTop: 4 }}>
-                  {record.reviewedAt}
-                </div>
-              )}
+              </span>
               {record.note && (
                 <div
-                  style={{
-                    fontSize: 11,
-                    color: '#666',
-                    maxWidth: 160,
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                    marginTop: 2,
-                  }}
+                  className="mt-1 max-w-[150px] truncate text-[11px] text-slate-400"
                   title={record.note}
                 >
                   {record.note}
@@ -396,72 +491,105 @@ export function AdminApprovalsPage({ forcedType }: AdminApprovalsPageProps) {
       {
         title: t('admin.tableActions', { defaultValue: 'THAO TÁC' }),
         render: (_: unknown, record: ApprovalRequest) => (
-          <div style={{ display: 'flex', gap: 6 }}>
-            <Button size="small" icon={<EyeOutlined />} onClick={() => handleViewDetail(record)}>
-              {t('common.details', { defaultValue: 'Xem' })}
-            </Button>
+          <div className="flex items-center gap-1.5">
+            <Tooltip title={t('common.details', { defaultValue: 'Xem hồ sơ' })}>
+              <Button
+                size="small"
+                icon={<EyeOutlined />}
+                onClick={() => handleViewDetail(record)}
+                className="border-slate-700 bg-slate-800/80 text-slate-200 hover:border-green-400 hover:text-green-400"
+              />
+            </Tooltip>
             {record.status === 'pending' && (
               <>
-                <Button
-                  size="small"
-                  type="primary"
-                  icon={<CheckOutlined />}
-                  onClick={() => handleConfirmApprove(record)}
-                >
-                  {t('admin.approve', { defaultValue: 'Duyệt' })}
-                </Button>
-                <Button
-                  size="small"
-                  danger
-                  icon={<CloseOutlined />}
-                  onClick={() => handleOpenRejectModal(record)}
-                >
-                  {t('admin.reject', { defaultValue: 'Từ chối' })}
-                </Button>
+                <Tooltip title={t('admin.approve', { defaultValue: 'Duyệt nhanh' })}>
+                  <Button
+                    size="small"
+                    type="primary"
+                    icon={<CheckOutlined />}
+                    onClick={() => handleConfirmApprove(record)}
+                    className="bg-green-600 hover:bg-green-500 border-none"
+                  />
+                </Tooltip>
+                <Tooltip title={t('admin.reject', { defaultValue: 'Từ chối' })}>
+                  <Button
+                    size="small"
+                    danger
+                    icon={<CloseOutlined />}
+                    onClick={() => handleOpenRejectModal(record)}
+                  />
+                </Tooltip>
               </>
             )}
           </div>
         ),
       },
     ],
-    [handleConfirmApprove, handleOpenRejectModal, handleViewDetail, t],
+    [handleConfirmApprove, handleCopyText, handleOpenRejectModal, handleViewDetail, t],
   )
 
   const fieldColumns = useMemo(
     () => [
       {
-        title: t('admin.tableFieldName', { defaultValue: 'TÊN SÂN BÓNG' }),
+        title: t('admin.tableFieldName', { defaultValue: 'TÊN CỤM SÂN BÓNG' }),
         dataIndex: 'name',
         render: (val: string, record: ApprovalRequest) => (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <b>{val}</b>
-            {record.requestType && (
-              <Tag color={record.requestType === 'field_create' ? 'cyan' : 'purple'}>
-                {record.requestType === 'field_create'
-                  ? t('admin.fieldTypeCreate', { defaultValue: 'Tạo mới' })
-                  : t('admin.fieldTypeUpdate', { defaultValue: 'Cập nhật' })}
-              </Tag>
+          <div className="approval-partner-cell">
+            <div className="approval-partner-avatar">
+              <ShopOutlined />
+            </div>
+            <div className="approval-partner-info">
+              <div className="flex items-center gap-2">
+                <span className="approval-partner-name">{val}</span>
+                {record.requestType && (
+                  <Tag color={record.requestType === 'field_create' ? 'cyan' : 'purple'}>
+                    {record.requestType === 'field_create'
+                      ? t('admin.fieldTypeCreate', { defaultValue: 'Tạo mới' })
+                      : t('admin.fieldTypeUpdate', { defaultValue: 'Cập nhật' })}
+                  </Tag>
+                )}
+              </div>
+              <span className="text-xs text-slate-400 truncate max-w-xs">{record.location}</span>
+            </div>
+          </div>
+        ),
+      },
+      {
+        title: t('admin.tableRequester', { defaultValue: 'CHỦ SÂN / NGƯỜI NỘP' }),
+        dataIndex: 'applicant',
+        render: (val: string, record: ApprovalRequest) => (
+          <div className="approval-contact-cell">
+            <span className="approval-contact-name">{val}</span>
+            {record.phone && (
+              <span className="approval-contact-sub flex items-center gap-1">
+                {record.phone}
+                <Tooltip title={t('common.copy', { defaultValue: 'Sao chép' })}>
+                  <CopyOutlined
+                    className="cursor-pointer text-slate-400 hover:text-green-400"
+                    onClick={() => handleCopyText(record.phone)}
+                  />
+                </Tooltip>
+              </span>
             )}
           </div>
         ),
       },
       {
-        title: t('admin.tableRequester', { defaultValue: 'NGƯỜI YÊU CẦU' }),
-        dataIndex: 'applicant',
-        render: (val: string, record: ApprovalRequest) => (
-          <div>
-            <div>{val}</div>
-            {record.phone && <small style={{ color: '#888' }}>{record.phone}</small>}
-          </div>
-        ),
-      },
-      {
-        title: t('admin.tableLocation', { defaultValue: 'KHU VỰC / ĐỊA CHỈ' }),
+        title: t('admin.tableLocation', { defaultValue: 'KHU VỰC ĐỊA BÀN' }),
         dataIndex: 'location',
+        render: (val: string) => (
+          <span className="text-xs text-slate-300 font-medium">{val || 'Chưa cập nhật'}</span>
+        ),
       },
       {
         title: t('admin.tableSubmittedAt', { defaultValue: 'NGÀY NỘP' }),
         dataIndex: 'submittedAt',
+        render: (val: string) => (
+          <div className="flex items-center gap-1.5 text-xs text-slate-300">
+            <ClockCircleOutlined className="text-slate-500" />
+            <span>{val}</span>
+          </div>
+        ),
       },
       {
         title: t('admin.tableStatus', { defaultValue: 'TRẠNG THÁI' }),
@@ -470,6 +598,13 @@ export function AdminApprovalsPage({ forcedType }: AdminApprovalsPageProps) {
           const isPending = val === 'pending'
           const isApproved = val === 'approved' || val === 'active'
           const isRejected = val === 'rejected'
+
+          const tagClass = isPending
+            ? 'approval-status-tag--pending'
+            : isApproved
+              ? 'approval-status-tag--approved'
+              : 'approval-status-tag--rejected'
+
           const label = isPending
             ? t('admin.statusPending', { defaultValue: 'Chờ duyệt' })
             : isApproved
@@ -477,27 +612,16 @@ export function AdminApprovalsPage({ forcedType }: AdminApprovalsPageProps) {
               : isRejected
                 ? t('admin.statusRejected', { defaultValue: 'Từ chối' })
                 : val?.toUpperCase()
+
           return (
             <div>
-              <Tag color={isApproved ? 'green' : isRejected ? 'red' : 'gold'}>
+              <span className={`approval-status-tag ${tagClass}`}>
+                {isPending && <span className="dot" />}
                 {label}
-              </Tag>
-              {record.reviewedAt && (
-                <div style={{ fontSize: 11, color: '#888', marginTop: 4 }}>
-                  {record.reviewedAt}
-                </div>
-              )}
+              </span>
               {record.note && (
                 <div
-                  style={{
-                    fontSize: 11,
-                    color: '#666',
-                    maxWidth: 160,
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                    marginTop: 2,
-                  }}
+                  className="mt-1 max-w-[150px] truncate text-[11px] text-slate-400"
                   title={record.note}
                 >
                   {record.note}
@@ -510,92 +634,157 @@ export function AdminApprovalsPage({ forcedType }: AdminApprovalsPageProps) {
       {
         title: t('admin.tableActions', { defaultValue: 'THAO TÁC' }),
         render: (_: unknown, record: ApprovalRequest) => (
-          <div style={{ display: 'flex', gap: 6 }}>
-            <Button size="small" icon={<EyeOutlined />} onClick={() => handleViewDetail(record)}>
-              {t('common.details', { defaultValue: 'Xem' })}
-            </Button>
+          <div className="flex items-center gap-1.5">
+            <Tooltip title={t('common.details', { defaultValue: 'Xem hồ sơ' })}>
+              <Button
+                size="small"
+                icon={<EyeOutlined />}
+                onClick={() => handleViewDetail(record)}
+                className="border-slate-700 bg-slate-800/80 text-slate-200 hover:border-green-400 hover:text-green-400"
+              />
+            </Tooltip>
             {record.status === 'pending' && (
               <>
-                <Button
-                  size="small"
-                  type="primary"
-                  icon={<CheckOutlined />}
-                  onClick={() => handleConfirmApprove(record)}
-                >
-                  {t('admin.approve', { defaultValue: 'Duyệt' })}
-                </Button>
-                <Button
-                  size="small"
-                  danger
-                  icon={<CloseOutlined />}
-                  onClick={() => handleOpenRejectModal(record)}
-                >
-                  {t('admin.reject', { defaultValue: 'Từ chối' })}
-                </Button>
+                <Tooltip title={t('admin.approve', { defaultValue: 'Duyệt nhanh' })}>
+                  <Button
+                    size="small"
+                    type="primary"
+                    icon={<CheckOutlined />}
+                    onClick={() => handleConfirmApprove(record)}
+                    className="bg-green-600 hover:bg-green-500 border-none"
+                  />
+                </Tooltip>
+                <Tooltip title={t('admin.reject', { defaultValue: 'Từ chối' })}>
+                  <Button
+                    size="small"
+                    danger
+                    icon={<CloseOutlined />}
+                    onClick={() => handleOpenRejectModal(record)}
+                  />
+                </Tooltip>
               </>
             )}
           </div>
         ),
       },
     ],
-    [handleConfirmApprove, handleOpenRejectModal, handleViewDetail, t],
+    [handleConfirmApprove, handleCopyText, handleOpenRejectModal, handleViewDetail, t],
   )
 
   const isDetailLoading = ownerDetailLoading || fieldDetailLoading
 
+  const quickRejectionOptions = type === 'owner' ? OWNER_REJECTION_REASONS : FIELD_REJECTION_REASONS
+
   return (
-    <section className="admin-page">
+    <section className="admin-approvals-page">
       {contextHolder}
-      <header className="user-page__head">
+
+      {/* Header */}
+      <header className="admin-approvals-header">
         <div>
-          <span className="eyebrow">VERIFICATION QUEUE</span>
-          <h1>{t('admin.approvalsTitle', { defaultValue: 'Phê duyệt chủ sân & sân' })}</h1>
-          <p>{t('admin.approvalsSubtitle', { defaultValue: 'Kiểm tra hồ sơ, tài liệu và mức độ rủi ro trước khi kích hoạt.' })}</p>
+          <span className="admin-approvals-eyebrow">
+            <span className="admin-approvals-eyebrow__dot" />
+            VERIFICATION TERMINAL
+          </span>
+          <h1 className="admin-approvals-title">
+            {type === 'owner'
+              ? t('admin.approvalsTitle', { defaultValue: 'Phê duyệt đối tác chủ sân' })
+              : t('nav.fieldApprovals', { defaultValue: 'Phê duyệt cụm sân bóng' })}
+          </h1>
+          <p className="admin-approvals-subtitle">
+            {t('admin.approvalsSubtitle', {
+              defaultValue: 'Thẩm định hồ sơ pháp nhân, đối soát ngân hàng và kiểm soát rủi ro trước khi mở vận hành.',
+            })}
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Button
+            icon={<ReloadOutlined spin={loading} />}
+            onClick={() => refetch()}
+            loading={loading}
+            className="border-slate-700 bg-slate-800 text-slate-200 hover:border-green-400 hover:text-green-400"
+          >
+            {t('common.refresh', { defaultValue: 'Làm mới dữ liệu' })}
+          </Button>
         </div>
       </header>
-      <div
-        className="admin-toolbar"
-        style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: 12,
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        }}
-      >
-        <Segmented
-          value={type}
-          onChange={(val) => {
-            const nextType = val as 'owner' | 'field'
-            setType(nextType)
-            navigate(nextType === 'owner' ? '/admin/approvals/owners' : '/admin/approvals/fields')
-          }}
-          options={[
-            { value: 'owner', label: t('nav.ownerApprovals', { defaultValue: 'Duyệt chủ sân' }) },
-            { value: 'field', label: t('nav.fieldApprovals', { defaultValue: 'Duyệt sân bóng' }) },
-          ]}
-        />
-        <div
-          style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: 8,
-            alignItems: 'center',
-            flex: 1,
-            justifyContent: 'flex-end',
-          }}
-        >
-          <Input
-            prefix={<SearchOutlined />}
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder={t('admin.searchPlaceholder', { defaultValue: 'Tìm hồ sơ...' })}
-            style={{ maxWidth: 220 }}
+
+      {/* KPI Cards */}
+      <div className="admin-approvals-kpi-grid">
+        <div className="admin-approvals-kpi-card admin-approvals-kpi-card--pending">
+          <div className="admin-approvals-kpi-label">
+            <span>{t('admin.kpiPending', { defaultValue: 'CHỜ DUYỆT' })}</span>
+            <ClockCircleOutlined className="text-amber-400" />
+          </div>
+          <div className="admin-approvals-kpi-value text-amber-400">{kpiStats.pending}</div>
+          <div className="admin-approvals-kpi-sub">Hồ sơ ưu tiên cần thẩm định</div>
+        </div>
+
+        <div className="admin-approvals-kpi-card admin-approvals-kpi-card--approved">
+          <div className="admin-approvals-kpi-label">
+            <span>{t('admin.kpiApproved', { defaultValue: 'ĐÃ PHÊ DUYỆT' })}</span>
+            <CheckCircleOutlined className="text-green-400" />
+          </div>
+          <div className="admin-approvals-kpi-value text-green-400">{kpiStats.approved}</div>
+          <div className="admin-approvals-kpi-sub">Đối tác đã kích hoạt hệ thống</div>
+        </div>
+
+        <div className="admin-approvals-kpi-card admin-approvals-kpi-card--rejected">
+          <div className="admin-approvals-kpi-label">
+            <span>{t('admin.kpiRejected', { defaultValue: 'ĐÃ TỪ CHỐI' })}</span>
+            <CloseCircleOutlined className="text-red-400" />
+          </div>
+          <div className="admin-approvals-kpi-value text-red-400">{kpiStats.rejected}</div>
+          <div className="admin-approvals-kpi-sub">Hồ sơ không đạt tiêu chuẩn</div>
+        </div>
+
+        <div className="admin-approvals-kpi-card admin-approvals-kpi-card--total">
+          <div className="admin-approvals-kpi-label">
+            <span>{t('admin.kpiTotal', { defaultValue: 'TỔNG TIẾP NHẬN' })}</span>
+            <FileTextOutlined className="text-slate-400" />
+          </div>
+          <div className="admin-approvals-kpi-value text-slate-100">{kpiStats.total}</div>
+          <div className="admin-approvals-kpi-sub">Tổng số yêu cầu toàn hệ thống</div>
+        </div>
+      </div>
+
+      {/* Filter Toolbar */}
+      <div className="admin-approvals-toolbar">
+        <div className="admin-approvals-toolbar__left">
+          <Segmented
+            value={type}
+            onChange={(val) => {
+              const nextType = val as 'owner' | 'field'
+              setType(nextType)
+              navigate(nextType === 'owner' ? '/admin/approvals/owners' : '/admin/approvals/fields')
+            }}
+            options={[
+              {
+                value: 'owner',
+                label: (
+                  <span className="flex items-center gap-1.5 px-2">
+                    <UserOutlined />
+                    {t('nav.ownerApprovals', { defaultValue: 'Duyệt chủ sân' })}
+                  </span>
+                ),
+              },
+              {
+                value: 'field',
+                label: (
+                  <span className="flex items-center gap-1.5 px-2">
+                    <ShopOutlined />
+                    {t('nav.fieldApprovals', { defaultValue: 'Duyệt sân bóng' })}
+                  </span>
+                ),
+              },
+            ]}
           />
+
           <Select
             value={statusFilter}
             onChange={(val) => setStatusFilter(val)}
-            style={{ width: 150 }}
+            className="w-36"
             options={[
               { value: 'pending', label: t('admin.statusPending', { defaultValue: 'Chờ duyệt' }) },
               { value: 'approved', label: t('admin.statusApproved', { defaultValue: 'Đã duyệt' }) },
@@ -603,6 +792,18 @@ export function AdminApprovalsPage({ forcedType }: AdminApprovalsPageProps) {
               { value: 'all', label: t('admin.statusAll', { defaultValue: 'Tất cả trạng thái' }) },
             ]}
           />
+        </div>
+
+        <div className="admin-approvals-toolbar__right">
+          <Input
+            prefix={<SearchOutlined className="text-slate-500" />}
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder={t('admin.searchPlaceholder', { defaultValue: 'Tìm theo tên, GPKD, SĐT...' })}
+            className="max-w-[240px] bg-slate-900/90 text-white"
+            allowClear
+          />
+
           <Select
             value={datePreset}
             onChange={(val) => {
@@ -612,8 +813,9 @@ export function AdminApprovalsPage({ forcedType }: AdminApprovalsPageProps) {
               }
             }}
             options={datePresetOptions}
-            style={{ width: 170 }}
+            className="w-44"
           />
+
           {datePreset === 'custom' && (
             <DatePicker.RangePicker
               value={customRange}
@@ -627,37 +829,52 @@ export function AdminApprovalsPage({ forcedType }: AdminApprovalsPageProps) {
               ]}
             />
           )}
-          <Button icon={<ReloadOutlined />} onClick={() => refetch()} loading={loading}>
-            {t('common.refresh', { defaultValue: 'Làm mới' })}
-          </Button>
         </div>
       </div>
-      <Table
-        loading={loading}
-        rowKey="id"
-        dataSource={visible}
-        columns={type === 'owner' ? ownerColumns : fieldColumns}
-        pagination={{
-          current: page,
-          pageSize: ADMIN_APPROVALS_PAGE_SIZE,
-          total,
-          showSizeChanger: false,
-          pageSizeOptions: ADMIN_APPROVALS_PAGE_SIZE_OPTIONS,
-          onChange: (nextPage) => setPage(nextPage),
-        }}
-      />
+
+      {/* Table Container */}
+      <div className="admin-approvals-table-wrap">
+        <Table
+          className="admin-approvals-table"
+          loading={loading}
+          rowKey="id"
+          dataSource={visible}
+          columns={type === 'owner' ? ownerColumns : fieldColumns}
+          pagination={{
+            current: page,
+            pageSize: ADMIN_APPROVALS_PAGE_SIZE,
+            total,
+            showSizeChanger: false,
+            pageSizeOptions: ADMIN_APPROVALS_PAGE_SIZE_OPTIONS,
+            onChange: (nextPage) => setPage(nextPage),
+          }}
+        />
+      </div>
+
+      {/* Drawer: Inspection Terminal */}
       <Drawer
-        title={t('admin.detailTitle', { defaultValue: 'Chi tiết hồ sơ phê duyệt' })}
+        title={
+          <div className="flex items-center gap-2">
+            <SafetyCertificateOutlined className="text-green-400" />
+            <span className="text-white font-bold">
+              {t('admin.detailTitle', { defaultValue: 'Thẩm định hồ sơ phê duyệt' })}
+            </span>
+          </div>
+        }
         open={isDrawerOpen}
         onClose={handleCloseDrawer}
-        width={560}
+        width={620}
+        styles={{
+          header: { background: '#111a14', borderBottom: '1px solid rgba(255,255,255,0.08)' },
+          body: { background: '#0d1410', padding: 20 },
+        }}
       >
         {isDetailLoading ? (
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 240 }}>
+          <div className="flex min-h-[300px] items-center justify-center">
             <Spin size="large" />
           </div>
         ) : selectedRecord?.type === 'owner' && ownerDetail ? (
-          <div className="approval-detail">
+          <div className="admin-audit-pane">
             {renderStatusAlert(
               ownerDetail.status,
               ownerDetail.reviewedAt,
@@ -665,128 +882,123 @@ export function AdminApprovalsPage({ forcedType }: AdminApprovalsPageProps) {
               ownerDetail.note,
             )}
 
-            <Descriptions
-              title={t('admin.requestInfo', { defaultValue: 'Thông tin yêu cầu' })}
-              column={1}
-              bordered
-              size="small"
-            >
-              <Descriptions.Item label={t('admin.requestType', { defaultValue: 'Loại yêu cầu' })}>
-                <Tag color="blue">{ownerDetail.type}</Tag>
-              </Descriptions.Item>
-              <Descriptions.Item label={t('admin.status', { defaultValue: 'Trạng thái' })}>
-                <Tag
-                  color={
-                    ownerDetail.status === 'approved'
-                      ? 'green'
-                      : ownerDetail.status === 'rejected'
-                        ? 'red'
-                        : 'gold'
-                  }
-                >
-                  {ownerDetail.status.toUpperCase()}
-                </Tag>
-              </Descriptions.Item>
-              <Descriptions.Item label={t('admin.submittedAt', { defaultValue: 'Thời điểm nộp' })}>
-                {new Date(ownerDetail.createdAt).toLocaleString('vi-VN')}
-              </Descriptions.Item>
-              {ownerDetail.reviewedAt && (
-                <Descriptions.Item label={t('admin.reviewedAt', { defaultValue: 'Thời điểm duyệt' })}>
-                  {new Date(ownerDetail.reviewedAt).toLocaleString('vi-VN')}
-                </Descriptions.Item>
-              )}
-              {ownerDetail.note && (
-                <Descriptions.Item label={t('admin.note', { defaultValue: 'Ghi chú' })}>
-                  {ownerDetail.note}
-                </Descriptions.Item>
-              )}
-            </Descriptions>
+            {/* Business Entity Section */}
+            <div className="admin-audit-section">
+              <h4 className="admin-audit-section-title">
+                <ShopOutlined /> {t('admin.ownerProfileInfo', { defaultValue: 'Hồ sơ pháp nhân kinh doanh' })}
+              </h4>
+              <div className="admin-audit-grid">
+                <div className="admin-audit-field">
+                  <span className="admin-audit-field-label">{t('admin.businessName', { defaultValue: 'Tên cơ sở kinh doanh' })}</span>
+                  <span className="admin-audit-field-value text-green-300">
+                    {ownerDetail.ownerProfile?.businessName || selectedRecord.name}
+                  </span>
+                </div>
+                <div className="admin-audit-field">
+                  <span className="admin-audit-field-label">{t('admin.businessLicense', { defaultValue: 'Giấy phép kinh doanh / MST' })}</span>
+                  <span className="admin-audit-field-value admin-audit-field-value--mono text-amber-300">
+                    {ownerDetail.ownerProfile?.businessLicense || selectedRecord.license || t('admin.notUpdated', { defaultValue: 'Chưa cập nhật' })}
+                  </span>
+                </div>
+              </div>
+            </div>
 
-            <Descriptions
-              title={t('admin.requesterInfo', { defaultValue: 'Thông tin người gửi' })}
-              column={1}
-              bordered
-              size="small"
-              style={{ marginTop: 16 }}
-            >
-              <Descriptions.Item label={t('admin.email', { defaultValue: 'Email liên hệ' })}>
-                {ownerDetail.requester.email}
-              </Descriptions.Item>
-              <Descriptions.Item label={t('admin.phone', { defaultValue: 'Số điện thoại' })}>
-                {ownerDetail.requester.phone || t('admin.notUpdated', { defaultValue: 'Chưa cập nhật' })}
-              </Descriptions.Item>
-              <Descriptions.Item label={t('admin.userRole', { defaultValue: 'Vai trò tài khoản' })}>
-                <Tag>{ownerDetail.requester.role}</Tag>
-              </Descriptions.Item>
-              <Descriptions.Item label={t('admin.accountStatus', { defaultValue: 'Trạng thái tài khoản' })}>
-                <Tag color={ownerDetail.requester.status === 'active' ? 'green' : 'default'}>
-                  {ownerDetail.requester.status}
-                </Tag>
-              </Descriptions.Item>
-            </Descriptions>
+            {/* Financial / Payout Info */}
+            <div className="admin-audit-section">
+              <h4 className="admin-audit-section-title">
+                <BankOutlined /> {t('admin.bankAccount', { defaultValue: 'Tài khoản ngân hàng đối soát' })}
+              </h4>
+              <div className="admin-audit-grid">
+                <div className="admin-audit-field">
+                  <span className="admin-audit-field-label">Số tài khoản</span>
+                  <span className="admin-audit-field-value admin-audit-field-value--mono text-white">
+                    {ownerDetail.ownerProfile?.bankAccount || selectedRecord.bankAccount || t('admin.notUpdated', { defaultValue: 'Chưa cập nhật' })}
+                  </span>
+                </div>
+                <div className="admin-audit-field">
+                  <span className="admin-audit-field-label">Xác minh lúc</span>
+                  <span className="admin-audit-field-value text-xs text-slate-300">
+                    {ownerDetail.ownerProfile?.verifiedAt
+                      ? new Date(ownerDetail.ownerProfile.verifiedAt).toLocaleString('vi-VN')
+                      : t('admin.unverified', { defaultValue: 'Chưa xác minh' })}
+                  </span>
+                </div>
+              </div>
+            </div>
 
-            {ownerDetail.ownerProfile && (
-              <Descriptions
-                title={t('admin.ownerProfileInfo', { defaultValue: 'Hồ sơ pháp nhân chủ sân' })}
-                column={1}
-                bordered
-                size="small"
-                style={{ marginTop: 16 }}
-              >
-                <Descriptions.Item label={t('admin.businessName', { defaultValue: 'Tên cơ sở kinh doanh' })}>
-                  <b>{ownerDetail.ownerProfile.businessName || t('admin.notUpdated', { defaultValue: 'Chưa cập nhật' })}</b>
-                </Descriptions.Item>
-                <Descriptions.Item label={t('admin.businessLicense', { defaultValue: 'Giấy phép kinh doanh' })}>
-                  {ownerDetail.ownerProfile.businessLicense || t('admin.notUpdated', { defaultValue: 'Chưa cập nhật' })}
-                </Descriptions.Item>
-                <Descriptions.Item label={t('admin.bankAccount', { defaultValue: 'Tài khoản ngân hàng' })}>
-                  {ownerDetail.ownerProfile.bankAccount || t('admin.notUpdated', { defaultValue: 'Chưa cập nhật' })}
-                </Descriptions.Item>
-                <Descriptions.Item label={t('admin.verifiedAt', { defaultValue: 'Xác minh lúc' })}>
-                  {ownerDetail.ownerProfile.verifiedAt
-                    ? new Date(ownerDetail.ownerProfile.verifiedAt).toLocaleString('vi-VN')
-                    : t('admin.unverified', { defaultValue: 'Chưa xác minh' })}
-                </Descriptions.Item>
-              </Descriptions>
-            )}
+            {/* Applicant Profile */}
+            <div className="admin-audit-section">
+              <h4 className="admin-audit-section-title">
+                <UserOutlined /> {t('admin.requesterInfo', { defaultValue: 'Thông tin người gửi yêu cầu' })}
+              </h4>
+              <div className="admin-audit-grid">
+                <div className="admin-audit-field">
+                  <span className="admin-audit-field-label">Email tài khoản</span>
+                  <span className="admin-audit-field-value">{ownerDetail.requester.email}</span>
+                </div>
+                <div className="admin-audit-field">
+                  <span className="admin-audit-field-label">Số điện thoại</span>
+                  <span className="admin-audit-field-value">{ownerDetail.requester.phone || t('admin.notUpdated', { defaultValue: 'Chưa cập nhật' })}</span>
+                </div>
+                <div className="admin-audit-field">
+                  <span className="admin-audit-field-label">Vai trò</span>
+                  <span className="admin-audit-field-value">
+                    <Tag>{ownerDetail.requester.role}</Tag>
+                  </span>
+                </div>
+                <div className="admin-audit-field">
+                  <span className="admin-audit-field-label">Trạng thái tài khoản</span>
+                  <span className="admin-audit-field-value">
+                    <Tag color={ownerDetail.requester.status === 'active' ? 'green' : 'default'}>
+                      {ownerDetail.requester.status.toUpperCase()}
+                    </Tag>
+                  </span>
+                </div>
+              </div>
+            </div>
 
+            {/* Reviewer Note if available */}
             {ownerDetail.reviewer && (
-              <Descriptions
-                title={t('admin.reviewer', { defaultValue: 'Người kiểm duyệt' })}
-                column={1}
-                bordered
-                size="small"
-                style={{ marginTop: 16 }}
-              >
-                <Descriptions.Item label={t('admin.reviewerEmail', { defaultValue: 'Admin duyệt' })}>
-                  {ownerDetail.reviewer.email}
-                </Descriptions.Item>
-              </Descriptions>
+              <div className="admin-audit-section">
+                <h4 className="admin-audit-section-title">
+                  <SafetyCertificateOutlined /> {t('admin.reviewer', { defaultValue: 'Lịch sử kiểm duyệt' })}
+                </h4>
+                <div className="text-xs text-slate-300 space-y-1">
+                  <div>Admin duyệt: <strong>{ownerDetail.reviewer.email}</strong></div>
+                  {ownerDetail.reviewedAt && (
+                    <div>Thời điểm: {new Date(ownerDetail.reviewedAt).toLocaleString('vi-VN')}</div>
+                  )}
+                  {ownerDetail.note && <div>Ghi chú: {ownerDetail.note}</div>}
+                </div>
+              </div>
             )}
 
+            {/* Sticky Actions */}
             {ownerDetail.status === 'pending' && selectedRecord && (
-              <div style={{ marginTop: 24, display: 'flex', gap: 12 }}>
+              <div className="admin-audit-actions">
                 <Button
                   type="primary"
                   block
                   icon={<CheckOutlined />}
                   onClick={() => handleConfirmApprove(selectedRecord)}
+                  className="bg-green-600 hover:bg-green-500 h-10 font-semibold"
                 >
-                  {t('admin.approveAction', { defaultValue: 'Phê duyệt hồ sơ' })}
+                  {t('admin.approveAction', { defaultValue: 'Phê duyệt kích hoạt' })}
                 </Button>
                 <Button
                   danger
                   block
                   icon={<CloseOutlined />}
                   onClick={() => handleOpenRejectModal(selectedRecord)}
+                  className="h-10 font-semibold"
                 >
-                  {t('admin.rejectAction', { defaultValue: 'Từ chối' })}
+                  {t('admin.rejectAction', { defaultValue: 'Từ chối hồ sơ' })}
                 </Button>
               </div>
             )}
           </div>
         ) : selectedRecord?.type === 'field' && fieldDetail ? (
-          <div className="approval-detail">
+          <div className="admin-audit-pane">
             {renderStatusAlert(
               fieldDetail.status,
               fieldDetail.reviewedAt,
@@ -794,201 +1006,80 @@ export function AdminApprovalsPage({ forcedType }: AdminApprovalsPageProps) {
               fieldDetail.note,
             )}
 
-            <Descriptions
-              title={t('admin.requestInfo', { defaultValue: 'Thông tin yêu cầu' })}
-              column={1}
-              bordered
-              size="small"
-            >
-              <Descriptions.Item label={t('admin.requestType', { defaultValue: 'Loại yêu cầu' })}>
-                <Tag color={fieldDetail.type === 'field_create' ? 'cyan' : 'purple'}>
-                  {fieldDetail.type === 'field_create'
-                    ? t('admin.fieldTypeCreate', { defaultValue: 'Tạo sân mới' })
-                    : t('admin.fieldTypeUpdate', { defaultValue: 'Cập nhật sân' })}
-                </Tag>
-              </Descriptions.Item>
-              <Descriptions.Item label={t('admin.status', { defaultValue: 'Trạng thái' })}>
-                <Tag
-                  color={
-                    fieldDetail.status === 'approved'
-                      ? 'green'
-                      : fieldDetail.status === 'rejected'
-                        ? 'red'
-                        : 'gold'
-                  }
-                >
-                  {fieldDetail.status.toUpperCase()}
-                </Tag>
-              </Descriptions.Item>
-              <Descriptions.Item label={t('admin.submittedAt', { defaultValue: 'Thời điểm nộp' })}>
-                {new Date(fieldDetail.createdAt).toLocaleString('vi-VN')}
-              </Descriptions.Item>
-              {fieldDetail.reviewedAt && (
-                <Descriptions.Item label={t('admin.reviewedAt', { defaultValue: 'Thời điểm duyệt' })}>
-                  {new Date(fieldDetail.reviewedAt).toLocaleString('vi-VN')}
-                </Descriptions.Item>
-              )}
-              {fieldDetail.note && (
-                <Descriptions.Item label={t('admin.note', { defaultValue: 'Ghi chú' })}>
-                  {fieldDetail.note}
-                </Descriptions.Item>
-              )}
-            </Descriptions>
-
-            <Descriptions
-              title={t('admin.requesterInfo', { defaultValue: 'Thông tin người yêu cầu' })}
-              column={1}
-              bordered
-              size="small"
-              style={{ marginTop: 16 }}
-            >
-              <Descriptions.Item label={t('admin.email', { defaultValue: 'Email liên hệ' })}>
-                {fieldDetail.requester.email}
-              </Descriptions.Item>
-              <Descriptions.Item label={t('admin.phone', { defaultValue: 'Số điện thoại' })}>
-                {fieldDetail.requester.phone || t('admin.notUpdated', { defaultValue: 'Chưa cập nhật' })}
-              </Descriptions.Item>
-              <Descriptions.Item label={t('admin.userRole', { defaultValue: 'Vai trò tài khoản' })}>
-                <Tag>{fieldDetail.requester.role}</Tag>
-              </Descriptions.Item>
-              <Descriptions.Item label={t('admin.accountStatus', { defaultValue: 'Trạng thái tài khoản' })}>
-                <Tag color={fieldDetail.requester.status === 'active' ? 'green' : 'default'}>
-                  {fieldDetail.requester.status}
-                </Tag>
-              </Descriptions.Item>
-            </Descriptions>
-
+            {/* Field Information */}
             {fieldDetail.targetField && (
-              <Descriptions
-                title={t('admin.fieldInfo', { defaultValue: 'Thông tin cụm sân bóng' })}
-                column={1}
-                bordered
-                size="small"
-                style={{ marginTop: 16 }}
-              >
-                <Descriptions.Item label={t('admin.pitchName', { defaultValue: 'Tên cụm sân' })}>
-                  <b>{fieldDetail.targetField.name}</b>
-                </Descriptions.Item>
-                <Descriptions.Item label={t('admin.pitchAddress', { defaultValue: 'Địa chỉ sân' })}>
-                  {fieldDetail.targetField.address}
-                </Descriptions.Item>
-                {fieldDetail.targetField.district && (
-                  <Descriptions.Item label={t('admin.pitchDistrict', { defaultValue: 'Quận / Huyện' })}>
-                    {fieldDetail.targetField.district}
-                  </Descriptions.Item>
-                )}
-                {fieldDetail.targetField.description && (
-                  <Descriptions.Item label={t('admin.pitchDescription', { defaultValue: 'Mô tả' })}>
-                    {fieldDetail.targetField.description}
-                  </Descriptions.Item>
-                )}
-                <Descriptions.Item label={t('admin.pitchDeposit', { defaultValue: 'Yêu cầu đặt cọc' })}>
-                  {fieldDetail.targetField.requireDeposit
-                    ? `${t('admin.pitchDepositYes', { defaultValue: 'Có cọc' })}${fieldDetail.targetField.depositValue ? ` (${fieldDetail.targetField.depositValue.toLocaleString('vi-VN')} VNĐ)` : ''}`
-                    : t('admin.pitchDepositNo', { defaultValue: 'Không cọc' })}
-                </Descriptions.Item>
-              </Descriptions>
-            )}
-
-            {fieldDetail.proposedChanges && Object.keys(fieldDetail.proposedChanges).length > 0 && (
-              <Descriptions
-                title={t('admin.proposedChanges', { defaultValue: 'Nội dung thay đổi đề xuất' })}
-                column={1}
-                bordered
-                size="small"
-                style={{ marginTop: 16 }}
-              >
-                {Object.entries(fieldDetail.proposedChanges).map(([key, value]) => (
-                  <Descriptions.Item key={key} label={key}>
-                    {typeof value === 'object' ? JSON.stringify(value) : String(value)}
-                  </Descriptions.Item>
-                ))}
-              </Descriptions>
-            )}
-
-            {fieldDetail.reviewer && (
-              <Descriptions
-                title={t('admin.reviewer', { defaultValue: 'Người kiểm duyệt' })}
-                column={1}
-                bordered
-                size="small"
-                style={{ marginTop: 16 }}
-              >
-                <Descriptions.Item label={t('admin.reviewerEmail', { defaultValue: 'Admin duyệt' })}>
-                  {fieldDetail.reviewer.email}
-                </Descriptions.Item>
-              </Descriptions>
-            )}
-
-            {fieldDetail.status === 'pending' && selectedRecord && (
-              <div style={{ marginTop: 24, display: 'flex', gap: 12 }}>
-                <Button
-                  type="primary"
-                  block
-                  icon={<CheckOutlined />}
-                  onClick={() => handleConfirmApprove(selectedRecord)}
-                >
-                  {t('admin.approveAction', { defaultValue: 'Phê duyệt hồ sơ' })}
-                </Button>
-                <Button
-                  danger
-                  block
-                  icon={<CloseOutlined />}
-                  onClick={() => handleOpenRejectModal(selectedRecord)}
-                >
-                  {t('admin.rejectAction', { defaultValue: 'Từ chối' })}
-                </Button>
+              <div className="admin-audit-section">
+                <h4 className="admin-audit-section-title">
+                  <ShopOutlined /> {t('admin.fieldInfo', { defaultValue: 'Thông tin cụm sân bóng' })}
+                </h4>
+                <div className="space-y-2 text-sm">
+                  <div>
+                    <span className="text-xs text-slate-400 block">Tên cụm sân:</span>
+                    <span className="font-semibold text-white">{fieldDetail.targetField.name}</span>
+                  </div>
+                  <div>
+                    <span className="text-xs text-slate-400 block">Địa chỉ:</span>
+                    <span className="text-slate-300">{fieldDetail.targetField.address}</span>
+                  </div>
+                  {fieldDetail.targetField.description && (
+                    <div>
+                      <span className="text-xs text-slate-400 block">Mô tả:</span>
+                      <span className="text-slate-400 text-xs">{fieldDetail.targetField.description}</span>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
-          </div>
-        ) : selectedRecord ? (
-          <div className="approval-detail">
-            {renderStatusAlert(
-              selectedRecord.status,
-              selectedRecord.reviewedAt,
-              selectedRecord.reviewerEmail,
-              selectedRecord.note,
+
+            {/* Requester Info */}
+            <div className="admin-audit-section">
+              <h4 className="admin-audit-section-title">
+                <UserOutlined /> {t('admin.requesterInfo', { defaultValue: 'Thông tin người gửi yêu cầu' })}
+              </h4>
+              <div className="admin-audit-grid">
+                <div className="admin-audit-field">
+                  <span className="admin-audit-field-label">Email</span>
+                  <span className="admin-audit-field-value">{fieldDetail.requester.email}</span>
+                </div>
+                <div className="admin-audit-field">
+                  <span className="admin-audit-field-label">Số điện thoại</span>
+                  <span className="admin-audit-field-value">{fieldDetail.requester.phone || t('admin.notUpdated', { defaultValue: 'Chưa cập nhật' })}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Proposed Changes if any */}
+            {fieldDetail.proposedChanges && Object.keys(fieldDetail.proposedChanges).length > 0 && (
+              <div className="admin-audit-section">
+                <h4 className="admin-audit-section-title">
+                  <FileTextOutlined /> {t('admin.proposedChanges', { defaultValue: 'Nội dung thay đổi đề xuất' })}
+                </h4>
+                <pre className="text-xs bg-black/40 p-3 rounded-lg overflow-x-auto text-green-300">
+                  {JSON.stringify(fieldDetail.proposedChanges, null, 2)}
+                </pre>
+              </div>
             )}
 
-            <Descriptions column={1} bordered size="small">
-              <Descriptions.Item label={t('admin.tablePartnerName', { defaultValue: 'Tên đối tác / Sân' })}>
-                {selectedRecord.name}
-              </Descriptions.Item>
-              <Descriptions.Item label={t('admin.email', { defaultValue: 'Email liên hệ' })}>
-                {selectedRecord.applicant}
-              </Descriptions.Item>
-              {selectedRecord.phone && (
-                <Descriptions.Item label={t('admin.phone', { defaultValue: 'Số điện thoại' })}>
-                  {selectedRecord.phone}
-                </Descriptions.Item>
-              )}
-              <Descriptions.Item label={t('admin.tableLocation', { defaultValue: 'Khu vực / Địa chỉ' })}>
-                {selectedRecord.location}
-              </Descriptions.Item>
-              <Descriptions.Item label={t('admin.submittedAt', { defaultValue: 'Ngày nộp' })}>
-                {selectedRecord.submittedAt}
-              </Descriptions.Item>
-              <Descriptions.Item label={t('admin.status', { defaultValue: 'Trạng thái' })}>
-                {selectedRecord.status}
-              </Descriptions.Item>
-            </Descriptions>
-            {selectedRecord.status === 'pending' && (
-              <div style={{ marginTop: 24, display: 'flex', gap: 12 }}>
+            {/* Sticky Actions */}
+            {fieldDetail.status === 'pending' && selectedRecord && (
+              <div className="admin-audit-actions">
                 <Button
                   type="primary"
                   block
                   icon={<CheckOutlined />}
                   onClick={() => handleConfirmApprove(selectedRecord)}
+                  className="bg-green-600 hover:bg-green-500 h-10 font-semibold"
                 >
-                  {t('admin.approveAction', { defaultValue: 'Phê duyệt hồ sơ' })}
+                  {t('admin.approveAction', { defaultValue: 'Phê duyệt kích hoạt sân' })}
                 </Button>
                 <Button
                   danger
                   block
                   icon={<CloseOutlined />}
                   onClick={() => handleOpenRejectModal(selectedRecord)}
+                  className="h-10 font-semibold"
                 >
-                  {t('admin.rejectAction', { defaultValue: 'Từ chối' })}
+                  {t('admin.rejectAction', { defaultValue: 'Từ chối sân' })}
                 </Button>
               </div>
             )}
@@ -996,8 +1087,14 @@ export function AdminApprovalsPage({ forcedType }: AdminApprovalsPageProps) {
         ) : null}
       </Drawer>
 
+      {/* Reject Modal with Quick Selection Tags */}
       <Modal
-        title={t('admin.rejectModalTitle', { defaultValue: 'Từ chối yêu cầu phê duyệt' })}
+        title={
+          <span className="text-red-400 font-bold flex items-center gap-2">
+            <CloseCircleOutlined />
+            {t('admin.rejectModalTitle', { defaultValue: 'Từ chối yêu cầu phê duyệt' })}
+          </span>
+        }
         open={Boolean(rejectModalRecord)}
         onCancel={() => {
           if (!isSubmittingReject) {
@@ -1007,21 +1104,39 @@ export function AdminApprovalsPage({ forcedType }: AdminApprovalsPageProps) {
         }}
         onOk={handleConfirmReject}
         confirmLoading={isSubmittingReject}
-        okText={t('admin.rejectAction', { defaultValue: 'Từ chối' })}
+        okText={t('admin.rejectAction', { defaultValue: 'Xác nhận từ chối' })}
         cancelText={t('common.cancel', { defaultValue: 'Hủy' })}
         okButtonProps={{ danger: true }}
       >
-        <p style={{ marginBottom: 12, color: '#555' }}>
+        <p className="mb-2 text-xs text-slate-400">
           {t('admin.rejectModalPrompt', {
             defaultValue: 'Vui lòng cung cấp lý do từ chối hồ sơ cho đối tác/người yêu cầu:',
           })}
         </p>
+
         {rejectModalRecord && (
-          <div style={{ padding: '8px 12px', background: '#f5f5f5', borderRadius: 6, marginBottom: 16 }}>
-            <b>{rejectModalRecord.name}</b>
-            <div style={{ fontSize: 12, color: '#888' }}>{rejectModalRecord.applicant}</div>
+          <div className="mb-3 rounded-lg bg-slate-900/80 p-3 border border-slate-800">
+            <b className="text-white block">{rejectModalRecord.name}</b>
+            <div className="text-xs text-slate-400">{rejectModalRecord.applicant}</div>
           </div>
         )}
+
+        <div className="mb-2 text-xs font-semibold text-slate-400">
+          {t('admin.quickReasons', { defaultValue: 'Lý do phổ biến (nhấp để chọn nhanh):' })}
+        </div>
+        <div className="admin-reject-tags">
+          {quickRejectionOptions.map((item) => (
+            <button
+              key={item.key}
+              type="button"
+              className="admin-reject-tag-btn"
+              onClick={() => setRejectionReason(isEn ? item.textEn : item.textVi)}
+            >
+              {isEn ? item.labelEn : item.labelVi}
+            </button>
+          ))}
+        </div>
+
         <Input.TextArea
           rows={4}
           value={rejectionReason}
@@ -1031,6 +1146,7 @@ export function AdminApprovalsPage({ forcedType }: AdminApprovalsPageProps) {
           })}
           maxLength={500}
           showCount
+          className="mt-2"
         />
       </Modal>
     </section>
