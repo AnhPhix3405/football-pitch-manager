@@ -1,340 +1,1170 @@
 import {
   AlertOutlined,
   CheckCircleFilled,
+  ClearOutlined,
+  ClockCircleOutlined,
+  CloseCircleFilled,
   CloudServerOutlined,
+  CopyOutlined,
+  DatabaseOutlined,
   DownloadOutlined,
+  EyeOutlined,
   FileSearchOutlined,
+  LinkOutlined,
+  ReloadOutlined,
   SearchOutlined,
-} from '@ant-design/icons'
+  SafetyCertificateOutlined,
+  WarningFilled,
+} from '@ant-design/icons';
 import {
+  Alert,
   Button,
   DatePicker,
+  Drawer,
+  Dropdown,
+  Empty,
   Input,
   Progress,
   Segmented,
   Select,
+  Skeleton,
   Table,
   Tag,
+  Tooltip,
   message,
-} from 'antd'
-import { useMemo, useState } from 'react'
-import { useTranslation } from 'react-i18next'
-import { auditLogs, moderationItems } from './admin.data'
+} from 'antd';
+import type { MenuProps } from 'antd';
+import { useCallback, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
+import { useAdminReports } from '../../hooks/useAdminReports';
+import {
+  AUDIT_ACTION_TAG_CONFIG,
+  AUDIT_CATEGORY_OPTIONS,
+  MODERATION_STATUS_OPTIONS,
+  MODERATION_TYPE_OPTIONS,
+} from './constants/admin-reports.constant';
 import type {
-  AuditLogItem,
-  ModerationReportItem,
+  AdminAuditItem,
+  AdminModerationReportItem,
   ReportTabType,
-  SystemNodeStatus,
-} from './interface/report.interface'
-
-const SYSTEM_NODES: SystemNodeStatus[] = [
-  { name: 'API Gateway', percent: 99, detail: '42 ms avg latency', status: 'OPERATIONAL' },
-  { name: 'Primary Database', percent: 96, detail: '18% storage used (PostgreSQL 16)', status: 'OPERATIONAL' },
-  { name: 'Socket Cluster', percent: 98, detail: '1,842 active connections (Redis 7)', status: 'OPERATIONAL' },
-  { name: 'Object Storage', percent: 100, detail: 'Supabase Storage Operational', status: 'OPERATIONAL' },
-]
+} from './interface/admin-reports.interface';
+import {
+  formatBytes,
+  formatLatency,
+  formatReportTimestamp,
+} from './utils/admin-reports.util';
+import './AdminReportsPage.css';
 
 export function AdminReportsPage() {
-  const { t } = useTranslation()
-  const [tab, setTab] = useState<ReportTabType>('reports')
-  const [search, setSearch] = useState('')
-  const [reportStatus, setReportStatus] = useState<'all' | 'pending' | 'resolved'>('all')
+  const { t } = useTranslation();
+  const navigate = useNavigate();
 
-  const filteredReports = useMemo(() => {
-    return moderationItems.filter((item) => {
-      const matchSearch =
-        !search ||
-        item.id.toLowerCase().includes(search.toLowerCase()) ||
-        item.author.toLowerCase().includes(search.toLowerCase()) ||
-        item.reason.toLowerCase().includes(search.toLowerCase()) ||
-        item.content.toLowerCase().includes(search.toLowerCase())
+  const {
+    activeTab,
+    setActiveTab,
 
-      const matchStatus = reportStatus === 'all' || item.status === reportStatus
-      return matchSearch && matchStatus
-    })
-  }, [search, reportStatus])
+    // Moderation Reports
+    reportsData,
+    reportsLoading,
+    reportsError,
+    reportsSearch,
+    setReportsSearch,
+    reportsType,
+    setReportsType,
+    reportsStatus,
+    setReportsStatus,
+    reportsPage,
+    setReportsPage,
+    setReportsDateRange,
+    refetchReports,
+    resetReportsFilters,
 
-  const filteredAuditLogs = useMemo(() => {
-    return auditLogs.filter((item) => {
-      if (!search) return true
-      const term = search.toLowerCase()
-      return (
-        item.id.toLowerCase().includes(term) ||
-        item.actor.toLowerCase().includes(term) ||
-        item.action.toLowerCase().includes(term) ||
-        item.target.toLowerCase().includes(term) ||
-        item.ip.toLowerCase().includes(term)
-      )
-    })
-  }, [search])
+    // Audit Logs
+    auditData,
+    auditLoading,
+    auditError,
+    auditSearch,
+    setAuditSearch,
+    auditCategory,
+    setAuditCategory,
+    auditPage,
+    setAuditPage,
+    setAuditDateRange,
+    refetchAudits,
+    resetAuditFilters,
 
-  const handleExport = () => {
-    try {
-      let exportData: unknown
-      let fileName = ''
+    // System Status
+    systemData,
+    systemLoading,
+    systemError,
+    lastRefreshedAt,
+    autoRefreshInterval,
+    setAutoRefreshInterval,
+    refetchSystemStatus,
 
-      if (tab === 'reports') {
-        exportData = filteredReports
-        fileName = `moderation-reports-${Date.now()}.json`
-      } else if (tab === 'audit') {
-        exportData = filteredAuditLogs
-        fileName = `audit-logs-${Date.now()}.json`
-      } else {
-        exportData = SYSTEM_NODES
-        fileName = `system-status-${Date.now()}.json`
+    // Drawers / Details
+    selectedAuditLog,
+    setSelectedAuditLog,
+    selectedReport,
+    setSelectedReport,
+    drawerLoading,
+    loadAuditLogDetail,
+    loadReportDetail,
+
+    // Actions
+    isExporting,
+    handleExport,
+  } = useAdminReports();
+
+  const [isAuditDrawerOpen, setIsAuditDrawerOpen] = useState(false);
+  const [isReportDrawerOpen, setIsReportDrawerOpen] = useState(false);
+
+  const handleCopy = useCallback(
+    async (text: string, label = 'Mã') => {
+      try {
+        await navigator.clipboard.writeText(text);
+        message.success(
+          t('admin.copiedToClipboard', {
+            defaultValue: `${label} đã được sao chép vào bộ nhớ tạm.`,
+          }),
+        );
+      } catch {
+        message.error('Không thể sao chép vào clipboard.');
       }
+    },
+    [t],
+  );
 
-      const blob = new Blob([JSON.stringify(exportData, null, 2)], {
-        type: 'application/json',
-      })
-      const url = URL.createObjectURL(blob)
-      const anchor = document.createElement('a')
-      anchor.href = url
-      anchor.download = fileName
-      document.body.appendChild(anchor)
-      anchor.click()
-      document.body.removeChild(anchor)
-      URL.revokeObjectURL(url)
-
-      message.success(t('admin.exportSuccess', { defaultValue: 'Đã xuất dữ liệu báo cáo thành công.' }))
+  const handleExportClick = async (format: 'json' | 'csv') => {
+    try {
+      await handleExport(format);
+      message.success(
+        t('admin.exportSuccess', {
+          defaultValue: 'Đã xuất dữ liệu báo cáo thành công.',
+        }),
+      );
     } catch {
-      message.error(t('admin.exportFailed', { defaultValue: 'Xuất dữ liệu báo cáo thất bại.' }))
+      message.error(
+        t('admin.exportFailed', {
+          defaultValue: 'Xuất dữ liệu báo cáo thất bại.',
+        }),
+      );
     }
-  }
+  };
 
+  const exportMenuItems: MenuProps['items'] = [
+    {
+      key: 'csv',
+      label: t('admin.exportCsv', { defaultValue: 'Xuất file CSV (Excel)' }),
+      onClick: () => void handleExportClick('csv'),
+    },
+    {
+      key: 'json',
+      label: t('admin.exportJson', { defaultValue: 'Xuất file JSON' }),
+      onClick: () => void handleExportClick('json'),
+    },
+  ];
+
+  // Columns for Moderation Reports (5 key fields + actions per #1003)
   const reportColumns = useMemo(
     () => [
       {
-        title: t('admin.reportId', { defaultValue: 'MÃ' }),
-        dataIndex: 'id',
-        key: 'id',
-        render: (val: string) => <b>{val}</b>,
-      },
-      {
-        title: t('admin.reportType', { defaultValue: 'LOẠI' }),
+        title: t('admin.reportType', { defaultValue: 'LOẠI VI PHẠM' }),
         dataIndex: 'type',
         key: 'type',
-        render: (type: string) => (
-          <Tag color={type === 'post' ? 'blue' : 'purple'}>
-            {type === 'post'
-              ? t('admin.typePost', { defaultValue: 'Bài đăng' })
-              : t('admin.typeReview', { defaultValue: 'Đánh giá' })}
-          </Tag>
+        width: 130,
+        render: (type: 'post' | 'review' | 'user') => {
+          let color = 'blue';
+          let label = t('admin.typePost', { defaultValue: 'Bài đăng' });
+          if (type === 'review') {
+            color = 'purple';
+            label = t('admin.typeReview', { defaultValue: 'Đánh giá' });
+          } else if (type === 'user') {
+            color = 'volcano';
+            label = t('admin.typeUser', { defaultValue: 'Tài khoản' });
+          }
+          return <Tag color={color}>{label}</Tag>;
+        },
+      },
+      {
+        title: t('admin.reportReason', { defaultValue: 'LÝ DO VI PHẠM' }),
+        dataIndex: 'reason',
+        key: 'reason',
+        render: (reason: string) => (
+          <span style={{ fontWeight: 600 }}>{reason}</span>
         ),
       },
       {
-        title: t('admin.reportReason', { defaultValue: 'LÝ DO' }),
-        dataIndex: 'reason',
-        key: 'reason',
-      },
-      {
-        title: t('admin.reportAuthor', { defaultValue: 'TÁC GIẢ' }),
+        title: t('admin.reportAuthor', { defaultValue: 'ĐỐI TƯỢNG / TÁC GIẢ' }),
         dataIndex: 'author',
         key: 'author',
       },
       {
-        title: t('admin.reportContent', { defaultValue: 'NỘI DUNG VI PHẠM' }),
+        title: t('admin.reportContent', { defaultValue: 'NỘI DUNG TRÍCH DẪN' }),
         dataIndex: 'content',
         key: 'content',
         ellipsis: true,
+        render: (content: string) => (
+          <Tooltip title={content} placement="topLeft">
+            <span className="table-content-ellipsis">{content}</span>
+          </Tooltip>
+        ),
       },
       {
-        title: t('admin.reportTime', { defaultValue: 'THỜI GIAN' }),
-        dataIndex: 'reportedAt',
-        key: 'reportedAt',
+        title: t('admin.reportTimeAndStatus', {
+          defaultValue: 'TRẠNG THÁI & THỜI GIAN',
+        }),
+        key: 'statusAndTime',
+        width: 180,
+        align: 'right' as const,
+        render: (_: unknown, item: AdminModerationReportItem) => (
+          <div
+            style={{
+              display: 'inline-flex',
+              flexDirection: 'column',
+              alignItems: 'flex-end',
+              gap: 4,
+            }}
+          >
+            <Tag
+              color={item.status === 'pending' ? 'gold' : 'green'}
+              style={{ margin: 0 }}
+            >
+              {item.status === 'pending'
+                ? t('admin.statusPending', { defaultValue: 'Chờ xử lý' })
+                : t('admin.statusResolved', { defaultValue: 'Đã giải quyết' })}
+            </Tag>
+            <span style={{ fontSize: 11.5, color: '#94a3b8' }}>
+              {formatReportTimestamp(item.reportedAt)}
+            </span>
+          </div>
+        ),
       },
       {
-        title: t('admin.tableStatus', { defaultValue: 'TRẠNG THÁI' }),
-        key: 'status',
-        render: (_: unknown, item: ModerationReportItem) => (
-          <Tag color={item.status === 'pending' ? 'gold' : 'green'}>
-            {item.status === 'pending'
-              ? t('admin.statusPending', { defaultValue: 'Chờ xử lý' })
-              : t('admin.statusResolved', { defaultValue: 'Đã xử lý' })}
-          </Tag>
+        title: t('admin.reportAction', { defaultValue: 'THAO TÁC' }),
+        key: 'action',
+        width: 100,
+        render: (_: unknown, item: AdminModerationReportItem) => (
+          <div style={{ display: 'flex', gap: 6 }}>
+            <Tooltip
+              title={t('admin.viewDetail', { defaultValue: 'Xem chi tiết' })}
+            >
+              <Button
+                size="small"
+                icon={<EyeOutlined />}
+                onClick={() => {
+                  setIsReportDrawerOpen(true);
+                  void loadReportDetail(item.id);
+                }}
+              />
+            </Tooltip>
+            {item.status === 'pending' && (
+              <Tooltip title="Chuyển đến trang Quản lý & Xử lý vi phạm">
+                <Button
+                  size="small"
+                  type="primary"
+                  ghost
+                  icon={<LinkOutlined />}
+                  onClick={() => navigate('/admin/management')}
+                />
+              </Tooltip>
+            )}
+          </div>
         ),
       },
     ],
-    [t],
-  )
+    [t, navigate, loadReportDetail],
+  );
 
+  // Columns for Audit Logs (5 key fields + actions per #1003)
   const auditColumns = useMemo(
     () => [
       {
-        title: t('admin.auditEventId', { defaultValue: 'EVENT ID' }),
-        dataIndex: 'id',
-        key: 'id',
-        render: (val: string) => <b>{val}</b>,
+        title: t('admin.auditTime', { defaultValue: 'THỜI GIAN' }),
+        dataIndex: 'timestamp',
+        key: 'timestamp',
+        width: 160,
+        render: (time: string) => formatReportTimestamp(time),
       },
       {
-        title: t('admin.auditActor', { defaultValue: 'ACTOR' }),
+        title: t('admin.auditActor', { defaultValue: 'NGƯỜI THỰC HIỆN' }),
         dataIndex: 'actor',
         key: 'actor',
+        render: (actor: string, item: AdminAuditItem) => (
+          <div className="actor-cell">
+            <Tag color={item.actorRole === 'admin' ? 'geekblue' : 'default'}>
+              {item.actorRole.toUpperCase()}
+            </Tag>
+            <span>{actor}</span>
+          </div>
+        ),
       },
       {
-        title: t('admin.auditAction', { defaultValue: 'ACTION' }),
+        title: t('admin.auditAction', { defaultValue: 'HÀNH ĐỘNG' }),
         key: 'action',
-        render: (_: unknown, item: AuditLogItem) => <code>{item.action}</code>,
+        width: 160,
+        render: (_: unknown, item: AdminAuditItem) => {
+          const cfg = AUDIT_ACTION_TAG_CONFIG[item.action] || {
+            color: 'default',
+            label: item.action,
+          };
+          return <Tag color={cfg.color}>{cfg.label}</Tag>;
+        },
       },
       {
-        title: t('admin.auditTarget', { defaultValue: 'TARGET' }),
+        title: t('admin.auditCategory', { defaultValue: 'DANH MỤC' }),
+        dataIndex: 'category',
+        key: 'category',
+        width: 130,
+        render: (cat: string) => <Tag color="blue">{cat}</Tag>,
+      },
+      {
+        title: t('admin.auditTarget', { defaultValue: 'MỤC TIÊU & IP' }),
         dataIndex: 'target',
         key: 'target',
+        ellipsis: true,
+        render: (target: string, item: AdminAuditItem) => (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <Tooltip title={target} placement="topLeft">
+              <span className="table-content-ellipsis">{target}</span>
+            </Tooltip>
+            <span className="ip-badge" style={{ width: 'fit-content' }}>
+              {item.ip ?? 'internal'}
+            </span>
+          </div>
+        ),
       },
       {
-        title: t('admin.auditTime', { defaultValue: 'TIME' }),
-        dataIndex: 'time',
-        key: 'time',
-      },
-      {
-        title: t('admin.auditIp', { defaultValue: 'IP' }),
-        dataIndex: 'ip',
-        key: 'ip',
+        title: t('admin.viewDetail', { defaultValue: 'CHI TIẾT' }),
+        key: 'detail',
+        width: 80,
+        render: (_: unknown, item: AdminAuditItem) => (
+          <Button
+            size="small"
+            icon={<EyeOutlined />}
+            onClick={() => {
+              setIsAuditDrawerOpen(true);
+              void loadAuditLogDetail(item.id);
+            }}
+          >
+            {t('admin.viewDetail', { defaultValue: 'Xem' })}
+          </Button>
+        ),
       },
     ],
-    [t],
-  )
-
-  const pendingCount = moderationItems.filter((item) => item.status === 'pending').length
+    [t, loadAuditLogDetail],
+  );
 
   return (
-    <section className="admin-page">
-      <header className="user-page__head">
+    <section className="admin-reports-page">
+      {/* Header */}
+      <header className="page-header">
         <div>
-          <span className="eyebrow">OBSERVABILITY & COMPLIANCE</span>
-          <h1>{t('admin.reportsTitle', { defaultValue: 'Báo cáo & Giám sát' })}</h1>
-          <p>{t('admin.reportsSubtitle', { defaultValue: 'Phân tích kiểm duyệt, audit trail và tình trạng hạ tầng hệ thống.' })}</p>
+          <span className="eyebrow">
+            {t('admin.reportsEyebrow', {
+              defaultValue: 'OBSERVABILITY & COMPLIANCE',
+            })}
+          </span>
+          <h1 className="page-title">
+            {t('admin.reportsTitle', {
+              defaultValue: 'Báo cáo & Giám sát hệ thống',
+            })}
+          </h1>
+          <p className="page-subtitle">
+            {t('admin.reportsSubtitle', {
+              defaultValue:
+                'Phân tích kiểm duyệt, nhật ký kiểm toán và theo dõi sức khỏe hạ tầng thời gian thực.',
+            })}
+          </p>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <Button icon={<DownloadOutlined />} onClick={handleExport}>
-            {t('admin.exportReport', { defaultValue: 'Xuất báo cáo' })}
-          </Button>
+        <div className="header-actions">
+          <Dropdown menu={{ items: exportMenuItems }} placement="bottomRight">
+            <Button
+              type="primary"
+              icon={<DownloadOutlined />}
+              loading={isExporting}
+            >
+              {t('admin.exportReport', { defaultValue: 'Xuất báo cáo' })}
+            </Button>
+          </Dropdown>
         </div>
       </header>
 
-      <div
-        className="admin-toolbar"
-        style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: 12,
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        }}
-      >
+      {/* Toolbar */}
+      <div className="toolbar">
         <Segmented
-          value={tab}
-          onChange={(val) => {
-            setTab(val as ReportTabType)
-            setSearch('')
-          }}
+          value={activeTab}
+          onChange={(val) => setActiveTab(val as ReportTabType)}
           options={[
-            { value: 'reports', label: t('admin.tabReports', { defaultValue: 'Báo cáo kiểm duyệt' }) },
-            { value: 'audit', label: t('admin.tabAudit', { defaultValue: 'Audit log' }) },
-            { value: 'system', label: t('admin.tabSystem', { defaultValue: 'System status' }) },
+            {
+              value: 'reports',
+              label: t('admin.tabReports', {
+                defaultValue: 'Báo cáo kiểm duyệt',
+              }),
+              icon: <FileSearchOutlined />,
+            },
+            {
+              value: 'audit',
+              label: t('admin.tabAudit', { defaultValue: 'Audit Log' }),
+              icon: <SafetyCertificateOutlined />,
+            },
+            {
+              value: 'system',
+              label: t('admin.tabSystem', { defaultValue: 'Trạng thái hạ tầng' }),
+              icon: <CloudServerOutlined />,
+            },
           ]}
         />
 
-        <div
-          style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: 8,
-            alignItems: 'center',
-            flex: 1,
-            justifyContent: 'flex-end',
-          }}
-        >
-          {tab !== 'system' && (
-            <Input
-              prefix={<SearchOutlined />}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder={
-                tab === 'reports'
-                  ? t('admin.searchReportsPlaceholder', { defaultValue: 'Tìm mã, tác giả, lý do...' })
-                  : t('admin.searchAuditPlaceholder', { defaultValue: 'Tìm event, actor, action...' })
-              }
-              style={{ maxWidth: 240 }}
-            />
+        <div className="toolbar-filters">
+          {activeTab === 'reports' && (
+            <>
+              <Input
+                prefix={<SearchOutlined />}
+                value={reportsSearch}
+                onChange={(e) => setReportsSearch(e.target.value)}
+                placeholder={t('admin.searchReportsPlaceholder', {
+                  defaultValue: 'Tìm mã, tác giả, lý do vi phạm...',
+                })}
+                style={{ width: 220 }}
+                allowClear
+              />
+              <Select
+                value={reportsType}
+                onChange={setReportsType}
+                style={{ width: 150 }}
+                options={MODERATION_TYPE_OPTIONS.map((opt) => ({
+                  value: opt.value,
+                  label: t(opt.labelKey, { defaultValue: opt.defaultLabel }),
+                }))}
+              />
+              <Select
+                value={reportsStatus}
+                onChange={setReportsStatus}
+                style={{ width: 140 }}
+                options={MODERATION_STATUS_OPTIONS.map((opt) => ({
+                  value: opt.value,
+                  label: t(opt.labelKey, { defaultValue: opt.defaultLabel }),
+                }))}
+              />
+              <DatePicker.RangePicker
+                onChange={(dates) => {
+                  if (dates && dates[0] && dates[1]) {
+                    setReportsDateRange([
+                      dates[0].startOf('day').toISOString(),
+                      dates[1].endOf('day').toISOString(),
+                    ]);
+                  } else {
+                    setReportsDateRange(null);
+                  }
+                }}
+              />
+            </>
           )}
 
-          {tab === 'reports' && (
-            <Select
-              value={reportStatus}
-              onChange={(val) => setReportStatus(val)}
-              style={{ width: 140 }}
-              options={[
-                { value: 'all', label: t('admin.statusAll', { defaultValue: 'Tất cả trạng thái' }) },
-                { value: 'pending', label: t('admin.statusPending', { defaultValue: 'Chờ xử lý' }) },
-                { value: 'resolved', label: t('admin.statusResolved', { defaultValue: 'Đã xử lý' }) },
-              ]}
-            />
+          {activeTab === 'audit' && (
+            <>
+              <Input
+                prefix={<SearchOutlined />}
+                value={auditSearch}
+                onChange={(e) => setAuditSearch(e.target.value)}
+                placeholder={t('admin.searchAuditPlaceholder', {
+                  defaultValue: 'Tìm event, actor, action, IP...',
+                })}
+                style={{ width: 230 }}
+                allowClear
+              />
+              <Select
+                value={auditCategory}
+                onChange={setAuditCategory}
+                style={{ width: 170 }}
+                options={AUDIT_CATEGORY_OPTIONS.map((opt) => ({
+                  value: opt.value,
+                  label: t(opt.labelKey, { defaultValue: opt.defaultLabel }),
+                }))}
+              />
+              <DatePicker.RangePicker
+                onChange={(dates) => {
+                  if (dates && dates[0] && dates[1]) {
+                    setAuditDateRange([
+                      dates[0].startOf('day').toISOString(),
+                      dates[1].endOf('day').toISOString(),
+                    ]);
+                  } else {
+                    setAuditDateRange(null);
+                  }
+                }}
+              />
+            </>
           )}
 
-          {tab !== 'system' && <DatePicker.RangePicker />}
+          {activeTab === 'system' && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <Select
+                value={autoRefreshInterval}
+                onChange={setAutoRefreshInterval}
+                style={{ width: 145 }}
+                options={[
+                  {
+                    value: 0,
+                    label: t('admin.autoRefreshOff', {
+                      defaultValue: 'Tự động: Tắt',
+                    }),
+                  },
+                  {
+                    value: 30,
+                    label: t('admin.autoRefresh30s', {
+                      defaultValue: 'Tự động: 30s',
+                    }),
+                  },
+                  {
+                    value: 60,
+                    label: t('admin.autoRefresh60s', {
+                      defaultValue: 'Tự động: 60s',
+                    }),
+                  },
+                ]}
+              />
+              {lastRefreshedAt && (
+                <span style={{ fontSize: 12, color: '#94a3b8' }}>
+                  <ClockCircleOutlined style={{ marginRight: 4 }} />
+                  {t('admin.lastUpdated', { defaultValue: 'Cập nhật: ' })}
+                  {lastRefreshedAt}
+                </span>
+              )}
+              <Button
+                icon={<ReloadOutlined />}
+                loading={systemLoading}
+                onClick={() => void refetchSystemStatus()}
+              >
+                {t('admin.refreshSystem', { defaultValue: 'Làm mới' })}
+              </Button>
+            </div>
+          )}
         </div>
       </div>
 
-      {tab === 'reports' && (
+      {/* Tab 1: Moderation Reports */}
+      {activeTab === 'reports' && (
         <>
-          <div className="report-metrics">
-            <article>
-              <AlertOutlined />
-              <strong>{moderationItems.length}</strong>
-              <span>{t('admin.metricTotalReports', { defaultValue: 'Tổng báo cáo' })}</span>
+          {reportsError && (
+            <Alert
+              type="error"
+              message={reportsError}
+              action={<Button onClick={() => void refetchReports()}>Thử lại</Button>}
+              showIcon
+            />
+          )}
+
+          <div className="metrics-grid">
+            <article className="metric-card">
+              <div className="metric-icon-wrap total">
+                <AlertOutlined />
+              </div>
+              <div className="metric-info">
+                <span className="metric-value">
+                  {reportsData?.metrics?.totalReports ?? 0}
+                </span>
+                <span className="metric-label">
+                  {t('admin.metricTotalReports', { defaultValue: 'Tổng báo cáo' })}
+                </span>
+              </div>
             </article>
-            <article>
-              <FileSearchOutlined />
-              <strong>{pendingCount}</strong>
-              <span>{t('admin.metricPendingReports', { defaultValue: 'Đang chờ xử lý' })}</span>
+
+            <article className="metric-card">
+              <div className="metric-icon-wrap pending">
+                <FileSearchOutlined />
+              </div>
+              <div className="metric-info">
+                <span className="metric-value">
+                  {reportsData?.metrics?.pendingReports ?? 0}
+                </span>
+                <span className="metric-label">
+                  {t('admin.metricPendingReports', {
+                    defaultValue: 'Đang chờ xử lý',
+                  })}
+                </span>
+              </div>
             </article>
-            <article>
-              <CheckCircleFilled />
-              <strong>94%</strong>
-              <span>{t('admin.metricProcessedIn24h', { defaultValue: 'Xử lý dưới 24 giờ' })}</span>
+
+            <article className="metric-card">
+              <div className="metric-icon-wrap resolved">
+                <CheckCircleFilled />
+              </div>
+              <div className="metric-info">
+                <span className="metric-value">
+                  {reportsData?.metrics?.resolvedReports ?? 0}
+                </span>
+                <span className="metric-label">
+                  {t('admin.metricResolvedReports', {
+                    defaultValue: 'Đã giải quyết',
+                  })}
+                </span>
+              </div>
+            </article>
+
+            <article className="metric-card">
+              <div className="metric-icon-wrap rate">
+                <SafetyCertificateOutlined />
+              </div>
+              <div className="metric-info">
+                <span className="metric-value">
+                  {reportsData?.metrics?.processedWithin24hRate ?? 100}%
+                </span>
+                <span className="metric-label">
+                  {t('admin.metricProcessedIn24h', {
+                    defaultValue: 'Xử lý dưới 24h',
+                  })}
+                </span>
+              </div>
             </article>
           </div>
-          <Table
-            rowKey="id"
-            dataSource={filteredReports}
-            columns={reportColumns}
-            pagination={{ pageSize: 10 }}
-          />
+
+          <div className="table-container">
+            {reportsLoading && !reportsData ? (
+              <Skeleton active paragraph={{ rows: 6 }} style={{ padding: 20 }} />
+            ) : (
+              <Table
+                rowKey="id"
+                dataSource={reportsData?.items ?? []}
+                columns={reportColumns}
+                loading={reportsLoading}
+                locale={{
+                  emptyText: (
+                    <Empty
+                      image={Empty.PRESENTED_IMAGE_SIMPLE}
+                      description={
+                        <div className="table-empty-wrap">
+                          <p className="empty-title">
+                            {t('admin.emptyModerationReports', {
+                              defaultValue:
+                                'Không có báo cáo vi phạm nào phù hợp.',
+                            })}
+                          </p>
+                          <p className="empty-subtitle">
+                            {t('admin.emptyFilterHelp', {
+                              defaultValue:
+                                'Thử điều chỉnh hoặc xóa bộ lọc để hiển thị dữ liệu.',
+                            })}
+                          </p>
+                          <Button
+                            size="small"
+                            icon={<ClearOutlined />}
+                            onClick={resetReportsFilters}
+                          >
+                            {t('admin.clearAllFilters', {
+                              defaultValue: 'Xóa bộ lọc',
+                            })}
+                          </Button>
+                        </div>
+                      }
+                    />
+                  ),
+                }}
+                pagination={{
+                  current: reportsPage,
+                  pageSize: 10,
+                  total: reportsData?.total ?? 0,
+                  onChange: (page) => setReportsPage(page),
+                  showTotal: (total) => `Tổng ${total} báo cáo vi phạm`,
+                }}
+              />
+            )}
+          </div>
         </>
       )}
 
-      {tab === 'audit' && (
-        <Table
-          rowKey="id"
-          dataSource={filteredAuditLogs}
-          columns={auditColumns}
-          scroll={{ x: 800 }}
-          pagination={{ pageSize: 10 }}
-        />
+      {/* Tab 2: Audit Logs */}
+      {activeTab === 'audit' && (
+        <>
+          {auditError && (
+            <Alert
+              type="error"
+              message={auditError}
+              action={<Button onClick={() => void refetchAudits()}>Thử lại</Button>}
+              showIcon
+            />
+          )}
+
+          <div className="table-container">
+            {auditLoading && !auditData ? (
+              <Skeleton active paragraph={{ rows: 8 }} style={{ padding: 20 }} />
+            ) : (
+              <Table
+                rowKey="id"
+                dataSource={auditData?.items ?? []}
+                columns={auditColumns}
+                loading={auditLoading}
+                scroll={{ x: 880 }}
+                locale={{
+                  emptyText: (
+                    <Empty
+                      image={Empty.PRESENTED_IMAGE_SIMPLE}
+                      description={
+                        <div className="table-empty-wrap">
+                          <p className="empty-title">
+                            {t('admin.emptyAuditLogs', {
+                              defaultValue:
+                                'Không tìm thấy nhật ký kiểm toán phù hợp.',
+                            })}
+                          </p>
+                          <p className="empty-subtitle">
+                            {t('admin.emptyFilterHelp', {
+                              defaultValue:
+                                'Thử điều chỉnh hoặc xóa bộ lọc để hiển thị dữ liệu.',
+                            })}
+                          </p>
+                          <Button
+                            size="small"
+                            icon={<ClearOutlined />}
+                            onClick={resetAuditFilters}
+                          >
+                            {t('admin.clearAllFilters', {
+                              defaultValue: 'Xóa bộ lọc',
+                            })}
+                          </Button>
+                        </div>
+                      }
+                    />
+                  ),
+                }}
+                pagination={{
+                  current: auditPage,
+                  pageSize: 10,
+                  total: auditData?.total ?? 0,
+                  onChange: (page) => setAuditPage(page),
+                  showTotal: (total) => `Tổng ${total} sự kiện kiểm toán`,
+                }}
+              />
+            )}
+          </div>
+        </>
       )}
 
-      {tab === 'system' && (
-        <div className="system-grid">
-          {SYSTEM_NODES.map((node) => (
-            <article key={node.name}>
-              <CloudServerOutlined />
-              <div>
-                <h2>{node.name}</h2>
-                <p>{node.detail}</p>
-                <Progress
-                  percent={node.percent}
-                  strokeColor="#8cfc70"
-                  trailColor="#263125"
-                />
-              </div>
-              <Tag color="green">
-                <CheckCircleFilled /> {node.status}
-              </Tag>
-            </article>
-          ))}
-        </div>
+      {/* Tab 3: System Status */}
+      {activeTab === 'system' && (
+        <>
+          {systemError && (
+            <Alert
+              type="error"
+              message={systemError}
+              action={
+                <Button onClick={() => void refetchSystemStatus()}>Thử lại</Button>
+              }
+              showIcon
+            />
+          )}
+
+          {systemLoading && !systemData ? (
+            <Skeleton active paragraph={{ rows: 6 }} style={{ padding: 20 }} />
+          ) : (
+            <div className="system-grid">
+              {(systemData?.nodes ?? []).map((node) => {
+                let statusColor = 'green';
+                let StatusIcon = CheckCircleFilled;
+                if (node.status === 'DEGRADED') {
+                  statusColor = 'gold';
+                  StatusIcon = WarningFilled;
+                } else if (node.status === 'OUTAGE') {
+                  statusColor = 'red';
+                  StatusIcon = CloseCircleFilled;
+                }
+
+                let NodeIcon = CloudServerOutlined;
+                if (node.key === 'primary_database') {
+                  NodeIcon = DatabaseOutlined;
+                }
+
+                return (
+                  <article key={node.key} className="system-card">
+                    <div className="node-header">
+                      <div className="node-title-group">
+                        <NodeIcon className="node-icon" />
+                        <div>
+                          <h3 className="node-name">{node.name}</h3>
+                          <p className="node-detail">{node.detail}</p>
+                        </div>
+                      </div>
+                      <Tag color={statusColor}>
+                        <StatusIcon style={{ marginRight: 4 }} />
+                        {node.status}
+                      </Tag>
+                    </div>
+
+                    <Progress
+                      percent={node.healthPercent}
+                      status={node.status === 'OUTAGE' ? 'exception' : 'active'}
+                      strokeColor={
+                        node.status === 'OPERATIONAL'
+                          ? '#10b981'
+                          : node.status === 'DEGRADED'
+                            ? '#f59e0b'
+                            : '#ef4444'
+                      }
+                      trailColor="#1e293b"
+                    />
+
+                    <div className="node-telemetry">
+                      <div className="telemetry-item">
+                        <span className="telemetry-label">
+                          {t('admin.latency', { defaultValue: 'Độ trễ' })}
+                        </span>
+                        <span className="telemetry-value">
+                          {formatLatency(node.latencyMs)}
+                        </span>
+                      </div>
+
+                      {node.metrics?.uptimeSeconds !== undefined && (
+                        <div className="telemetry-item">
+                          <span className="telemetry-label">
+                            {t('admin.uptime', { defaultValue: 'Thời gian chạy' })}
+                          </span>
+                          <span className="telemetry-value">
+                            {Math.floor(node.metrics.uptimeSeconds / 3600)}h
+                          </span>
+                        </div>
+                      )}
+
+                      {node.metrics?.heapUsedMb !== undefined && (
+                        <div className="telemetry-item">
+                          <span className="telemetry-label">
+                            {t('admin.heapMemory', { defaultValue: 'Bộ nhớ Heap' })}
+                          </span>
+                          <span className="telemetry-value">
+                            {node.metrics.heapUsedMb} MB
+                          </span>
+                        </div>
+                      )}
+
+                      {node.metrics?.activeConnections !== undefined && (
+                        <div className="telemetry-item">
+                          <span className="telemetry-label">
+                            {t('admin.activeConnections', {
+                              defaultValue: 'Pool kết nối',
+                            })}
+                          </span>
+                          <span className="telemetry-value">
+                            {node.metrics.activeConnections}
+                          </span>
+                        </div>
+                      )}
+
+                      {node.metrics?.databaseSizeBytes !== undefined && (
+                        <div className="telemetry-item">
+                          <span className="telemetry-label">
+                            {t('admin.databaseSize', {
+                              defaultValue: 'Dung lượng DB',
+                            })}
+                          </span>
+                          <span className="telemetry-value">
+                            {formatBytes(node.metrics.databaseSizeBytes)}
+                          </span>
+                        </div>
+                      )}
+
+                      {node.metrics?.connectedClients !== undefined && (
+                        <div className="telemetry-item">
+                          <span className="telemetry-label">
+                            {t('admin.connectedClients', {
+                              defaultValue: 'Clients kết nối',
+                            })}
+                          </span>
+                          <span className="telemetry-value">
+                            {node.metrics.connectedClients}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          )}
+        </>
       )}
+
+      {/* Drawer: Chi tiết Audit Log */}
+      <Drawer
+        rootClassName="admin-reports-drawer"
+        title={
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <SafetyCertificateOutlined style={{ color: '#10b981', fontSize: 18 }} />
+            <span>
+              {t('admin.auditDetailTitle', {
+                defaultValue: 'Chi tiết sự kiện kiểm toán',
+              })}
+            </span>
+            {selectedAuditLog && (
+              <Tag color="cyan" style={{ margin: 0, fontSize: 11, fontWeight: 600 }}>
+                {selectedAuditLog.category}
+              </Tag>
+            )}
+          </div>
+        }
+        open={isAuditDrawerOpen}
+        onClose={() => {
+          setIsAuditDrawerOpen(false);
+          setSelectedAuditLog(null);
+        }}
+        width={500}
+      >
+        {drawerLoading ? (
+          <Skeleton active paragraph={{ rows: 8 }} style={{ padding: 16 }} />
+        ) : selectedAuditLog ? (
+          <div>
+            <div className="drawer-compact-card">
+              <div className="drawer-compact-row">
+                <span className="drawer-compact-label">ID SỰ KIỆN</span>
+                <div className="drawer-compact-value">
+                  <span className="id-text">{selectedAuditLog.id}</span>
+                  <Tooltip
+                    title={t('admin.copyCode', {
+                      defaultValue: 'Sao chép mã sự kiện',
+                    })}
+                  >
+                    <Button
+                      type="text"
+                      size="small"
+                      aria-label={t('admin.copyCode', {
+                        defaultValue: 'Sao chép mã sự kiện',
+                      })}
+                      className="copy-action-btn"
+                      icon={<CopyOutlined style={{ fontSize: 12 }} />}
+                      onClick={() =>
+                        void handleCopy(
+                          selectedAuditLog.id,
+                          t('admin.auditEventId', { defaultValue: 'Mã sự kiện' }),
+                        )
+                      }
+                    />
+                  </Tooltip>
+                </div>
+              </div>
+
+              <div className="drawer-compact-row">
+                <span className="drawer-compact-label">HÀNH ĐỘNG</span>
+                <div className="drawer-compact-value">
+                  <Tag
+                    color={
+                      AUDIT_ACTION_TAG_CONFIG[selectedAuditLog.action]?.color ??
+                      'default'
+                    }
+                    style={{ margin: 0 }}
+                  >
+                    {AUDIT_ACTION_TAG_CONFIG[selectedAuditLog.action]?.label ??
+                      selectedAuditLog.action}
+                  </Tag>
+                  <Tag color="blue" style={{ margin: 0 }}>
+                    {selectedAuditLog.category}
+                  </Tag>
+                </div>
+              </div>
+
+              <div className="drawer-compact-row">
+                <span className="drawer-compact-label">NGƯỜI THỰC HIỆN</span>
+                <div className="drawer-compact-value">
+                  <span>{selectedAuditLog.actor}</span>
+                  <Tag style={{ margin: 0 }}>{selectedAuditLog.actorRole}</Tag>
+                </div>
+              </div>
+
+              <div className="drawer-compact-row">
+                <span className="drawer-compact-label">MỤC TIÊU TÁC ĐỘNG</span>
+                <div className="drawer-compact-value">
+                  <span style={{ fontWeight: 600 }}>{selectedAuditLog.target}</span>
+                </div>
+              </div>
+
+              <div className="drawer-compact-row">
+                <span className="drawer-compact-label">THỜI GIAN</span>
+                <div className="drawer-compact-value">
+                  {formatReportTimestamp(selectedAuditLog.timestamp)}
+                </div>
+              </div>
+
+              <div className="drawer-compact-row align-top">
+                <span className="drawer-compact-label">IP & THIẾT BỊ</span>
+                <div
+                  className="drawer-compact-value"
+                  style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 2 }}
+                >
+                  <span>{selectedAuditLog.ip ?? 'internal'}</span>
+                  {selectedAuditLog.userAgent && (
+                    <span style={{ fontSize: 11, color: '#94a3b8' }}>
+                      {selectedAuditLog.userAgent}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="drawer-payload-section">
+              <div className="drawer-payload-header">
+                <div className="drawer-payload-title">
+                  <span>DỮ LIỆU THAY ĐỔI</span>
+                  <span className="json-badge">JSON</span>
+                </div>
+                <Button
+                  size="small"
+                  type="text"
+                  aria-label={t('admin.copyPayload', { defaultValue: 'Sao chép JSON' })}
+                  icon={<CopyOutlined />}
+                  onClick={() =>
+                    void handleCopy(
+                      JSON.stringify(selectedAuditLog.details ?? {}, null, 2),
+                      'JSON Payload',
+                    )
+                  }
+                >
+                  {t('admin.copyPayload', { defaultValue: 'Sao chép' })}
+                </Button>
+              </div>
+              <pre className="json-viewer-compact">
+                {JSON.stringify(selectedAuditLog.details ?? {}, null, 2)}
+              </pre>
+            </div>
+          </div>
+        ) : null}
+      </Drawer>
+
+      {/* Drawer: Chi tiết Báo cáo vi phạm */}
+      <Drawer
+        rootClassName="admin-reports-drawer"
+        title={
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <AlertOutlined style={{ color: '#f59e0b', fontSize: 18 }} />
+            <span>
+              {t('admin.reportDetailTitle', {
+                defaultValue: 'Chi tiết báo cáo vi phạm',
+              })}
+            </span>
+            {selectedReport && (
+              <Tag
+                color={selectedReport.type === 'post' ? 'blue' : 'purple'}
+                style={{ margin: 0, fontSize: 11, fontWeight: 600 }}
+              >
+                {selectedReport.type.toUpperCase()}
+              </Tag>
+            )}
+          </div>
+        }
+        open={isReportDrawerOpen}
+        onClose={() => {
+          setIsReportDrawerOpen(false);
+          setSelectedReport(null);
+        }}
+        width={500}
+      >
+        {drawerLoading ? (
+          <Skeleton active paragraph={{ rows: 8 }} style={{ padding: 16 }} />
+        ) : selectedReport ? (
+          <div>
+            <div className="drawer-compact-card">
+              <div className="drawer-compact-row">
+                <span className="drawer-compact-label">MÃ BÁO CÁO</span>
+                <div className="drawer-compact-value">
+                  <span className="id-text">{selectedReport.id}</span>
+                  <Tooltip
+                    title={t('admin.copyCode', { defaultValue: 'Sao chép mã' })}
+                  >
+                    <Button
+                      type="text"
+                      size="small"
+                      aria-label={t('admin.copyCode', { defaultValue: 'Sao chép mã' })}
+                      className="copy-action-btn"
+                      icon={<CopyOutlined style={{ fontSize: 12 }} />}
+                      onClick={() =>
+                        void handleCopy(
+                          selectedReport.id,
+                          t('admin.reportId', { defaultValue: 'Mã báo cáo' }),
+                        )
+                      }
+                    />
+                  </Tooltip>
+                </div>
+              </div>
+
+              <div className="drawer-compact-row">
+                <span className="drawer-compact-label">PHÂN LOẠI</span>
+                <div className="drawer-compact-value">
+                  <Tag
+                    color={selectedReport.type === 'post' ? 'blue' : 'purple'}
+                    style={{ margin: 0 }}
+                  >
+                    {selectedReport.type.toUpperCase()}
+                  </Tag>
+                  <Tag
+                    color={selectedReport.status === 'pending' ? 'gold' : 'green'}
+                    style={{ margin: 0 }}
+                  >
+                    {selectedReport.status === 'pending'
+                      ? 'Chờ xử lý'
+                      : 'Đã giải quyết'}
+                  </Tag>
+                </div>
+              </div>
+
+              <div className="drawer-compact-row">
+                <span className="drawer-compact-label">LÝ DO VI PHẠM</span>
+                <div className="drawer-compact-value">
+                  <span style={{ fontWeight: 600, color: '#f87171' }}>
+                    {selectedReport.reason}
+                  </span>
+                </div>
+              </div>
+
+              <div className="drawer-compact-row">
+                <span className="drawer-compact-label">NGƯỜI GỬI</span>
+                <div className="drawer-compact-value">
+                  {selectedReport.author}
+                </div>
+              </div>
+
+              <div className="drawer-compact-row">
+                <span className="drawer-compact-label">THỜI GIAN</span>
+                <div className="drawer-compact-value">
+                  {formatReportTimestamp(selectedReport.reportedAt)}
+                </div>
+              </div>
+
+              {selectedReport.actionTaken && (
+                <div className="drawer-compact-row">
+                  <span className="drawer-compact-label">ĐÃ XỬ LÝ</span>
+                  <div className="drawer-compact-value" style={{ color: '#34d399' }}>
+                    {selectedReport.actionTaken} (bởi {selectedReport.moderator})
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="drawer-payload-section" style={{ marginBottom: 20 }}>
+              <div className="drawer-payload-header">
+                <span className="drawer-payload-title">NỘI DUNG BÁO CÁO</span>
+              </div>
+              <div className="drawer-content-box">
+                {selectedReport.content}
+              </div>
+            </div>
+
+            {selectedReport.status === 'pending' && (
+              <Button
+                type="primary"
+                block
+                className="drawer-action-btn"
+                icon={<LinkOutlined />}
+                onClick={() => {
+                  setIsReportDrawerOpen(false);
+                  setSelectedReport(null);
+                  navigate('/admin/management');
+                }}
+              >
+                Chuyển tới trang Kiểm duyệt để xử lý vi phạm
+              </Button>
+            )}
+          </div>
+        ) : null}
+      </Drawer>
     </section>
-  )
+  );
 }

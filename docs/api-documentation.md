@@ -98,6 +98,12 @@ Tài liệu chi tiết toàn bộ các API HTTP REST và WebSocket Gateway của
 | | `GET` | `/admin/field-approvals/:id` | Admin | Xem chi tiết yêu cầu duyệt sân bóng |
 | | `POST` | `/admin/field-approvals/:id/approve` | Admin | Phê duyệt sân bóng |
 | | `POST` | `/admin/field-approvals/:id/reject` | Admin | Từ chối phê duyệt sân bóng |
+| | `GET` | `/admin/audit-logs` | Admin | Lấy danh sách nhật ký kiểm toán hệ thống (Audit logs) |
+| | `GET` | `/admin/audit-logs/:id` | Admin | Lấy thông tin chi tiết một sự kiện kiểm toán theo ID |
+| | `GET` | `/admin/audit-logs/export` | Admin | Xuất tệp tin nhật ký kiểm toán ra định dạng CSV hoặc JSON |
+| | `GET` | `/admin/reports/moderation` | Admin | Báo cáo vi phạm nội dung và KPI kiểm duyệt thời gian thực |
+| | `GET` | `/admin/reports/moderation/:id` | Admin | Lấy thông tin chi tiết một báo cáo vi phạm kiểm duyệt theo ID |
+| | `GET` | `/admin/reports/system-status` | Admin | Giám sát trạng thái và hiệu năng các nút hạ tầng |
 | **Hệ thống** | `GET` | `/` | Public | Kiểm tra tình trạng hoạt động backend (Health check) |
 | **Real-time Chat** | `WS` | `/chat` | Đã đăng nhập (JWT) | WebSocket Gateway nhắn tin trực tiếp |
 | | `GET` | `/chat/conversations` | Đã đăng nhập (JWT) | Lấy danh sách cuộc trò chuyện của tôi |
@@ -2125,5 +2131,216 @@ Tài liệu chi tiết toàn bộ các API HTTP REST và WebSocket Gateway của
 - **Quyền truy cập:** `admin`
 - **Query Parameters (`AdminReviewsQueryDto`):** `search`, `status` (`'all' | 'pending' | 'resolved'`), `reviewType` (`'all' | 'field' | 'user'`), `page`, `limit`.
 - **Response (`200 OK` - `AdminReviewsListResponseDto`):** Hợp nhất (`UNION ALL`) các đánh giá có `is_flagged = true` từ `field_reviews` và `user_reviews`, kèm `summary` (`totalFlagged`, `pendingCount`, `resolvedCount`).
+
+---
+
+### 3.20. Audit Log & Báo Cáo Hệ Thống (Admin Reports & Observability)
+
+#### 3.20.1. Danh sách nhật ký kiểm toán hệ thống (`GET /admin/audit-logs`)
+- **Quyền truy cập:** `admin` (`JwtAuthGuard`, `AccountStatusGuard`, `RolesGuard`)
+- **Query Parameters (`AdminAuditQueryDto`):**
+  - `page` *(number, optional, default: 1)*
+  - `limit` *(number, optional, default: 10, max: 100)*
+  - `search` *(string, optional)*: Tìm kiếm theo actor email, action, target hoặc IP.
+  - `category` *(enum, optional, default: `'ALL'`)*: `'ALL' | 'AUTH' | 'APPROVAL' | 'MODERATION' | 'USER_STATUS' | 'PAYMENT' | 'SYSTEM'`
+  - `fromDate` *(ISO Date string, optional)*
+  - `toDate` *(ISO Date string, optional)*
+- **Response (`200 OK` - `AdminAuditListResponseDto`):**
+  ```json
+  {
+    "items": [
+      {
+        "id": "uuid",
+        "action": "SUSPEND_USER",
+        "category": "USER_STATUS",
+        "actor": "admin@pitchmaster.vn",
+        "actorRole": "admin",
+        "target": "USR-0088",
+        "targetType": "user",
+        "targetId": "uuid",
+        "ip": "10.42.8.17",
+        "userAgent": "Mozilla/5.0 ...",
+        "timestamp": "2026-11-08T10:31:00.000Z",
+        "details": {
+          "reason": "Spam bài đăng tìm đối",
+          "previousStatus": "active",
+          "newStatus": "suspended"
+        }
+      }
+    ],
+    "total": 1,
+    "page": 1,
+    "limit": 10,
+    "totalPages": 1,
+    "availableCategories": ["ALL", "AUTH", "APPROVAL", "MODERATION", "USER_STATUS", "PAYMENT", "SYSTEM"]
+  }
+  ```
+
+#### 3.20.2. Xuất dữ liệu nhật ký kiểm toán (`GET /admin/audit-logs/export`)
+- **Quyền truy cập:** `admin`
+- **Query Parameters (`AdminAuditExportQueryDto`):** Kế thừa `AdminAuditQueryDto`, bổ sung `format: 'json' | 'csv'` *(mặc định: `'json'`)*.
+- **Header phản hồi:**
+  - `Content-Type`: `text/csv; charset=utf-8` (hoặc `application/json; charset=utf-8`)
+  - `Content-Disposition`: `attachment; filename="audit-logs-YYYYMMDD.csv"`
+- **Đặc điểm:** Tự động đính kèm ký tự UTF-8 BOM (`\uFEFF`) cho định dạng CSV để hiển thị tiếng Việt hoàn hảo trên Excel.
+
+#### 3.20.3. Báo cáo kiểm duyệt & nội dung vi phạm (`GET /admin/reports/moderation`)
+- **Quyền truy cập:** `admin`
+- **Query Parameters (`AdminModerationReportsQueryDto`):**
+  - `page` *(number, optional, default: 1)*
+  - `limit` *(number, optional, default: 10)*
+  - `type` *(enum, optional, default: `'all'`)*: `'all' | 'post' | 'review' | 'user'`
+  - `status` *(enum, optional, default: `'all'`)*: `'all' | 'pending' | 'resolved'`
+  - `search` *(string, optional)*
+  - `fromDate`, `toDate` *(ISO Date string, optional)*
+- **Response (`200 OK` - `AdminModerationReportsResponseDto`):**
+  ```json
+  {
+    "metrics": {
+      "totalReports": 48,
+      "pendingReports": 7,
+      "resolvedReports": 41,
+      "processedWithin24hRate": 92.5
+    },
+    "items": [
+      {
+        "id": "RPT-4401",
+        "type": "post",
+        "targetId": "uuid",
+        "author": "Anonymous Striker",
+        "authorId": "uuid",
+        "reason": "Ngôn từ không phù hợp",
+        "content": "Bài tìm đối có nội dung công kích đội bóng khác",
+        "reportedAt": "2026-11-08T09:20:00.000Z",
+        "status": "pending",
+        "actionTaken": null,
+        "resolvedAt": null,
+        "moderator": null
+      }
+    ],
+    "total": 48,
+    "page": 1,
+    "limit": 10,
+    "totalPages": 5
+  }
+  ```
+
+#### 3.20.4. Giám sát tình trạng hạ tầng (`GET /admin/reports/system-status`)
+- **Quyền truy cập:** `admin`
+- **Response (`200 OK` - `AdminSystemStatusResponseDto`):**
+  ```json
+  {
+    "overallStatus": "OPERATIONAL",
+    "timestamp": "2026-11-08T10:15:30.000Z",
+    "nodes": [
+      {
+        "key": "api_gateway",
+        "name": "API Gateway & Server Node",
+        "status": "OPERATIONAL",
+        "healthPercent": 99,
+        "latencyMs": 15,
+        "detail": "NestJS 11 · Fastify · Heap: 142/256MB · Uptime: 4d 12h",
+        "metrics": {
+          "uptimeSeconds": 388800,
+          "heapUsedMb": 142.5,
+          "heapTotalMb": 256.0
+        }
+      },
+      {
+        "key": "primary_database",
+        "name": "Primary Database (PostgreSQL 16)",
+        "status": "OPERATIONAL",
+        "healthPercent": 97,
+        "latencyMs": 12,
+        "detail": "PostgreSQL 16 · 15 active pool clients · 48.6 MB used",
+        "metrics": {
+          "activeConnections": 15,
+          "databaseSizeBytes": 51000000,
+          "maxConnections": 100
+        }
+      },
+      {
+        "key": "cache_cluster",
+        "name": "Cache Cluster & BullMQ (Redis 7)",
+        "status": "OPERATIONAL",
+        "healthPercent": 98,
+        "latencyMs": 4,
+        "detail": "Redis 7.2 · Session store & queue workers operational",
+        "metrics": {
+          "connectedClients": 28,
+          "usedMemoryMb": 16.5
+        }
+      },
+      {
+        "key": "object_storage",
+        "name": "Object Storage (Supabase Storage)",
+        "status": "OPERATIONAL",
+        "healthPercent": 100,
+        "latencyMs": 45,
+        "detail": "Pitch images & asset storage operational",
+        "metrics": {
+          "serviceStatus": "READY"
+        }
+      }
+    ]
+  }
+  ```
+
+#### 3.20.5. Chi tiết báo cáo vi phạm kiểm duyệt (`GET /admin/reports/moderation/:id`)
+- **Quyền truy cập:** `admin` (`JwtAuthGuard`, `AccountStatusGuard`, `RolesGuard`)
+- **Path Parameters:**
+  - `id` *(string, bắt buộc)*: Mã định danh báo cáo vi phạm (ví dụ: `FR-uuid`, `UR-uuid`, `POST-uuid`, `USR-uuid`).
+- **Response (`200 OK` - `ModerationReportItemDto`):**
+  ```json
+  {
+    "id": "FR-9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+    "type": "review",
+    "targetId": "c0a80101-0000-0000-0000-000000000001",
+    "author": "striker99@example.com",
+    "authorId": "a1b2c3d4-0000-0000-0000-000000000001",
+    "reason": "Nội dung đánh giá vi phạm tiêu chuẩn",
+    "content": "Bình luận thô tục, chửi thề trên sân bóng",
+    "reportedAt": "2026-11-08T09:30:00.000Z",
+    "status": "pending",
+    "actionTaken": null,
+    "resolvedAt": null,
+    "moderator": null
+  }
+  ```
+- **Lỗi thường gặp:**
+  - `401 Unauthorized`: Chưa đăng nhập hoặc token không hợp lệ.
+  - `403 Forbidden`: Tài khoản không có vai trò `admin`.
+  - `404 Not Found`: Không tìm thấy báo cáo kiểm duyệt với mã cung cấp.
+
+#### 3.20.6. Chi tiết sự kiện kiểm toán hệ thống (`GET /admin/audit-logs/:id`)
+- **Quyền truy cập:** `admin` (`JwtAuthGuard`, `AccountStatusGuard`, `RolesGuard`)
+- **Path Parameters:**
+  - `id` *(string, bắt buộc)*: Mã định danh sự kiện kiểm toán (`UUID` hoặc `session-auth-id`).
+- **Response (`200 OK` - `AdminAuditItemDto`):**
+  ```json
+  {
+    "id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+    "action": "SUSPEND_USER",
+    "category": "USER_STATUS",
+    "actor": "admin@pitchmaster.vn",
+    "actorRole": "admin",
+    "target": "USR-0088",
+    "targetType": "user",
+    "targetId": "e1f2a3b4-0000-0000-0000-000000000001",
+    "ip": "10.42.8.17",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0",
+    "timestamp": "2026-11-08T10:31:00.000Z",
+    "details": {
+      "reason": "Spam nhiều lần trên diễn đàn tìm đối",
+      "suspendedUntil": "2026-12-08T10:31:00.000Z"
+    }
+  }
+  ```
+- **Lỗi thường gặp:**
+  - `401 Unauthorized`: Chưa đăng nhập hoặc token không hợp lệ.
+  - `403 Forbidden`: Tài khoản không có vai trò `admin`.
+  - `404 Not Found`: Không tìm thấy sự kiện kiểm toán với mã cung cấp.
+
+
 
 

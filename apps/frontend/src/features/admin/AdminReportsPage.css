@@ -1,0 +1,569 @@
+/* ==========================================================================
+   AdminReportsPage.css — UI-Pro: Athletic Dark Governance
+   ========================================================================== */
+
+.admin-reports-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 0 0 32px;
+  color: #f1f5f9;
+}
+
+/* Header */
+.admin-reports-page .page-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 20px;
+}
+
+.admin-reports-page .eyebrow {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #10b981;
+  margin-bottom: 6px;
+  background: linear-gradient(90deg, #10b981, #06b6d4);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.admin-reports-page .page-title {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+  margin: 0 0 6px;
+}
+
+.admin-reports-page .page-subtitle {
+  font-size: 13.5px;
+  color: #94a3b8;
+  margin: 0;
+  max-width: 650px;
+  line-height: 1.5;
+}
+
+.admin-reports-page .header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Toolbar */
+.admin-reports-page .toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  background: rgba(19, 27, 46, 0.6);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 12px 18px;
+}
+
+.admin-reports-page .toolbar-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  justify-content: flex-end;
+}
+
+/* Tab 1: Moderation KPI Metrics Strip */
+.admin-reports-page .metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.admin-reports-page .metric-card {
+  position: relative;
+  background: rgba(19, 27, 46, 0.7);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 14px;
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  transition: all 0.25s ease;
+  overflow: hidden;
+}
+
+.admin-reports-page .metric-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(16, 185, 129, 0.4);
+  box-shadow: 0 8px 24px -6px rgba(16, 185, 129, 0.15);
+}
+
+.admin-reports-page .metric-icon-wrap {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+.admin-reports-page .metric-icon-wrap.total {
+  background: rgba(99, 102, 241, 0.15);
+  color: #818cf8;
+}
+
+.admin-reports-page .metric-icon-wrap.pending {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+}
+
+.admin-reports-page .metric-icon-wrap.resolved {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+}
+
+.admin-reports-page .metric-icon-wrap.rate {
+  background: rgba(6, 182, 212, 0.15);
+  color: #22d3ee;
+}
+
+.admin-reports-page .metric-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-reports-page .metric-value {
+  font-size: 24px;
+  font-weight: 800;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  color: #ffffff;
+  line-height: 1.2;
+}
+
+.admin-reports-page .metric-label {
+  font-size: 12px;
+  color: #94a3b8;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-top: 2px;
+}
+
+/* Tables */
+.admin-reports-page .table-container {
+  background: rgba(19, 27, 46, 0.6);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  overflow: hidden;
+  padding: 6px;
+}
+
+.admin-reports-page .ant-table {
+  background: transparent !important;
+  color: #e2e8f0;
+}
+
+.admin-reports-page .ant-table-thead > tr > th {
+  background: rgba(15, 23, 42, 0.8) !important;
+  color: #94a3b8 !important;
+  font-size: 11.5px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.06em;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.admin-reports-page .ant-table-tbody > tr > td {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+  color: #f1f5f9;
+  font-size: 13px;
+}
+
+.admin-reports-page .ant-table-tbody > tr:hover > td {
+  background: rgba(255, 255, 255, 0.03) !important;
+}
+
+.admin-reports-page .id-cell {
+  font-family: ui-monospace, monospace;
+  font-weight: 700;
+  color: #38bdf8;
+  letter-spacing: 0.02em;
+}
+
+.admin-reports-page .copy-action-btn {
+  color: #64748b;
+  padding: 0 4px;
+  height: 22px;
+  width: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.admin-reports-page .copy-action-btn:hover {
+  color: #38bdf8 !important;
+  background: rgba(56, 189, 248, 0.1) !important;
+}
+
+.admin-reports-page .table-content-ellipsis {
+  display: inline-block;
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.admin-reports-page .table-empty-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 16px 0;
+}
+
+.admin-reports-page .table-empty-wrap .empty-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #e2e8f0;
+  margin: 0;
+}
+
+.admin-reports-page .table-empty-wrap .empty-subtitle {
+  font-size: 12.5px;
+  color: #94a3b8;
+  margin: 0 0 6px;
+}
+
+.admin-reports-page .actor-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.admin-reports-page .ip-badge {
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #94a3b8;
+}
+
+/* Tab 3: System Nodes Grid */
+.admin-reports-page .system-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 20px;
+}
+
+.admin-reports-page .system-card {
+  background: rgba(19, 27, 46, 0.75);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  transition: all 0.25s ease;
+}
+
+.admin-reports-page .system-card:hover {
+  border-color: rgba(16, 185, 129, 0.35);
+  box-shadow: 0 10px 30px -10px rgba(16, 185, 129, 0.2);
+}
+
+.admin-reports-page .node-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.admin-reports-page .node-title-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.admin-reports-page .node-icon {
+  font-size: 24px;
+  color: #10b981;
+}
+
+.admin-reports-page .node-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+}
+
+.admin-reports-page .node-detail {
+  font-size: 12.5px;
+  color: #94a3b8;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.admin-reports-page .node-telemetry {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  font-size: 12px;
+}
+
+.admin-reports-page .telemetry-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.admin-reports-page .telemetry-label {
+  color: #64748b;
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+.admin-reports-page .telemetry-value {
+  color: #e2e8f0;
+  font-weight: 700;
+  font-family: ui-monospace, monospace;
+}
+
+/* ==========================================================================
+   UI/UX Pro Max: Inspector Drawer Styling
+   ========================================================================== */
+
+.admin-reports-drawer .ant-drawer-header {
+  background: #111827;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 16px 20px;
+}
+
+.admin-reports-drawer .ant-drawer-title {
+  color: #f1f5f9;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.admin-reports-drawer .ant-drawer-close {
+  color: #94a3b8;
+  transition: color 150ms ease;
+}
+
+.admin-reports-drawer .ant-drawer-close:hover {
+  color: #f1f5f9;
+}
+
+.admin-reports-drawer .ant-drawer-body {
+  background: #090d16;
+  padding: 20px;
+  color: #f1f5f9;
+}
+
+.admin-reports-drawer .drawer-compact-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.admin-reports-drawer .drawer-compact-row {
+  display: grid;
+  grid-template-columns: 135px 1fr;
+  align-items: center;
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  font-size: 13px;
+  min-height: 40px;
+  transition: background 150ms ease;
+}
+
+.admin-reports-drawer .drawer-compact-row:hover {
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.admin-reports-drawer .drawer-compact-row:last-child {
+  border-bottom: none;
+}
+
+.admin-reports-drawer .drawer-compact-row.align-top {
+  align-items: flex-start;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.admin-reports-drawer .drawer-compact-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  user-select: none;
+}
+
+.admin-reports-drawer .drawer-compact-value {
+  color: #f1f5f9;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  word-break: break-word;
+}
+
+.admin-reports-drawer .drawer-compact-value .id-text {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+  color: #93c5fd;
+  word-break: break-all;
+  background: rgba(59, 130, 246, 0.1);
+  padding: 2px 7px;
+  border-radius: 4px;
+  border: 1px solid rgba(59, 130, 246, 0.22);
+}
+
+.admin-reports-drawer .copy-action-btn {
+  color: #94a3b8;
+  transition: all 150ms ease;
+}
+
+.admin-reports-drawer .copy-action-btn:hover {
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.12);
+}
+
+.admin-reports-drawer .drawer-payload-section {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.admin-reports-drawer .drawer-payload-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.admin-reports-drawer .drawer-payload-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.admin-reports-drawer .json-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  letter-spacing: 0.05em;
+}
+
+.admin-reports-drawer .json-viewer-compact {
+  background: #050811;
+  padding: 12px 14px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #38bdf8;
+  max-height: 250px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+  margin: 0;
+}
+
+.admin-reports-drawer .json-viewer-compact::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.admin-reports-drawer .json-viewer-compact::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 3px;
+}
+
+.admin-reports-drawer .drawer-content-box {
+  padding: 12px 14px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #e2e8f0;
+  background: #050811;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.admin-reports-drawer .drawer-action-btn {
+  background: #10b981;
+  border-color: #10b981;
+  font-weight: 600;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 8px;
+  transition: all 150ms ease;
+}
+
+.admin-reports-drawer .drawer-action-btn:hover {
+  background: #059669 !important;
+  border-color: #059669 !important;
+  box-shadow: 0 0 14px rgba(16, 185, 129, 0.35);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .admin-reports-page {
+    padding: 16px;
+    gap: 16px;
+  }
+
+  .admin-reports-page .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .admin-reports-page .toolbar-filters {
+    justify-content: stretch;
+  }
+
+  .admin-reports-page .toolbar-filters > * {
+    width: 100% !important;
+  }
+
+  .admin-reports-page .system-grid {
+    grid-template-columns: 1fr;
+  }
+}

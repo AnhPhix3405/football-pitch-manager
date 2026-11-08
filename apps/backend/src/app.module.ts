@@ -7,6 +7,7 @@ import { StorageModule } from './common/storage/storage.module';
 import { AdminApprovalModule } from './components/admin-approval/admin-approval.module';
 import { AdminManagementModule } from './components/admin-management/admin-management.module';
 import { AdminOverviewModule } from './components/admin-overview/admin-overview.module';
+import { AdminReportsModule } from './components/admin-reports/admin-reports.module';
 import { AiModule } from './components/ai/ai.module';
 import { AuthModule } from './components/auth/auth.module';
 import { BookingModule } from './components/booking/booking.module';
@@ -48,6 +49,7 @@ import { typeOrmDataSourceOptions } from './database/config/typeorm.options';
     AdminApprovalModule,
     AdminManagementModule,
     AdminOverviewModule,
+    AdminReportsModule,
     FieldModule,
     BookingModule,
     PaymentModule,

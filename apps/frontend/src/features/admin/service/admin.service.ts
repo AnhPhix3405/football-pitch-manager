@@ -1,5 +1,14 @@
 import { apiClient, type ApiResponse } from '../../../config/axios.config'
 import type {
+  AdminAuditItem,
+  AdminAuditListResponse,
+  AdminAuditQueryParams,
+  AdminModerationReportItem,
+  AdminModerationReportsQueryParams,
+  AdminModerationReportsResponse,
+  AdminSystemStatusResponse,
+} from '../interface/admin-reports.interface'
+import type {
   AdminApprovalQueryParams,
   AdminFieldApprovalItem,
   AdminOwnerApprovalItem,
@@ -207,6 +216,67 @@ export async function moderateAdminReview(
   const response = await apiClient.patch<ApiResponse<unknown>>(
     endpoint,
     payload,
+  )
+  return response.data.data
+}
+
+export async function getAdminAuditLogs(
+  params?: AdminAuditQueryParams,
+): Promise<AdminAuditListResponse> {
+  const response = await apiClient.get<ApiResponse<AdminAuditListResponse>>(
+    '/admin/audit-logs',
+    { params },
+  )
+  return response.data.data
+}
+
+export async function getAdminAuditLogById(
+  id: string,
+): Promise<AdminAuditItem> {
+  const response = await apiClient.get<ApiResponse<AdminAuditItem>>(
+    `/admin/audit-logs/${id}`,
+  )
+  return response.data.data
+}
+
+export async function exportAdminAuditLogs(
+  params?: AdminAuditQueryParams,
+  format: 'json' | 'csv' = 'json',
+): Promise<{ data: string; contentType: string; filename: string }> {
+  const response = await apiClient.get<string>('/admin/audit-logs/export', {
+    params: { ...params, format },
+    responseType: 'text',
+  })
+  const contentType =
+    format === 'csv'
+      ? 'text/csv; charset=utf-8'
+      : 'application/json; charset=utf-8'
+  const dateSuffix = new Date().toISOString().slice(0, 10).replace(/-/g, '')
+  const filename = `audit-logs-${dateSuffix}.${format}`
+  return { data: response.data, contentType, filename }
+}
+
+export async function getAdminModerationReports(
+  params?: AdminModerationReportsQueryParams,
+): Promise<AdminModerationReportsResponse> {
+  const response = await apiClient.get<
+    ApiResponse<AdminModerationReportsResponse>
+  >('/admin/reports/moderation', { params })
+  return response.data.data
+}
+
+export async function getAdminModerationReportById(
+  id: string,
+): Promise<AdminModerationReportItem> {
+  const response = await apiClient.get<
+    ApiResponse<AdminModerationReportItem>
+  >(`/admin/reports/moderation/${id}`)
+  return response.data.data
+}
+
+export async function getAdminSystemStatus(): Promise<AdminSystemStatusResponse> {
+  const response = await apiClient.get<ApiResponse<AdminSystemStatusResponse>>(
+    '/admin/reports/system-status',
   )
   return response.data.data
 }

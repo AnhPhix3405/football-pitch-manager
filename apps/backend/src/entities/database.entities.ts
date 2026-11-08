@@ -1,5 +1,6 @@
 import { AiUsageLogEntity } from './ai-usage-log.entity';
 import { ApprovalRequestEntity } from './approval-request.entity';
+import { AuditLogEntity } from './audit-log.entity';
 import { AuthSessionEntity } from './auth-session.entity';
 import { BookingServiceEntity } from './booking-service.entity';
 import { BookingStatusHistoryEntity } from './booking-status-history.entity';
@@ -60,4 +61,5 @@ export const DATABASE_ENTITIES: Array<new () => object> = [
   FieldRatingSummaryEntity,
   UserRatingSummaryEntity,
   AiUsageLogEntity,
+  AuditLogEntity,
 ];

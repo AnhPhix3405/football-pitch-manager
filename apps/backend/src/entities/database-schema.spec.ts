@@ -32,6 +32,7 @@ const EXPECTED_TABLES = [
   'field_rating_summary',
   'user_rating_summary',
   'ai_usage_logs',
+  'audit_logs',
 ].sort();
 
 describe('database schema metadata', () => {
@@ -42,7 +43,7 @@ describe('database schema metadata', () => {
       .map((table) => table.name)
       .sort();
 
-    expect(DATABASE_ENTITIES).toHaveLength(30);
+    expect(DATABASE_ENTITIES).toHaveLength(31);
     expect(tables).toEqual(EXPECTED_TABLES);
   });
 
