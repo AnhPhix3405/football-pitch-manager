@@ -2,12 +2,15 @@ import { randomUUID } from 'node:crypto';
 import {
   BadRequestException,
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
   Inject,
+  Param,
   Post,
   Query,
   Req,
+  Res,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -19,7 +22,8 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import type { FastifyRequest } from 'fastify';
+import type { FastifyReply, FastifyRequest } from 'fastify';
+import { Public } from '~/components/auth/decorators/public.decorator';
 import { CurrentUser } from '~/components/auth/decorators/current-user.decorator';
 import { AccountStatusGuard } from '~/components/auth/guards/account-status.guard';
 import { JwtAuthGuard } from '~/components/auth/guards/jwt-auth.guard';
@@ -28,6 +32,7 @@ import {
   STORAGE_SERVICE_TOKEN,
 } from '../constants/storage.constant';
 import type { IStorageService } from '../interfaces/storage-service.interface';
+import { LocalImageStorageService } from '../services/local-image-storage.service';
 
 @ApiTags('Upload')
 @Controller('upload')
@@ -35,6 +40,7 @@ export class UploadController {
   constructor(
     @Inject(STORAGE_SERVICE_TOKEN)
     private readonly storageService: IStorageService,
+    private readonly localStorage: LocalImageStorageService,
   ) {}
 
   @Post('image')
@@ -89,6 +95,9 @@ export class UploadController {
     }
 
     const buffer = await file.toBuffer();
+    if (this.localStorage.enabled) {
+      return this.localStorage.save(buffer, file.mimetype);
+    }
     const ext = file.filename?.split('.').pop() || 'jpg';
     const targetFolder =
       folder === 'avatars' || folder === 'avatar' ? 'avatars' : 'chat';
@@ -104,5 +113,15 @@ export class UploadController {
       url: result.publicUrl,
       path: result.path,
     };
+  }
+
+  @Public()
+  @Get('local/:name')
+  async getLocalImage(@Param('name') name: string, @Res() reply: FastifyReply) {
+    const { buffer, mimeType } = await this.localStorage.read(name);
+    void reply
+      .header('X-Content-Type-Options', 'nosniff')
+      .type(mimeType)
+      .send(buffer);
   }
 }

@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { SubscriptionPlanEntity } from '~/entities/subscription-plan.entity';
 import { SubscriptionPlanRepository } from '~/repositories/subscription-plan.repository';
@@ -13,6 +14,7 @@ export class SubscriptionPlanService {
     dto: CreateSubscriptionPlanDto,
   ): Promise<SubscriptionPlanEntity> {
     const plan = this.subscriptionPlanRepository.create({
+      id: randomUUID(),
       name: dto.name,
       price: dto.price.toFixed(2),
       durationDays: dto.durationDays,

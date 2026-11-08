@@ -2,4 +2,5 @@
 apps/backend/.pnpm-store/v10/
 .env
 /meta/
+/apps/backend/.local-uploads/
 

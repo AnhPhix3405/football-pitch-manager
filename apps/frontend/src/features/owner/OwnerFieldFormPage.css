@@ -392,68 +392,17 @@
   border: 1px solid var(--border-soft);
 }
 
-.offp-map-img {
+.offp-map-container iframe {
+  display: block;
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  filter: brightness(0.7) contrast(1.1);
+  border: 0;
 }
 
-.offp-map-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(0deg, rgba(14, 18, 15, 0.8) 0%, rgba(14, 18, 15, 0.2) 50%, rgba(0, 0, 0, 0.3) 100%);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-}
-
-.offp-map-pin {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  cursor: pointer;
-}
-
-.offp-map-pin-icon {
-  width: 36px;
-  height: 36px;
-  background: var(--lime);
-  color: #051403;
-  border-radius: 9999px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 0 0 6px rgba(140, 252, 112, 0.25), 0 4px 12px rgba(0, 0, 0, 0.5);
-  font-size: 18px;
-}
-
-.offp-map-pin-label {
-  margin-top: 6px;
-  background: rgba(19, 19, 19, 0.95);
-  border: 1px solid var(--border-soft);
-  padding: 4px 10px;
-  border-radius: 8px;
-  color: var(--white);
+.offp-map-help {
+  margin: 10px 0 0;
   font-size: 11px;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.offp-map-coords-pill {
-  position: absolute;
-  bottom: 12px;
-  left: 12px;
-  background: rgba(19, 19, 19, 0.85);
-  border: 1px solid var(--border-soft);
-  border-radius: 6px;
-  padding: 3px 8px;
-  font-size: 11px;
-  font-family: monospace;
-  color: var(--lime);
+  color: var(--sage);
 }
 
 /* Guideline List */

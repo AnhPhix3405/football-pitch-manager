@@ -8,10 +8,13 @@ import { BookingStatusHistoryRepository } from '~/repositories/booking-status-hi
 import { BookingRepository } from '~/repositories/booking.repository';
 import { AuthModule } from '../auth/auth.module';
 import { FieldModule } from '../field/field.module';
+import { NotificationModule } from '../notification/notification.module';
+import { OwnerDashboardController } from './controllers/owner-dashboard.controller';
 import { OwnerBookingController } from './controllers/owner-booking.controller';
 import { UserBookingController } from './controllers/user-booking.controller';
 import { BookingStateMachineService } from './services/booking-state-machine.service';
 import { OwnerBookingService } from './services/owner-booking.service';
+import { OwnerDashboardService } from './services/owner-dashboard.service';
 import { UserBookingService } from './services/user-booking.service';
 
 @Module({
@@ -23,8 +26,13 @@ import { UserBookingService } from './services/user-booking.service';
     ]),
     AuthModule,
     FieldModule,
+    NotificationModule,
   ],
-  controllers: [UserBookingController, OwnerBookingController],
+  controllers: [
+    UserBookingController,
+    OwnerBookingController,
+    OwnerDashboardController,
+  ],
   providers: [
     BookingRepository,
     BookingServiceRepository,
@@ -32,6 +40,7 @@ import { UserBookingService } from './services/user-booking.service';
     BookingStateMachineService,
     UserBookingService,
     OwnerBookingService,
+    OwnerDashboardService,
   ],
   exports: [
     BookingRepository,

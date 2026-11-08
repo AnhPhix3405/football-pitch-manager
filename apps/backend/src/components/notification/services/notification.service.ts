@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
+import { EntityManager } from 'typeorm';
 import { ChatGateway } from '~/components/chat/gateways/chat.gateway';
 import { NotificationEntity } from '~/entities/notification.entity';
 import { NotificationRepository } from '~/repositories/notification.repository';
@@ -12,14 +13,20 @@ export class NotificationService {
     private readonly chatGateway: ChatGateway,
   ) {}
 
-  private resolveLink(type: string): string | undefined {
-    switch (type) {
+  private resolveLink(entity: NotificationEntity): string | undefined {
+    switch (entity.type) {
       case 'match_request':
       case 'match_confirmed':
       case 'message':
         return '/messages';
       case 'booking_confirmed':
         return '/bookings';
+      case 'owner_booking_created':
+        return entity.refId
+          ? `/owner/bookings/${entity.refId}`
+          : '/owner/bookings';
+      case 'owner_field_approved':
+        return '/owner/fields';
       default:
         return undefined;
     }
@@ -37,7 +44,7 @@ export class NotificationService {
       refId: entity.refId,
       isRead: entity.isRead,
       createdAt: entity.createdAt,
-      link: customLink || this.resolveLink(entity.type),
+      link: customLink || this.resolveLink(entity),
     };
   }
 
@@ -66,6 +73,34 @@ export class NotificationService {
     await this.notificationRepository.markAllAsRead(userId);
   }
 
+  async recordOwnerNotification(
+    manager: EntityManager,
+    params: {
+      userId: string;
+      type: 'owner_booking_created' | 'owner_field_approved';
+      fieldName: string;
+      refId: string;
+    },
+  ): Promise<NotificationResponseDto> {
+    const entity = manager.create(NotificationEntity, {
+      id: randomUUID(),
+      userId: params.userId,
+      type: params.type,
+      title:
+        params.type === 'owner_booking_created'
+          ? 'Có đơn đặt sân mới'
+          : 'Cụm sân đã được duyệt',
+      content: params.fieldName,
+      refId: params.refId,
+      isRead: false,
+    });
+    return this.toDto(await manager.save(NotificationEntity, entity));
+  }
+
+  publish(userId: string, notification: NotificationResponseDto): void {
+    this.chatGateway.emitToUsers([userId], 'notification:new', notification);
+  }
+
   async createAndSend(params: {
     userId: string;
     type: string;
@@ -87,8 +122,7 @@ export class NotificationService {
     const saved = await this.notificationRepository.save(notification);
     const dto = this.toDto(saved, params.link);
 
-    // Phát sự kiện realtime qua WebSocket đến room của user
-    this.chatGateway.emitToUsers([params.userId], 'notification:new', dto);
+    this.publish(params.userId, dto);
 
     return dto;
   }

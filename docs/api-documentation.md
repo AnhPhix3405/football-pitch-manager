@@ -68,6 +68,7 @@ Tài liệu chi tiết toàn bộ các API HTTP REST và WebSocket Gateway của
 | | `POST` | `/owner/fields/:fieldId/bookings/:bookingId/reject` | Owner / Admin | Từ chối đơn đặt sân đang chờ |
 | | `POST` | `/owner/fields/:fieldId/bookings/:bookingId/cancel` | Owner / Admin | Chủ sân hủy đơn sân kèm lý do |
 | | `POST` | `/owner/fields/:fieldId/bookings/:bookingId/complete` | Owner / Admin | Đánh dấu hoàn tất trận đấu |
+| **Tổng quan chủ sân** | `GET` | `/owner/dashboard/stats` | Owner / Active | Số liệu và đơn gần đây trên tất cả sân của tài khoản |
 | **Tìm đối & Bình luận** | `GET` | `/posts` | Public | Lấy danh sách bài đăng tìm đối công khai |
 | | `GET` | `/posts/me` | User / Active | Lấy danh sách bài đăng tìm đối của chính mình |
 | | `GET` | `/posts/:id` | Public | Lấy chi tiết một bài đăng tìm đối |
@@ -104,7 +105,8 @@ Tài liệu chi tiết toàn bộ các API HTTP REST và WebSocket Gateway của
 | | `POST` | `/chat/conversations` | Đã đăng nhập (JWT) | Bắt đầu hoặc lấy cuộc trò chuyện |
 | | `GET` | `/chat/conversations/:id/messages` | Đã đăng nhập (JWT) | Lấy lịch sử tin nhắn (hỗ trợ phân trang limit/before) |
 | | `DELETE` | `/chat/conversations/:id` | Đã đăng nhập (JWT) | Xóa cuộc trò chuyện (xóa 1 phía hoặc xóa hoàn toàn 2 phía) |
-| **Tải lên tệp (Upload)** | `POST` | `/upload/image` | User / Active | Tải lên hình ảnh lên Supabase Storage |
+| **Tải lên tệp (Upload)** | `POST` | `/upload/image` | User / Active | Tải ảnh lên Supabase hoặc lưu cục bộ khi phát triển |
+| | `GET` | `/upload/local/:name` | Public / Development | Trả nội dung ảnh đã tải lên cục bộ |
 | **Đánh giá sân bóng** | `POST` | `/reviews/fields` | User / Active | Gửi đánh giá và chấm sao cho sân sau khi hoàn tất đặt sân |
 | | `GET` | `/reviews/fields/:fieldId` | Public | Lấy danh sách đánh giá công khai của sân bóng |
 | | `GET` | `/reviews/fields/:fieldId/summary` | Public | Xem tổng hợp điểm rating và điểm bayesian của sân bóng |
@@ -701,6 +703,16 @@ Tài liệu chi tiết toàn bộ các API HTTP REST và WebSocket Gateway của
 ---
 
 ### 3.4. Quản lý Đặt Sân & Vòng Đời Booking (Booking Lifecycle & Concurrency)
+
+#### Tổng quan chủ sân (`GET /owner/dashboard/stats`)
+
+- **Quyền truy cập:** Chủ sân đang hoạt động. Chỉ đọc dữ liệu các cụm sân của tài khoản trong JWT.
+- **Request:** Không có query parameters hoặc request body.
+- **Response `200 OK`:** `{ success: true, data: { monthlyRevenue, todayBookings, activeFields, totalFields, bookedMinutes, availableMinutes, utilizationPercent, recentBookings } }`.
+- `monthlyRevenue` là tổng giao dịch tiền đặt sân thành công trừ hoàn tiền thành công trong tháng, tính theo VND và thời điểm cập nhật giao dịch.
+- `todayBookings` đếm đơn có ngày đá hôm nay, trừ đơn bị hủy hoặc từ chối. `activeFields` và `totalFields` đếm cụm sân đang hoạt động và tổng cụm sân.
+- `availableMinutes` cộng giờ mở cửa của sân con đang hoạt động sau khi trừ lịch chặn. `bookedMinutes` là phần của các đơn xác nhận hoặc hoàn thành nằm trong khung giờ có thể đặt. `utilizationPercent` làm tròn theo phần trăm và trả `null` khi không có phút nào có thể đặt. Ngày và tháng tính theo `Asia/Ho_Chi_Minh`.
+- `recentBookings` trả tối đa 4 đơn mới nhất theo thời gian tạo, dùng định dạng `BookingResponseDto` như API chi tiết đơn đặt.
 
 #### 3.4.1. Ma trận chuyển đổi trạng thái đơn đặt sân (State Machine Matrix)
 - `pending` -> `confirmed` (Owner/Admin) | `rejected` (Owner/Admin) | `cancelled` (User/Owner/Admin)
@@ -1302,7 +1314,7 @@ Tài liệu chi tiết toàn bộ các API HTTP REST và WebSocket Gateway của
   - `message_deleted`: Phát thông báo thu hồi tin nhắn (`{ messageId: "uuid", conversationId: "uuid" }`) đến phòng hội thoại và phòng người dùng của các thành viên.
   - `message_read`: Phát thông báo người dùng đã đọc (`{ userId, conversationId }`).
   - `match:accepted`: Phát thông báo bài đăng ghép đối đã được chấp nhận (`{ matchId, postId, conversationId, postTitle }`).
-  - `notification:new`: Phát thông báo mới tức thời cho người dùng qua room `user:${userId}` (`{ id, type, title, content, refId, isRead: false, createdAt, link }`).
+  - `notification:new`: Sự kiện server → client trong namespace `/chat`. Không có payload yêu cầu từ client. Server gửi `{ id, type, title, content, refId, isRead: false, createdAt, link }` vào room `user:${userId}` sau khi đã lưu thông báo. Với `owner_booking_created`, `content` là tên sân, `refId` là ID đơn và `link` mở đơn trong khu vực chủ sân. Với `owner_field_approved`, `content` là tên sân, `refId` là ID sân và `link` mở danh sách sân của chủ sân.
 
 ---
 
@@ -1373,10 +1385,21 @@ Tài liệu chi tiết toàn bộ các API HTTP REST và WebSocket Gateway của
 - **Response (`200 OK`):**
   ```json
   {
-    "url": "https://edpwyenilpultbnxfent.supabase.co/storage/v1/object/public/football-pitch-manager/avatars/userid/uuid.jpg",
-    "path": "avatars/userid/uuid.jpg"
+    "success": true,
+    "data": {
+      "url": "http://127.0.0.1:3000/upload/local/810fe347-f2cb-44ca-8057-096c06cf23dc.png",
+      "path": "upload/local/810fe347-f2cb-44ca-8057-096c06cf23dc.png"
+    }
   }
   ```
+
+- Khi chạy development và thiếu cấu hình Supabase, backend lưu ảnh tại `.local-uploads` và trả URL cục bộ. Khi có cấu hình Supabase, URL và đường dẫn vẫn trỏ tới kho Supabase.
+
+#### 3.10.2. Đọc ảnh tải lên cục bộ (`GET /upload/local/:name`)
+
+- **Quyền truy cập:** Public khi đang dùng kho ảnh cục bộ trong development.
+- **Request:** Tên tệp từ phản hồi tải ảnh trong tham số `name`. Không có request body.
+- **Response:** `200 OK` với nội dung nhị phân và `Content-Type` của ảnh. Trả `404` khi tệp không tồn tại hoặc kho cục bộ không hoạt động.
 
 ---
 

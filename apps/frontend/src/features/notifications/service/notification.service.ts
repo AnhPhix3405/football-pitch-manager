@@ -56,7 +56,7 @@ export async function getNotificationsApi(
 ): Promise<AppNotification[]> {
   const response = await apiClient.get<
     ApiResponse<
-      Array<{
+      { data: Array<{
         id: string
         type: string
         title: string
@@ -65,7 +65,7 @@ export async function getNotificationsApi(
         isRead: boolean
         createdAt: string
         link?: string
-      }>
+      }> }
     >
   >('/notifications', {
     params: {
@@ -73,7 +73,7 @@ export async function getNotificationsApi(
       limit,
     },
   })
-  const list = response.data?.data ?? []
+  const list = response.data.data.data
   return list.map(mapBackendNotification)
 }
 

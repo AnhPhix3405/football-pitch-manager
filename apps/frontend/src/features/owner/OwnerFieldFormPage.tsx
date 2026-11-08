@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import {
   AimOutlined,
   AppstoreOutlined,
@@ -14,8 +15,8 @@ import {
   PlusOutlined,
   SaveOutlined,
 } from '@ant-design/icons'
-import { Form, Input, InputNumber, Switch, message } from 'antd'
-import { useEffect, useState } from 'react'
+import { Form, Input, InputNumber, Segmented, Switch, message } from 'antd'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ownerFields } from './owner.data'
 import './OwnerFieldFormPage.css'
@@ -44,6 +45,9 @@ export function OwnerFieldFormPage() {
   const navigate = useNavigate()
   const [form] = Form.useForm<FieldFormData>()
   const [messageApi, contextHolder] = message.useMessage()
+  const { t } = useTranslation()
+  const [satellite, setSatellite] = useState(false)
+  const mapPreview = useRef<HTMLDivElement>(null)
   const [submitting, setSubmitting] = useState(false)
 
   // Watch form fields for live preview updates
@@ -423,7 +427,7 @@ export function OwnerFieldFormPage() {
                     <button
                       type="button"
                       className="offp-btn-tool"
-                      onClick={() => messageApi.info('Đã cố định điểm ghim trung tâm bản đồ.')}
+                      onClick={() => mapPreview.current?.scrollIntoView({ block: 'center', behavior: 'smooth' })}
                     >
                       <EnvironmentOutlined />
                       <span>Ghim trên bản đồ</span>
@@ -659,62 +663,26 @@ export function OwnerFieldFormPage() {
               <div className="offp-card-header">
                 <div className="offp-card-header-title">
                   <EnvironmentOutlined className="offp-card-header-icon" />
-                  <span>Vị trí ghim trên bản đồ</span>
+                  <span>{t('owner.mapPreview.title')}</span>
                 </div>
-                <div style={{ display: 'flex', gap: 4 }}>
-                  <span
-                    style={{
-                      padding: '2px 8px',
-                      background: 'var(--ground)',
-                      color: 'var(--lime)',
-                      borderRadius: 6,
-                      fontSize: 11,
-                      fontWeight: 600,
-                      border: '1px solid var(--border-soft)',
-                    }}
-                  >
-                    Bản đồ
-                  </span>
-                  <span
-                    style={{
-                      padding: '2px 8px',
-                      color: 'var(--muted)',
-                      borderRadius: 6,
-                      fontSize: 11,
-                    }}
-                  >
-                    Vệ tinh
-                  </span>
-                </div>
-              </div>
-
-              <div className="offp-map-container">
-                <img
-                  src="/images/figma/map_bg.png"
-                  alt="Map preview"
-                  className="offp-map-img"
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none'
-                  }}
+                <Segmented
+                  size="small"
+                  value={satellite ? 'satellite' : 'map'}
+                  onChange={(value) => setSatellite(value === 'satellite')}
+                  options={[
+                    { value: 'map', label: t('owner.mapPreview.map') },
+                    { value: 'satellite', label: t('owner.mapPreview.satellite') },
+                  ]}
                 />
-                <div className="offp-map-overlay">
-                  <div className="offp-map-pin">
-                    <div className="offp-map-pin-icon">
-                      <EnvironmentOutlined />
-                    </div>
-                    <div className="offp-map-pin-label">
-                      <span className="offp-pulse-dot" style={{ width: 6, height: 6 }} />
-                      <span>{watchedName || 'Cụm sân thể thao'}</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="offp-map-coords-pill">
-                  {Number(watchedLat).toFixed(6)}, {Number(watchedLng).toFixed(6)}
-                </div>
               </div>
-              <p style={{ margin: '10px 0 0', fontSize: 11, color: 'var(--sage)' }}>
-                Kéo ghim hoặc nhập tọa độ để khách hàng tìm đường qua ứng dụng dễ dàng.
-              </p>
+              <div className="offp-map-container" ref={mapPreview}>
+                <iframe
+                  title={t('owner.mapPreview.title')}
+                  src={`https://maps.google.com/maps?q=${Number(watchedLat)},${Number(watchedLng)}&z=16&t=${satellite ? 'k' : 'm'}&output=embed`}
+                  loading="lazy"
+                />
+              </div>
+              <p className="offp-map-help">{t('owner.mapPreview.help')}</p>
             </div>
 
             {/* Card 2: Guidelines & Notes */}

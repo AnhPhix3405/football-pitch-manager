@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import {
   BadRequestException,
   ForbiddenException,
@@ -41,6 +42,7 @@ export class SubscriptionService {
     const endDate = dayjs().add(plan.durationDays, 'day').format('YYYY-MM-DD');
 
     const subscription = this.subscriptionRepository.create({
+      id: randomUUID(),
       ownerId: userId,
       planId: plan.id,
       status: SUBSCRIPTION_STATUS.ACTIVE,

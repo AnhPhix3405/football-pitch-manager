@@ -21,8 +21,15 @@ import { FieldServiceRepository } from '~/repositories/field-service.repository'
 import { FieldRepository } from '~/repositories/field.repository';
 import { BookingStateMachineService } from './booking-state-machine.service';
 import { UserBookingService } from './user-booking.service';
+import { NotificationService } from '~/components/notification/services/notification.service';
 
 describe('UserBookingService', () => {
+  const notifications = {
+    recordOwnerNotification: jest
+      .fn()
+      .mockResolvedValue({ id: 'notification-1' }),
+    publish: jest.fn(),
+  };
   let service: UserBookingService;
   let bookingRepository: jest.Mocked<BookingRepository>;
   let fieldRepository: jest.Mocked<FieldRepository>;
@@ -85,6 +92,7 @@ describe('UserBookingService', () => {
       availabilityService,
       stateMachineService,
       dataSource,
+      notifications as unknown as NotificationService,
     );
   });
 
@@ -178,6 +186,7 @@ describe('UserBookingService', () => {
     it('creates booking with snapshot of pitch price and services', async () => {
       fieldRepository.findById.mockResolvedValue({
         id: 'f-1',
+        ownerId: 'owner-1',
         status: 'active',
       } as FieldEntity);
       openingHourRepository.findByFieldAndDay.mockResolvedValue({
@@ -260,6 +269,9 @@ describe('UserBookingService', () => {
       expect(result.totalPrice).toBe(440000);
       expect(result.depositAmount).toBe(132000);
       expect(result.status).toBe('pending');
+      expect(notifications.publish).toHaveBeenCalledWith('owner-1', {
+        id: 'notification-1',
+      });
     });
   });
 

@@ -36,6 +36,7 @@
     "edit": "Edit",
     "details": "Details",
     "viewDetails": "View Details",
+    "from": "From",
     "back": "Back",
     "status": "Status",
     "action": "Action",
@@ -219,7 +220,8 @@
     "pitchesFound": "pitches found",
     "empty": "No pitches found matching your filters.",
     "bookNow": "Book Now",
-    "perHour": "/ hour"
+    "perHour": "/ hour",
+    "viewField": "View field"
   },
   "posts": {
     "eyebrow": "MATCHMAKING HUB",
@@ -376,8 +378,78 @@
     }
   },
   "owner": {
+    "dashboard": {
+      "unavailable": "—",
+      "loadError": "Could not load dashboard statistics.",
+      "noRecentBookings": "No bookings yet.",
+      "noCapacity": "No bookable court time today.",
+      "capacityMinutes": "{{booked}} of {{available}} court minutes booked"
+    },
+    "servicePage": {
+      "navFields": "My fields",
+      "field": "Facility",
+      "section": "Add-on services",
+      "title": "Manage add-on services",
+      "description": "Configure extras such as balls, bibs, drinks and referees.",
+      "back": "Back",
+      "add": "Add service",
+      "fieldLabel": "Facility:",
+      "chooseField": "Select a facility",
+      "statusLabel": "Status:",
+      "allStatuses": "All statuses",
+      "active": "Active",
+      "inactive": "Inactive",
+      "refresh": "Refresh",
+      "loading": "Loading services…",
+      "nameHeader": "SERVICE NAME",
+      "priceHeader": "UNIT PRICE",
+      "statusHeader": "STATUS",
+      "actions": "ACTIONS",
+      "edit": "Edit",
+      "disableConfirm": "Deactivate this service?",
+      "disable": "Off",
+      "enable": "On",
+      "cancel": "Cancel",
+      "empty": "This facility has no add-on services yet.",
+      "createTitle": "Create an add-on service",
+      "create": "Create service",
+      "name": "Service name",
+      "nameRequired": "Enter a service name",
+      "namePlaceholder": "For example, ball rental, bibs or water",
+      "price": "Unit price (VND)",
+      "priceRequired": "Enter a price of zero or more",
+      "unit": "Unit",
+      "unitRequired": "Enter a unit",
+      "unitPlaceholder": "Per match, set, crate…",
+      "initialStatus": "Initial status",
+      "save": "Save changes",
+      "created": "Service created.",
+      "updated": "Service updated.",
+      "createError": "Could not create the service.",
+      "editError": "Could not update the service.",
+      "duplicate": "This service name already exists for the facility.",
+      "toggleError": "Could not change the service status.",
+      "editTitle": "Edit service {{name}}",
+      "deactivated": "Deactivated {{name}}.",
+      "reactivated": "Reactivated {{name}}."
+    },
+    "mapPreview": {
+      "title": "Pinned location",
+      "map": "Map",
+      "satellite": "Satellite",
+      "help": "Enter coordinates or use your current location to update the pin."
+    },
+    "selectImageFile": "Choose an image file",
+    "imageUrlRequired": "Enter a URL or choose an image file",
+    "imageUrlInvalid": "Enter a valid image URL",
+    "subscription": {
+      "noCurrentPlan": "No current plan",
+      "noPlans": "No plans are currently available",
+      "availablePlans": "Available plans",
+      "free": "Free"
+    },
     "eyebrow": "FACILITY COMMAND CENTER",
-    "title": "Good morning, Operator.",
+    "title": "Owner Dashboard",
     "subtitle": "Today's facility operations overview.",
     "addField": "+ Add Pitch",
     "metricRevenue": "MONTHLY REVENUE",
@@ -656,6 +728,10 @@
     }
   },
   "notifications": {
+    "eventTitles": {
+      "owner_booking_created": "New court booking",
+      "owner_field_approved": "Facility approved"
+    },
     "title": "Notifications",
     "markAllRead": "Mark all as read",
     "all": "All",
@@ -871,7 +947,7 @@
     "cancelSuccess": "Subscription cancelled successfully.",
     "cancelFailed": "Failed to cancel subscription.",
     "confirmCancelTitle": "Cancel Subscription?",
-    "confirmCancelContent": "After cancelling, your benefits will remain active until the end of the billing period.",
+    "confirmCancelContent": "Your current plan will end immediately.",
     "table": {
       "id": "TX ID",
       "date": "DATE",

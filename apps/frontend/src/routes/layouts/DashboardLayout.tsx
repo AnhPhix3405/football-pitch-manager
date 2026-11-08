@@ -74,7 +74,7 @@ export function DashboardLayout({ mode = 'user' }: { mode?: 'user' | 'owner' | '
   return (
     <div className="dashboard-shell">
       <aside className="dashboard-sidebar">
-        <BrandMark />
+        <BrandMark to={mode === 'owner' ? '/owner' : undefined} />
         <Navigation mode={mode} />
       </aside>
       <section className="dashboard-main">
@@ -98,7 +98,7 @@ export function DashboardLayout({ mode = 'user' }: { mode?: 'user' | 'owner' | '
           <Outlet />
         </main>
       </section>
-      <Drawer title={<BrandMark />} placement="left" open={open} onClose={() => setOpen(false)}>
+      <Drawer title={<BrandMark to={mode === 'owner' ? '/owner' : undefined} />} placement="left" open={open} onClose={() => setOpen(false)}>
         <Navigation mode={mode} close={() => setOpen(false)} />
       </Drawer>
     </div>

@@ -9,6 +9,20 @@ import type {
   UserReview,
 } from '../interface/review.types'
 
+type ReviewPageResponse<T> = Omit<PaginatedReviews<T>, 'items' | 'totalPages'> & {
+  data: T[]
+}
+
+function normalizeReviewPage<T>(page: ReviewPageResponse<T>): PaginatedReviews<T> {
+  return {
+    items: page.data,
+    total: page.total,
+    page: page.page,
+    limit: page.limit,
+    totalPages: Math.max(1, Math.ceil(page.total / page.limit)),
+  }
+}
+
 export const reviewService = {
   async createFieldReview(
     _fieldId: string,
@@ -26,11 +40,11 @@ export const reviewService = {
     page = 1,
     limit = 10,
   ): Promise<PaginatedReviews<FieldReview>> {
-    const res = await apiClient.get<ApiResponse<PaginatedReviews<FieldReview>>>(
+    const res = await apiClient.get<ApiResponse<ReviewPageResponse<FieldReview>>>(
       `/reviews/fields/${fieldId}`,
       { params: { page, limit } },
     )
-    return res.data.data
+    return normalizeReviewPage(res.data.data)
   },
 
   async getFieldRatingSummary(fieldId: string): Promise<FieldRatingSummary> {
@@ -56,11 +70,11 @@ export const reviewService = {
     page = 1,
     limit = 10,
   ): Promise<PaginatedReviews<UserReview>> {
-    const res = await apiClient.get<ApiResponse<PaginatedReviews<UserReview>>>(
+    const res = await apiClient.get<ApiResponse<ReviewPageResponse<UserReview>>>(
       `/reviews/users/${targetUserId}`,
       { params: { page, limit } },
     )
-    return res.data.data
+    return normalizeReviewPage(res.data.data)
   },
 
   async getUserRatingSummary(targetUserId: string): Promise<UserRatingSummary> {

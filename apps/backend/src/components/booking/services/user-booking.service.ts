@@ -4,6 +4,7 @@ import { DataSource } from 'typeorm';
 import { ApplicationException } from '~/common/exceptions/application.exception';
 import { FieldAvailabilityService } from '~/components/field/services/field-availability.service';
 import { FieldPricingCalculatorService } from '~/components/field/services/field-pricing-calculator.service';
+import { NotificationService } from '~/components/notification/services/notification.service';
 import { BookingServiceEntity } from '~/entities/booking-service.entity';
 import { BookingEntity } from '~/entities/booking.entity';
 import { FieldServiceEntity } from '~/entities/field-service.entity';
@@ -28,6 +29,7 @@ export class UserBookingService {
     private readonly availabilityService: FieldAvailabilityService,
     private readonly stateMachineService: BookingStateMachineService,
     private readonly dataSource: DataSource,
+    private readonly notifications: NotificationService,
   ) {}
 
   async createBooking(
@@ -133,7 +135,7 @@ export class UserBookingService {
 
     const bookingId = randomUUID();
 
-    await this.dataSource.transaction(async (em) => {
+    const notification = await this.dataSource.transaction(async (em) => {
       const bookingEntity = em.create(BookingEntity, {
         id: bookingId,
         userId,
@@ -171,7 +173,14 @@ export class UserBookingService {
       }
 
       await this.stateMachineService.recordInitialStatus(em, bookingId, userId);
+      return this.notifications.recordOwnerNotification(em, {
+        userId: field.ownerId,
+        type: 'owner_booking_created',
+        fieldName: field.name,
+        refId: bookingId,
+      });
     });
+    this.notifications.publish(field.ownerId, notification);
 
     const fullDetail = await this.bookingRepository.findDetailById(bookingId);
     return BookingResponseDto.fromEntity(fullDetail!);
