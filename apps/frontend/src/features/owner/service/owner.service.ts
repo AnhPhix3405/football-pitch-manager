@@ -41,12 +41,22 @@ export interface RegisterOwnerPayload {
   note?: string
 }
 
-export interface OwnerRegistrationStatusResponse {
-  hasRequest: boolean
-  status?: 'pending' | 'approved' | 'rejected'
-  submittedAt?: string
+export interface OwnerRegistrationRequestItem {
+  id: string
+  type: string
+  status: 'pending' | 'approved' | 'rejected'
+  note?: string | null
+  reviewedBy?: string | null
   reviewedAt?: string | null
-  rejectionReason?: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface OwnerRegistrationStatusResponse {
+  hasPendingRequest: boolean
+  currentRole: string
+  latestRequest: OwnerRegistrationRequestItem | null
+  profile: OwnerProfileResponse | null
 }
 
 export interface OwnerProfileResponse {

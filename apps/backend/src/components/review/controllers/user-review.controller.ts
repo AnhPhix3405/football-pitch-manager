@@ -44,6 +44,16 @@ export class UserReviewController {
     return this.userReviewService.createReview(reviewerId, dto);
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Get('match-status/:postId')
+  @HttpCode(HttpStatus.OK)
+  async getMatchStatus(
+    @CurrentUser('id') reviewerId: string,
+    @Param('postId') postId: string,
+  ) {
+    return this.userReviewService.getPostMatchReviewStatus(reviewerId, postId);
+  }
+
   @Public()
   @Get(':userId')
   @HttpCode(HttpStatus.OK)

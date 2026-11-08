@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import dayjs from 'dayjs';
-import { In, Repository } from 'typeorm';
+import { Brackets, In, Repository } from 'typeorm';
 import { BaseRepository } from '~/core/base/base-repositories';
 import { PostEntity } from '~/entities/post.entity';
 import { UserProfileEntity } from '~/entities/user-profile.entity';
@@ -93,11 +93,27 @@ export class PostRepository extends BaseRepository<PostEntity> {
     const qb = this.repository
       .createQueryBuilder('post')
       .leftJoinAndSelect('post.user', 'user')
-      .where('post.userId = :userId', { userId })
-      .andWhere('post.deletedAt IS NULL');
+      .where('post.deletedAt IS NULL');
 
-    if (options.status?.trim()) {
-      qb.andWhere('post.status = :status', { status: options.status.trim() });
+    if (options.status?.trim() === 'matched') {
+      qb.andWhere(
+        new Brackets((sub) => {
+          sub
+            .where(
+              '(post.userId = :userId AND (post.status = :matchedStatus OR EXISTS (SELECT 1 FROM post_matches pm_own WHERE pm_own.post_id = post.id AND pm_own.status = :acceptedStatus)))',
+              { userId, matchedStatus: 'matched', acceptedStatus: 'accepted' },
+            )
+            .orWhere(
+              'EXISTS (SELECT 1 FROM post_matches pm_app WHERE pm_app.post_id = post.id AND pm_app.applicant_id = :userId AND pm_app.status = :acceptedStatus)',
+              { userId, acceptedStatus: 'accepted' },
+            );
+        }),
+      );
+    } else {
+      qb.andWhere('post.userId = :userId', { userId });
+      if (options.status?.trim()) {
+        qb.andWhere('post.status = :status', { status: options.status.trim() });
+      }
     }
 
     qb.orderBy('post.createdAt', 'DESC').skip(skip).take(limit);

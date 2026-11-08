@@ -19,12 +19,17 @@ export interface FootballField {
   amenities: string[]
   description: string
   coordinates: { x: number; y: number }
+  lat?: number
+  lng?: number
   featured: boolean
   availableToday: boolean
+  hasOwnerAccount: boolean
+  phone?: string
 }
 
 export interface FieldFilters {
   query: string
+  city?: string
   district: string
   format: FieldFormat | 'all'
   maxPrice: number

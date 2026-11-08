@@ -4,6 +4,7 @@ import {
   CheckCircleFilled,
   ClockCircleOutlined,
   CreditCardOutlined,
+  InfoCircleOutlined,
 } from '@ant-design/icons'
 import {
   Alert,
@@ -41,12 +42,10 @@ import {
   getFieldAvailabilityApi,
   getFieldPriceQuoteApi,
 } from '../service/booking.service'
-
-const extras = [
-  { name: 'Thuê bóng thi đấu', price: 30000 },
-  { name: 'Nước uống cho đội', price: 50000 },
-  { name: 'Thuê áo bib', price: 40000 },
-]
+import {
+  getFieldServices,
+  type PublicFieldServiceItem,
+} from '../../fields/service/field.service'
 
 export function BookingFlow({
   field,
@@ -68,7 +67,9 @@ export function BookingFlow({
   const [courtType, setCourtType] = useState<string>(defaultCourtType)
   const [date, setDate] = useState<Dayjs>(dayjs().add(1, 'day'))
   const [slotIndex, setSlotIndex] = useState<number | undefined>(undefined)
-  const [selectedExtras, setSelectedExtras] = useState<string[]>([])
+  const [fieldServices, setFieldServices] = useState<PublicFieldServiceItem[]>([])
+  const [loadingServices, setLoadingServices] = useState(false)
+  const [selectedServices, setSelectedServices] = useState<Record<string, number>>({}) // serviceId -> quantity
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(PAYMENT_METHOD.VNPAY)
   const [submitting, setSubmitting] = useState(false)
   const [bookingCode, setBookingCode] = useState('')
@@ -152,25 +153,41 @@ export function BookingFlow({
     }
   }, [open, date, courtType, slotIndex, checkAvailability])
 
-  const extrasTotal = useMemo(
-    () =>
-      extras
-        .filter((extra) => selectedExtras.includes(extra.name))
-        .reduce((sum, extra) => sum + extra.price, 0),
-    [selectedExtras],
-  )
+  // Tải danh sách dịch vụ thực tế của sân
+  useEffect(() => {
+    if (open && field.id) {
+      setLoadingServices(true)
+      getFieldServices(field.id)
+        .then((items) => {
+          setFieldServices(items || [])
+        })
+        .catch(() => {
+          setFieldServices([])
+        })
+        .finally(() => {
+          setLoadingServices(false)
+        })
+    }
+  }, [open, field.id])
+
+  const servicesTotal = useMemo(() => {
+    return Object.entries(selectedServices).reduce((sum, [id, qty]) => {
+      const s = fieldServices.find((item) => item.id === id)
+      return sum + (s ? s.price * qty : 0)
+    }, 0)
+  }, [selectedServices, fieldServices])
 
   const pitchRate = quote ? quote.pitchPrice : field.pricePerHour
+  const total = pitchRate + servicesTotal
   const depositAmount = quote
-    ? quote.depositAmount
-    : Math.round(pitchRate * 0.3)
-  const total = pitchRate + extrasTotal
+    ? quote.depositAmount + Math.round(servicesTotal * 0.3)
+    : Math.round(total * 0.3)
   const remainingPayable = Math.max(0, total - depositAmount)
 
   const reset = () => {
     setStep(0)
     setSlotIndex(undefined)
-    setSelectedExtras([])
+    setSelectedServices({})
     setBookingCode('')
     setCreatedBookingId('')
     setAvailabilityInfo(null)
@@ -207,13 +224,20 @@ export function BookingFlow({
     setSubmitting(true)
 
     try {
+      const bookingServicesPayload = Object.entries(selectedServices).map(
+        ([serviceId, quantity]) => ({
+          serviceId,
+          quantity,
+        }),
+      )
+
       const res = await createBookingApi({
         fieldId: field.id,
         courtType,
         bookingDate: date.format('YYYY-MM-DD'),
         startTime: selectedSlot.startTime,
         endTime: selectedSlot.endTime,
-        services: [],
+        services: bookingServicesPayload,
       })
 
       if (res && res.id) {
@@ -387,6 +411,12 @@ export function BookingFlow({
                 <dt>{t('booking.flow.pitchPrice')}</dt>
                 <dd>{formatPrice(pitchRate)}</dd>
               </div>
+              {servicesTotal > 0 && (
+                <div>
+                  <dt>{t('booking.flow.servicesTotal', { defaultValue: 'Tiền dịch vụ' })}</dt>
+                  <dd style={{ color: 'var(--lime)', fontWeight: 600 }}>+{formatPrice(servicesTotal)}</dd>
+                </div>
+              )}
               <div>
                 <dt>{t('booking.flow.deposit')}</dt>
                 <dd style={{ color: 'var(--lime)', fontWeight: 600 }}>
@@ -400,23 +430,115 @@ export function BookingFlow({
             </dl>
           </div>
 
-          <label style={{ display: 'block', margin: '16px 0' }}>
+          <div style={{ margin: '16px 0' }}>
             <span style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: 'var(--sage)', marginBottom: 8 }}>
-              {t('booking.flow.extraServices')}
+              {t('booking.flow.extraServices', { defaultValue: 'Dịch vụ đi kèm' })}
             </span>
-            <Checkbox.Group
-              value={selectedExtras}
-              onChange={(values) => setSelectedExtras(values as string[])}
-              style={{ display: 'flex', flexDirection: 'column', gap: 8 }}
-            >
-              {extras.map((extra) => (
-                <Checkbox value={extra.name} key={extra.name}>
-                  <span>{extra.name}</span>
-                  <b style={{ marginLeft: 8, color: 'var(--lime)' }}>+{formatPrice(extra.price)}</b>
-                </Checkbox>
-              ))}
-            </Checkbox.Group>
-          </label>
+
+            {loadingServices ? (
+              <div style={{ textAlign: 'center', padding: '12px 0' }}>
+                <Spin size="small" />
+              </div>
+            ) : fieldServices.length === 0 ? (
+              <p style={{ fontSize: '0.78rem', color: 'var(--muted)', margin: 0, fontStyle: 'italic' }}>
+                {t('booking.flow.noServicesAvailable', { defaultValue: 'Sân bóng chưa thiết lập dịch vụ đi kèm.' })}
+              </p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {fieldServices.map((service) => {
+                  const isSelected = !!selectedServices[service.id]
+                  const quantity = selectedServices[service.id] || 1
+                  return (
+                    <div
+                      key={service.id}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '8px 12px',
+                        borderRadius: 8,
+                        background: isSelected ? 'rgba(140, 252, 112, 0.08)' : 'rgba(255, 255, 255, 0.03)',
+                        border: isSelected ? '1px solid rgba(140, 252, 112, 0.3)' : '1px solid rgba(255, 255, 255, 0.06)',
+                        transition: 'all 0.2s',
+                      }}
+                    >
+                      <Checkbox
+                        checked={isSelected}
+                        onChange={(e) => {
+                          const checked = e.target.checked
+                          setSelectedServices((prev) => {
+                            const updated = { ...prev }
+                            if (checked) {
+                              updated[service.id] = 1
+                            } else {
+                              delete updated[service.id]
+                            }
+                            return updated
+                          })
+                        }}
+                      >
+                        <span style={{ fontWeight: 600, color: '#fff', fontSize: '0.84rem' }}>{service.name}</span>
+                        <span style={{ marginLeft: 8, color: 'var(--lime)', fontSize: '0.8rem' }}>
+                          +{formatPrice(service.price)} {service.unit ? `/ ${service.unit}` : ''}
+                        </span>
+                      </Checkbox>
+
+                      {isSelected && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <Button
+                            size="small"
+                            disabled={quantity <= 1}
+                            onClick={() => {
+                              setSelectedServices((prev) => ({
+                                ...prev,
+                                [service.id]: Math.max(1, (prev[service.id] || 1) - 1),
+                              }))
+                            }}
+                            style={{
+                              width: 24,
+                              height: 24,
+                              minWidth: 24,
+                              padding: 0,
+                              borderRadius: 4,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                            }}
+                          >
+                            -
+                          </Button>
+                          <span style={{ minWidth: 18, textAlign: 'center', fontWeight: 700, fontSize: '0.82rem', color: '#fff' }}>
+                            {quantity}
+                          </span>
+                          <Button
+                            size="small"
+                            onClick={() => {
+                              setSelectedServices((prev) => ({
+                                ...prev,
+                                [service.id]: (prev[service.id] || 1) + 1,
+                              }))
+                            }}
+                            style={{
+                              width: 24,
+                              height: 24,
+                              minWidth: 24,
+                              padding: 0,
+                              borderRadius: 4,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                            }}
+                          >
+                            +
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
 
           <div className="booking-total">
             <span>{t('booking.flow.totalPayment')}</span>
@@ -439,6 +561,27 @@ export function BookingFlow({
                   defaultValue: 'Thanh toán trực tiếp cho ban quản lý sân trước giờ bắt đầu thi đấu.',
                 })}
           </p>
+
+          <div
+            style={{
+              margin: '12px 0 16px',
+              background: 'rgba(140, 252, 112, 0.05)',
+              border: '1px solid rgba(140, 252, 112, 0.15)',
+              borderRadius: 8,
+              padding: '8px 12px',
+              fontSize: '0.74rem',
+              color: 'var(--sage)',
+              lineHeight: 1.4,
+            }}
+          >
+            <InfoCircleOutlined style={{ color: 'var(--lime)', marginRight: 6 }} />
+            <strong style={{ color: '#fff' }}>
+              {t('booking.cancellation.policyTitle', { defaultValue: 'Chính sách hủy sân: ' })}
+            </strong>
+            {t('booking.cancellation.policySummary', {
+              defaultValue: 'Trước 24h: Hoàn 100% cọc · 12-24h: Phạt 50% cọc · Dưới 12h: Mất 100% cọc.',
+            })}
+          </div>
 
           <div className="booking-buttons">
             <Button onClick={() => setStep(0)} disabled={submitting}>

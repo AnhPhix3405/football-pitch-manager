@@ -35,9 +35,13 @@ services:
     container_name: fpm_backend
     build:
       context: ./apps/backend
+      dockerfile: Dockerfile.dev
     restart: unless-stopped
     ports:
       - "3000:3000"
+    volumes:
+      - ./apps/backend:/app
+      - /app/node_modules
     depends_on:
       postgres:
         condition: service_healthy
@@ -50,14 +54,19 @@ services:
       - DATABASE_PORT=5432
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - CHOKIDAR_USEPOLLING=true
 
   frontend:
     container_name: fpm_frontend
     build:
       context: ./apps/frontend
+      dockerfile: Dockerfile.dev
     restart: unless-stopped
     ports:
-      - "80:80"
+      - "3001:3001"
+    volumes:
+      - ./apps/frontend:/app
+      - /app/node_modules
     depends_on:
       - backend
 

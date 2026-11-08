@@ -19,6 +19,7 @@ import { FieldRatingSummaryRepository } from '~/repositories/field-rating-summar
 import { FieldReviewRepository } from '~/repositories/field-review.repository';
 import { PostMatchRepository } from '~/repositories/post-match.repository';
 import { PostRepository } from '~/repositories/post.repository';
+import { UserProfileRepository } from '~/repositories/user-profile.repository';
 import { UserRatingSummaryRepository } from '~/repositories/user-rating-summary.repository';
 import { UserReviewRepository } from '~/repositories/user-review.repository';
 import { FieldRankingController } from './controllers/field-ranking.controller';
@@ -66,6 +67,7 @@ import { UserReviewService } from './services/user-review.service';
     BookingRepository,
     PostRepository,
     PostMatchRepository,
+    UserProfileRepository,
 
     // Services
     RatingSummaryService,

@@ -8,6 +8,7 @@ import type {
   PriceQuoteQueryParams,
   PriceQuoteResponse,
   UserBookingQueryParams,
+  CancellationPreviewData,
 } from '../interface/booking.types'
 
 /**
@@ -29,6 +30,18 @@ export async function getMyBookingsApi(
 export async function getBookingDetailApi(id: string): Promise<BackendBooking> {
   const response = await apiClient.get<ApiResponse<BackendBooking>>(
     `/bookings/${id}`,
+  )
+  return response.data?.data
+}
+
+/**
+ * Xem trước chính sách hủy, tỷ lệ phạt và số tiền hoàn cọc
+ */
+export async function getCancellationPreviewApi(
+  id: string,
+): Promise<CancellationPreviewData> {
+  const response = await apiClient.get<ApiResponse<CancellationPreviewData>>(
+    `/bookings/${id}/cancellation-preview`,
   )
   return response.data?.data
 }

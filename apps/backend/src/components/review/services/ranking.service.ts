@@ -3,6 +3,30 @@ import { FieldImageRepository } from '~/repositories/field-image.repository';
 import { FieldRatingSummaryRepository } from '~/repositories/field-rating-summary.repository';
 import { UserRatingSummaryRepository } from '~/repositories/user-rating-summary.repository';
 
+function getDistrictFromLocation(
+  lat?: string | null,
+  lng?: string | null,
+): string {
+  if (!lat || !lng) {
+    return 'Chưa cập nhật';
+  }
+  const latNum = parseFloat(lat);
+  const lngNum = parseFloat(lng);
+  if (isNaN(latNum) || isNaN(lngNum)) {
+    return 'Chưa cập nhật';
+  }
+  if (latNum >= 20.7 && latNum <= 21.4 && lngNum >= 105.5 && lngNum <= 106.1) {
+    return 'Hà Nội';
+  }
+  if (latNum >= 10.3 && latNum <= 11.2 && lngNum >= 106.3 && lngNum <= 107.1) {
+    return 'TP. Hồ Chí Minh';
+  }
+  if (latNum >= 15.9 && latNum <= 16.2 && lngNum >= 108.0 && lngNum <= 108.4) {
+    return 'Đà Nẵng';
+  }
+  return 'Việt Nam';
+}
+
 @Injectable()
 export class RankingService {
   constructor(
@@ -43,12 +67,14 @@ export class RankingService {
 
     return list.map((item, index) => {
       const profile = item.profile;
+      const district = getDistrictFromLocation(item.user?.lat, item.user?.lng);
       return {
         rank: index + 1,
         userId: item.userId,
         name: profile?.fullName || item.user?.email?.split('@')[0] || 'Cầu thủ',
         avatarUrl: profile?.avatarUrl ?? null,
         skillLevel: profile?.skillLevel ?? 'Chưa cập nhật',
+        district,
         avgRating: parseFloat(item.avgRating),
         totalReviews: item.totalReviews,
         sportsmanshipScore: parseFloat(item.sportsmanshipScore),

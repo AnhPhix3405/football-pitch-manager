@@ -69,4 +69,23 @@ export const reviewService = {
     )
     return res.data.data
   },
+
+  async getPostMatchReviewStatus(postId: string): Promise<{
+    isFinished: boolean
+    isMatched: boolean
+    hasReviewedOpponent: boolean
+    opponent: { id: string; fullName: string | null; avatarUrl: string | null } | null
+    canReview: boolean
+  }> {
+    const res = await apiClient.get<
+      ApiResponse<{
+        isFinished: boolean
+        isMatched: boolean
+        hasReviewedOpponent: boolean
+        opponent: { id: string; fullName: string | null; avatarUrl: string | null } | null
+        canReview: boolean
+      }>
+    >(`/reviews/users/match-status/${postId}`)
+    return res.data.data
+  },
 }

@@ -12,3 +12,31 @@ export const FIELD_SURFACES = {
 } as const
 
 export type FieldSurface = (typeof FIELD_SURFACES)[keyof typeof FIELD_SURFACES]
+
+export const HANOI_DISTRICTS = [
+  'Hoàn Kiếm',
+  'Cầu Giấy',
+  'Thanh Xuân',
+  'Đống Đa',
+  'Nam Từ Liêm',
+  'Tây Hồ',
+  'Ba Đình',
+  'Hai Bà Trưng',
+  'Hà Đông',
+]
+
+export const HCM_DISTRICTS = [
+  'Tân Bình',
+  'Quận 1',
+  'Quận 3',
+  'Quận 7',
+  'Bình Thạnh',
+  'Thủ Đức',
+  'Phú Nhuận',
+  'Gò Vấp',
+  'Quận 10',
+  'Quận 2',
+  'Quận 9',
+  'Bình Tân',
+]
+

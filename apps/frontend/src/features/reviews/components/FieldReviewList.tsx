@@ -1,4 +1,4 @@
-import { StarFilled, UserOutlined } from '@ant-design/icons'
+import { UserOutlined } from '@ant-design/icons'
 import { Avatar, Pagination, Spin } from 'antd'
 import dayjs from 'dayjs'
 import { useTranslation } from 'react-i18next'
@@ -10,7 +10,7 @@ import type {
 
 interface FieldReviewListProps {
   reviews: FieldReview[]
-  summary: FieldRatingSummary | null
+  summary?: FieldRatingSummary | null
   loading: boolean
   total: number
   page: number
@@ -21,55 +21,16 @@ interface FieldReviewListProps {
 
 export function FieldReviewList({
   reviews,
-  summary,
   loading,
   total,
   page,
   limit = 10,
   onPageChange,
-  onOpenReviewModal,
 }: FieldReviewListProps) {
   const { t } = useTranslation()
 
-  const avgScore = summary ? Number(summary.avgRating).toFixed(1) : '0.0'
-  const totalCount = summary?.totalReviews ?? 0
-
   return (
     <div className="field-reviews-section">
-      {/* Summary Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 p-6 rounded-2xl bg-zinc-900/60 border border-white/5 backdrop-blur-md mb-8">
-        <div className="flex items-center gap-5">
-          <div className="flex flex-col items-center justify-center w-20 h-20 rounded-2xl bg-lime-500/10 border border-lime-500/20 text-lime-400">
-            <span className="text-3xl font-black">{avgScore}</span>
-            <div className="flex items-center text-xs text-lime-400 mt-0.5">
-              <StarFilled className="mr-1" />
-              <span>/ 5.0</span>
-            </div>
-          </div>
-          <div>
-            <h4 className="text-lg font-bold text-white mb-1">
-              {t('reviews.ratingOverview', { defaultValue: 'Đánh giá từ khách hàng' })}
-            </h4>
-            <p className="text-sm text-zinc-400">
-              {t('reviews.basedOn', {
-                count: totalCount,
-                defaultValue: `Dựa trên ${totalCount} lượt đánh giá thực tế từ người đặt sân`,
-              })}
-            </p>
-          </div>
-        </div>
-
-        {onOpenReviewModal && (
-          <button
-            type="button"
-            onClick={onOpenReviewModal}
-            className="px-5 py-2.5 rounded-full text-sm font-semibold bg-lime-500 text-black hover:bg-lime-400 transition-colors shadow-lg shadow-lime-500/20 shrink-0"
-          >
-            {t('reviews.writeReview', { defaultValue: 'Viết đánh giá' })}
-          </button>
-        )}
-      </div>
-
       {/* Reviews List */}
       {loading ? (
         <div className="py-12 flex items-center justify-center">

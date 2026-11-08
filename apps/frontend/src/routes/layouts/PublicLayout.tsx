@@ -43,9 +43,6 @@ export function PublicLayout() {
           <NavLink to="/rankings">
             {t('nav.rankings', { defaultValue: 'Xếp hạng' })}
           </NavLink>
-          <NavLink to="/bookings">
-            {t('nav.myBookings', { defaultValue: 'Lịch đặt' })}
-          </NavLink>
           <NavLink to="/messages">
             {t('nav.messages', { defaultValue: 'Tin nhắn' })}
           </NavLink>

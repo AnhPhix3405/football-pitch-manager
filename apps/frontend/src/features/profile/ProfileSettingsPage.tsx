@@ -13,6 +13,7 @@ import {
   UserOutlined,
 } from '@ant-design/icons'
 import {
+  AutoComplete,
   Avatar,
   Button,
   Empty,
@@ -31,6 +32,8 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { useAppSelector } from '../../app/hooks'
 import { useUserProfile } from '../../hooks/useUserProfile'
+import { useRankings } from '../../hooks/useRankings'
+import { RANKING_TABS } from '../rankings/constants/ranking.constants'
 import { updateMyProfile } from '../owner/service/owner.service'
 import type { MatchPost, UserBooking } from '../user/user.data'
 import { useBookings, type BookingFilterType } from '../bookings/hooks/useBookings'
@@ -46,6 +49,7 @@ import { PillButton } from '../../components/PillButton'
 import profilePanelBg from '../../assets/profile_panel.jpg'
 import { ALLOWED_AVATAR_TYPES, MAX_AVATAR_SIZE } from './constants/profile.constant'
 import type { PasswordForm, ProfileForm } from './interface/profile.types'
+import { reverseGeocodeCoords, searchAddressNominatim } from './service/profile.service'
 import { smoothScrollToTop } from '../../utils/scroll.utils'
 
 export function ProfileSettingsPage() {
@@ -69,6 +73,11 @@ export function ProfileSettingsPage() {
   const avatarInputRef = useRef<HTMLInputElement>(null)
   const { summary: userRatingSummary } = useUserReviews(user?.id)
   const [reviewBooking, setReviewBooking] = useState<{ id: string; fieldId?: string; fieldName: string } | null>(null)
+  const [locationName, setLocationName] = useState('')
+  const [locationOptions, setLocationOptions] = useState<
+    Array<{ label: string; value: string; lat: number; lng: number }>
+  >([])
+  const { playerRankings } = useRankings(RANKING_TABS.PLAYERS)
 
   // Booking history state & hook
   const { filter: bookingFilter, setFilter: setBookingFilter, visible: visibleBookings, cancel: cancelBooking } = useBookings()
@@ -94,6 +103,11 @@ export function ProfileSettingsPage() {
         lat: profile.lat ?? undefined,
         lng: profile.lng ?? undefined,
       })
+      if (profile.lat && profile.lng) {
+        void reverseGeocodeCoords(profile.lat, profile.lng).then((name) => {
+          setLocationName(name)
+        })
+      }
     } else if (user) {
       form.setFieldsValue({
         name: user.name,
@@ -168,6 +182,24 @@ export function ProfileSettingsPage() {
     }
   }
 
+  const handleLocationSearch = async (val: string) => {
+    setLocationName(val)
+    if (!val || val.trim().length < 2) {
+      setLocationOptions([])
+      return
+    }
+    const results = await searchAddressNominatim(val)
+    setLocationOptions(results)
+  }
+
+  const handleLocationSelect = (
+    value: string,
+    option: { label: string; value: string; lat: number; lng: number },
+  ) => {
+    setLocationName(value)
+    form.setFieldsValue({ lat: option.lat, lng: option.lng })
+  }
+
   const handleGetCurrentLocation = () => {
     if (!navigator.geolocation) {
       messageApi.error(
@@ -184,6 +216,8 @@ export function ProfileSettingsPage() {
           const { latitude, longitude } = pos.coords
           await updateLocation(latitude, longitude)
           form.setFieldsValue({ lat: latitude, lng: longitude })
+          const readableName = await reverseGeocodeCoords(latitude, longitude)
+          setLocationName(readableName)
           messageApi.success(
             t('profile.location.updateSuccess', {
               defaultValue: 'Cập nhật vị trí thành công.',
@@ -398,30 +432,38 @@ export function ProfileSettingsPage() {
           <Form.Item label="GIỚI THIỆU" name="bio" rules={[{ max: 240, message: 'Giới thiệu tối đa 240 ký tự.' }]}>
             <Input.TextArea rows={4} showCount maxLength={240} />
           </Form.Item>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-            <Form.Item
-              label={t('profile.location.lat', { defaultValue: 'Vĩ độ (Lat)' })}
-              name="lat"
+          <Form.Item name="lat" hidden>
+            <Input type="hidden" />
+          </Form.Item>
+          <Form.Item name="lng" hidden>
+            <Input type="hidden" />
+          </Form.Item>
+
+          <Form.Item
+            label={t('profile.location.label', { defaultValue: 'VỊ TRÍ / KHU VỰC' })}
+            help={locationName ? undefined : t('profile.location.placeholder', { defaultValue: 'Nhập địa chỉ hoặc khu vực (ví dụ: Quận 1, TP. Hồ Chí Minh)...' })}
+          >
+            <AutoComplete
+              value={locationName}
+              options={locationOptions}
+              onSearch={handleLocationSearch}
+              onSelect={handleLocationSelect}
+              placeholder={t('profile.location.placeholder', {
+                defaultValue: 'Nhập địa chỉ hoặc khu vực (ví dụ: Quận 1, TP. Hồ Chí Minh)...',
+              })}
             >
               <Input
-                type="number"
-                step="0.000001"
                 prefix={<EnvironmentOutlined />}
-                placeholder="10.762622"
+                allowClear
+                onChange={(e) => {
+                  if (!e.target.value) {
+                    setLocationName('')
+                    form.setFieldsValue({ lat: undefined, lng: undefined })
+                  }
+                }}
               />
-            </Form.Item>
-            <Form.Item
-              label={t('profile.location.lng', { defaultValue: 'Kinh độ (Lng)' })}
-              name="lng"
-            >
-              <Input
-                type="number"
-                step="0.000001"
-                prefix={<EnvironmentOutlined />}
-                placeholder="106.660172"
-              />
-            </Form.Item>
-          </div>
+            </AutoComplete>
+          </Form.Item>
           <div style={{ marginBottom: 20 }}>
             <Button
               icon={<CompassOutlined />}
@@ -474,6 +516,20 @@ export function ProfileSettingsPage() {
       </div>
     </div>
   )
+
+  const myPlayerRanking = playerRankings.find(
+    (p) => p.userId === (user?.id || profile?.userId),
+  )
+  const myRankNumber = myPlayerRanking?.rank
+  const hasReviews = Boolean(userRatingSummary && userRatingSummary.totalReviews > 0)
+
+  const ratingDisplay = hasReviews
+    ? `${Number(userRatingSummary?.avgRating).toFixed(1)} ★`
+    : t('profile.stats.noReviews', { defaultValue: 'Chưa có đánh giá' })
+
+  const rankDisplay = hasReviews && myRankNumber
+    ? `#${String(myRankNumber).padStart(2, '0')}`
+    : t('profile.stats.noReviews', { defaultValue: 'Chưa có đánh giá' })
 
   return (
     <div className="profile-page-wrapper">
@@ -566,10 +622,20 @@ export function ProfileSettingsPage() {
                 <span className="profile-stat-item__label">
                   {t('profile.stats.rating', { defaultValue: 'Đánh giá' })}
                 </span>
-                <b className="profile-stat-item__value">
-                  {userRatingSummary && Number(userRatingSummary.avgRating) > 0
-                    ? `${Number(userRatingSummary.avgRating).toFixed(1)} ★`
-                    : '5.0 ★'}
+                <b
+                  className={`profile-stat-item__value ${!hasReviews ? 'text-xs sm:text-sm font-medium text-zinc-400 mt-1.5' : ''}`}
+                >
+                  {ratingDisplay}
+                </b>
+              </div>
+              <div className="profile-stat-item">
+                <span className="profile-stat-item__label">
+                  {t('profile.stats.rank', { defaultValue: 'Xếp hạng' })}
+                </span>
+                <b
+                  className={`profile-stat-item__value ${hasReviews && myRankNumber ? 'text-amber-300' : 'text-xs sm:text-sm font-medium text-zinc-400 mt-1.5'}`}
+                >
+                  {rankDisplay}
                 </b>
               </div>
             </div>

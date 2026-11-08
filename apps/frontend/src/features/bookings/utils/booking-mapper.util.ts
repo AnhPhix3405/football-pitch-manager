@@ -38,6 +38,7 @@ export function mapBackendBookingToUi(b: BackendBooking): UiBooking {
     paymentStatus: b.paymentStatus,
     image: DEFAULT_BOOKING_IMAGE,
     services: b.services,
+    cancelReason: b.cancelReason,
     createdAt: b.createdAt,
     updatedAt: b.updatedAt,
   }

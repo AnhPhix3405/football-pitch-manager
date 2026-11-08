@@ -40,8 +40,9 @@ export class UserRatingSummaryRepository {
         user: true,
       },
       order: {
-        sportsmanshipScore: 'DESC',
+        avgRating: 'DESC',
         totalReviews: 'DESC',
+        updatedAt: 'ASC',
       },
       take: limit,
     });

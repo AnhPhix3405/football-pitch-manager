@@ -40,3 +40,59 @@ export async function updateUserLocationApi(
   return response.data.data
 }
 
+export async function searchAddressNominatim(
+  query: string,
+): Promise<Array<{ label: string; value: string; lat: number; lng: number }>> {
+  const trimmed = query.trim()
+  if (!trimmed || trimmed.length < 2) return []
+
+  try {
+    const url = new URL('https://nominatim.openstreetmap.org/search')
+    url.searchParams.set('q', trimmed)
+    url.searchParams.set('format', 'json')
+    url.searchParams.set('addressdetails', '1')
+    url.searchParams.set('limit', '5')
+    url.searchParams.set('countrycodes', 'vn')
+
+    const res = await fetch(url.toString(), {
+      headers: { Accept: 'application/json' },
+    })
+    if (!res.ok) return []
+    const data = (await res.json()) as Array<{
+      display_name: string
+      lat: string
+      lon: string
+    }>
+
+    return data.map((item) => ({
+      label: item.display_name,
+      value: item.display_name,
+      lat: parseFloat(item.lat),
+      lng: parseFloat(item.lon),
+    }))
+  } catch {
+    return []
+  }
+}
+
+export async function reverseGeocodeCoords(
+  lat: number,
+  lng: number,
+): Promise<string> {
+  try {
+    const url = new URL('https://nominatim.openstreetmap.org/reverse')
+    url.searchParams.set('lat', lat.toString())
+    url.searchParams.set('lon', lng.toString())
+    url.searchParams.set('format', 'json')
+
+    const res = await fetch(url.toString(), {
+      headers: { Accept: 'application/json' },
+    })
+    if (!res.ok) return `${lat.toFixed(4)}, ${lng.toFixed(4)}`
+    const data = (await res.json()) as { display_name?: string }
+    return data.display_name || `${lat.toFixed(4)}, ${lng.toFixed(4)}`
+  } catch {
+    return `${lat.toFixed(4)}, ${lng.toFixed(4)}`
+  }
+}
+

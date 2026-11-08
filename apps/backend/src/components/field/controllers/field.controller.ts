@@ -9,11 +9,13 @@ import {
 import { Public } from '~/components/auth/decorators/public.decorator';
 import {
   ApiGetPublicFieldDetailDoc,
+  ApiGetPublicFieldServicesDoc,
   ApiGetPublicFieldsDoc,
   ApiPublicFieldControllerDoc,
 } from '../docs/public-field.doc';
 import { FieldListResponseDto } from '../dto/field-list-response.dto';
 import { FieldResponseDto } from '../dto/field-response.dto';
+import { FieldServiceResponseDto } from '../dto/field-service-response.dto';
 import { PublicFieldQueryDto } from '../dto/public-field-query.dto';
 import { FieldService } from '../services/field.service';
 
@@ -40,5 +42,15 @@ export class FieldController {
     @Param('id') id: string,
   ): Promise<FieldResponseDto> {
     return this.fieldService.getPublicFieldDetail(id);
+  }
+
+  @Public()
+  @Get(':id/services')
+  @HttpCode(HttpStatus.OK)
+  @ApiGetPublicFieldServicesDoc()
+  async getPublicFieldServices(
+    @Param('id') id: string,
+  ): Promise<FieldServiceResponseDto[]> {
+    return this.fieldService.getPublicFieldServices(id);
   }
 }

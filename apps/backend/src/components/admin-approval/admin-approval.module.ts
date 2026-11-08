@@ -9,6 +9,7 @@ import { FieldRepository } from '~/repositories/field.repository';
 import { OwnerProfileRepository } from '~/repositories/owner-profile.repository';
 import { UserRepository } from '~/repositories/user.repository';
 import { AuthModule } from '../auth/auth.module';
+import { NotificationModule } from '../notification/notification.module';
 import { AdminFieldApprovalController } from './controllers/admin-field-approval.controller';
 import { AdminOwnerApprovalController } from './controllers/admin-owner-approval.controller';
 import { AdminFieldApprovalService } from './services/admin-field-approval.service';
@@ -23,6 +24,7 @@ import { AdminOwnerApprovalService } from './services/admin-owner-approval.servi
       FieldEntity,
     ]),
     AuthModule,
+    NotificationModule,
   ],
   controllers: [AdminOwnerApprovalController, AdminFieldApprovalController],
   providers: [

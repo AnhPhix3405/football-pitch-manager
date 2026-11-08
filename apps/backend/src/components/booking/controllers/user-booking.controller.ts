@@ -15,6 +15,7 @@ import { JwtAuthGuard } from '~/components/auth/guards/jwt-auth.guard';
 import { ApiUserBooking } from '../docs/user-booking.doc';
 import { BookingResponseDto } from '../dto/booking-response.dto';
 import { CancelBookingDto } from '../dto/cancel-booking.dto';
+import { CancellationPreviewResponseDto } from '../dto/cancellation-preview-response.dto';
 import { CreateBookingDto } from '../dto/create-booking.dto';
 import { UserBookingQueryDto } from '../dto/user-booking-query.dto';
 import { UserBookingService } from '../services/user-booking.service';
@@ -51,6 +52,16 @@ export class UserBookingController {
     @Param('id', ParseUUIDPipe) id: string,
   ): Promise<BookingResponseDto> {
     return this.userBookingService.getBookingDetail(userId, id);
+  }
+
+  @Get(':id/cancellation-preview')
+  @HttpCode(HttpStatus.OK)
+  @ApiUserBooking.getCancellationPreview()
+  async getCancellationPreview(
+    @CurrentUser('id') userId: string,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<CancellationPreviewResponseDto> {
+    return this.userBookingService.getCancellationPreview(userId, id);
   }
 
   @Post(':id/cancel')

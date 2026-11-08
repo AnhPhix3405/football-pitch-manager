@@ -7,6 +7,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { BookingResponseDto } from '../dto/booking-response.dto';
+import { CancellationPreviewResponseDto } from '../dto/cancellation-preview-response.dto';
 
 export const ApiUserBooking = {
   apply() {
@@ -46,6 +47,19 @@ export const ApiUserBooking = {
     return applyDecorators(
       ApiOperation({ summary: 'Xem chi tiết đơn đặt sân của người dùng' }),
       ApiResponse({ status: 200, type: BookingResponseDto }),
+      ApiResponse({ status: 404, description: 'Không tìm thấy đơn đặt sân' }),
+    );
+  },
+  getCancellationPreview() {
+    return applyDecorators(
+      ApiOperation({
+        summary: 'Xem trước chính sách hủy, tỷ lệ phạt và số tiền hoàn cọc',
+      }),
+      ApiResponse({ status: 200, type: CancellationPreviewResponseDto }),
+      ApiResponse({
+        status: 400,
+        description: 'Đơn đặt sân không ở trạng thái cho phép hủy',
+      }),
       ApiResponse({ status: 404, description: 'Không tìm thấy đơn đặt sân' }),
     );
   },

@@ -9,11 +9,13 @@ import { HttpStatus } from '@nestjs/common';
 import { ApplicationException } from '~/common/exceptions/application.exception';
 import { FieldEntity } from '~/entities/field.entity';
 import { FieldRepository } from '~/repositories/field.repository';
+import { FieldServiceRepository } from '~/repositories/field-service.repository';
 import { FieldService } from './field.service';
 
 describe('FieldService', () => {
   let service: FieldService;
   let fieldRepository: jest.Mocked<FieldRepository>;
+  let fieldServiceRepository: jest.Mocked<FieldServiceRepository>;
 
   const validFieldId = 'd3b07384-d113-40e1-95b6-75399589d6e4';
   const mockActiveField: FieldEntity = {
@@ -40,7 +42,11 @@ describe('FieldService', () => {
       findActiveById: jest.fn(),
     } as unknown as jest.Mocked<FieldRepository>;
 
-    service = new FieldService(fieldRepository);
+    fieldServiceRepository = {
+      findByFieldId: jest.fn(),
+    } as unknown as jest.Mocked<FieldServiceRepository>;
+
+    service = new FieldService(fieldRepository, fieldServiceRepository);
   });
 
   describe('getPublicFields', () => {

@@ -133,8 +133,21 @@ export interface UiBooking {
   paymentStatus: string
   image: string
   services?: BookingServiceItemDto[]
+  cancelReason?: string | null
   createdAt?: string
   updatedAt?: string
+}
+
+export interface CancellationPreviewData {
+  bookingId: string
+  hoursUntilMatch: number
+  canCancel: boolean
+  penaltyPercentage: number
+  depositAmount: number
+  penaltyAmount: number
+  refundAmount: number
+  policyDescription: string
+  blockReason?: string
 }
 
 export interface BookingCardProps {

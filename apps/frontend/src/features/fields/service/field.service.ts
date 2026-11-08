@@ -43,3 +43,19 @@ export async function getPublicFieldDetail(id: string): Promise<BackendFieldItem
   const response = await apiClient.get<ApiResponse<BackendFieldItem>>(`/fields/${id}`)
   return response.data.data
 }
+
+export interface PublicFieldServiceItem {
+  id: string
+  fieldId: string
+  name: string
+  price: number
+  unit: string | null
+  isActive: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export async function getFieldServices(fieldId: string): Promise<PublicFieldServiceItem[]> {
+  const response = await apiClient.get<ApiResponse<PublicFieldServiceItem[]>>(`/fields/${fieldId}/services`)
+  return response.data.data
+}

@@ -11,6 +11,7 @@ import { UserEntity } from '~/entities/user.entity';
 import { ApprovalRequestRepository } from '~/repositories/approval-request.repository';
 import { OwnerProfileRepository } from '~/repositories/owner-profile.repository';
 import { UserRepository } from '~/repositories/user.repository';
+import { NotificationService } from '~/components/notification/services/notification.service';
 import { AdminApproveOwnerDto } from '../dto/admin-approve-owner.dto';
 import { AdminOwnerApprovalQueryDto } from '../dto/admin-owner-approval-query.dto';
 import { AdminRejectOwnerDto } from '../dto/admin-reject-owner.dto';
@@ -85,11 +86,16 @@ describe('AdminOwnerApprovalService', () => {
       transaction: jest.fn(),
     } as unknown as jest.Mocked<DataSource>;
 
+    const notificationService = {
+      createAndSend: jest.fn().mockResolvedValue({}),
+    } as unknown as jest.Mocked<NotificationService>;
+
     service = new AdminOwnerApprovalService(
       approvalRequestRepository,
       ownerProfileRepository,
       userRepository,
       dataSource,
+      notificationService,
     );
   });
 
