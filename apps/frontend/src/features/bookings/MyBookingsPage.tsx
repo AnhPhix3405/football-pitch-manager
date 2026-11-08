@@ -8,6 +8,8 @@ import { useBookings, type BookingFilterType } from './hooks/useBookings'
 import { BookingCard } from './components/BookingCard'
 import { smoothScrollToTop } from '../../utils/scroll.utils'
 import { PaymentMethodModal } from '../payment/components/PaymentMethodModal'
+import { FieldReviewModal } from '../reviews/components/FieldReviewModal'
+import type { UiBooking } from './interface/booking.types'
 import type { UserBooking } from '../user/user.data'
 
 export function MyBookingsPage() {
@@ -15,6 +17,7 @@ export function MyBookingsPage() {
   const { filter, setFilter, visible, cancel, loading } = useBookings()
   const [messageApi, contextHolder] = message.useMessage()
   const [payingBooking, setPayingBooking] = useState<UserBooking | null>(null)
+  const [reviewBooking, setReviewBooking] = useState<UiBooking | null>(null)
 
   const handleCancelConfirm = (id: string) =>
     Modal.confirm({
@@ -82,6 +85,7 @@ export function MyBookingsPage() {
               key={booking.id}
               booking={booking}
               onCancel={handleCancelConfirm}
+              onReview={(item) => setReviewBooking(item)}
               onPay={(item) => setPayingBooking(item)}
             />
           ))}
@@ -100,6 +104,24 @@ export function MyBookingsPage() {
           onSuccess={() => {
             messageApi.success('Thao tác thanh toán hoàn tất.')
             setPayingBooking(null)
+          }}
+        />
+      )}
+
+      {reviewBooking && (
+        <FieldReviewModal
+          open={!!reviewBooking}
+          fieldId={reviewBooking.fieldId}
+          fieldName={reviewBooking.field}
+          bookingId={reviewBooking.id}
+          onClose={() => setReviewBooking(null)}
+          onSuccess={() => {
+            setReviewBooking(null)
+            messageApi.success(
+              t('reviews.fieldReviewSuccess', {
+                defaultValue: 'Cảm ơn bạn đã gửi đánh giá cho sân bóng!',
+              }),
+            )
           }}
         />
       )}

@@ -20,6 +20,7 @@ import { FieldOpeningHourRepository } from '~/repositories/field-opening-hour.re
 import { FieldServiceRepository } from '~/repositories/field-service.repository';
 import { FieldRepository } from '~/repositories/field.repository';
 import { BookingStateMachineService } from './booking-state-machine.service';
+import { NotificationService } from '~/components/notification/services/notification.service';
 import { UserBookingService } from './user-booking.service';
 
 describe('UserBookingService', () => {
@@ -32,6 +33,7 @@ describe('UserBookingService', () => {
   let availabilityService: jest.Mocked<FieldAvailabilityService>;
   let stateMachineService: jest.Mocked<BookingStateMachineService>;
   let dataSource: jest.Mocked<DataSource>;
+  let notificationService: jest.Mocked<NotificationService>;
   let em: jest.Mocked<EntityManager>;
 
   beforeEach(() => {
@@ -76,6 +78,10 @@ describe('UserBookingService', () => {
       transaction: jest.fn().mockImplementation(async (cb: any) => cb(em)),
     } as unknown as jest.Mocked<DataSource>;
 
+    notificationService = {
+      createAndSend: jest.fn().mockResolvedValue({}),
+    } as unknown as jest.Mocked<NotificationService>;
+
     service = new UserBookingService(
       bookingRepository,
       fieldRepository,
@@ -85,6 +91,7 @@ describe('UserBookingService', () => {
       availabilityService,
       stateMachineService,
       dataSource,
+      notificationService,
     );
   });
 
@@ -265,10 +272,15 @@ describe('UserBookingService', () => {
 
   describe('cancelMyBooking', () => {
     it('cancels pending booking and records reason', async () => {
+      const futureDate = new Date();
+      futureDate.setDate(futureDate.getDate() + 3);
       const mockBooking = {
         id: 'b-1',
         userId: 'u-1',
         status: 'pending',
+        bookingDate: futureDate.toISOString().slice(0, 10),
+        startTime: '18:00',
+        depositAmount: '100000',
       } as BookingEntity;
 
       bookingRepository.findDetailById.mockResolvedValue(mockBooking);
@@ -284,7 +296,7 @@ describe('UserBookingService', () => {
         'cancelled',
         'u-1',
         'user',
-        'Bận việc đột xuất',
+        expect.stringContaining('Bận việc đột xuất'),
       );
       expect(result).toBeDefined();
     });

@@ -34,7 +34,7 @@ export class NotificationController {
       filter,
       limit ? Number(limit) : 20,
     );
-    return { data };
+    return data;
   }
 
   @Get('unread-count')

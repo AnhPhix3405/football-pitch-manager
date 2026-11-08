@@ -7,6 +7,7 @@ import { UserEntity } from '~/entities/user.entity';
 import { ApprovalRequestRepository } from '~/repositories/approval-request.repository';
 import { OwnerProfileRepository } from '~/repositories/owner-profile.repository';
 import { UserRepository } from '~/repositories/user.repository';
+import { NotificationService } from '~/components/notification/services/notification.service';
 import { AdminApproveOwnerDto } from '../dto/admin-approve-owner.dto';
 import {
   AdminOwnerApprovalDetailResponseDto,
@@ -25,6 +26,7 @@ export class AdminOwnerApprovalService {
     private readonly ownerProfileRepository: OwnerProfileRepository,
     private readonly userRepository: UserRepository,
     private readonly dataSource: DataSource,
+    private readonly notificationService: NotificationService,
   ) {}
 
   async getOwnerApprovals(
@@ -85,7 +87,7 @@ export class AdminOwnerApprovalService {
   ): Promise<AdminOwnerApprovalDetailResponseDto> {
     const adminUser = await this.userRepository.findById(adminUserId);
 
-    return this.dataSource.transaction(async (manager) => {
+    const result = await this.dataSource.transaction(async (manager) => {
       const approvalRepo = manager.getRepository(ApprovalRequestEntity);
       const ownerRepo = manager.getRepository(OwnerProfileEntity);
       const userRepo = manager.getRepository(UserEntity);
@@ -141,6 +143,23 @@ export class AdminOwnerApprovalService {
 
       return this.mapToDetailDto(savedRequest, profile);
     });
+
+    try {
+      if (result.requester?.id) {
+        await this.notificationService.createAndSend({
+          userId: result.requester.id,
+          type: 'owner_approval',
+          title: 'Hồ sơ chủ sân đã được phê duyệt',
+          content:
+            'Chúc mừng! Hồ sơ đăng ký đối tác chủ sân của bạn đã được quản trị viên phê duyệt. Bạn hiện đã có quyền truy cập vào cổng quản lý sân.',
+          link: '/owner',
+        });
+      }
+    } catch {
+      // Best-effort notification delivery
+    }
+
+    return result;
   }
 
   async rejectOwnerRegistration(
@@ -150,7 +169,7 @@ export class AdminOwnerApprovalService {
   ): Promise<AdminOwnerApprovalDetailResponseDto> {
     const adminUser = await this.userRepository.findById(adminUserId);
 
-    return this.dataSource.transaction(async (manager) => {
+    const result = await this.dataSource.transaction(async (manager) => {
       const approvalRepo = manager.getRepository(ApprovalRequestEntity);
       const ownerRepo = manager.getRepository(OwnerProfileEntity);
       const userRepo = manager.getRepository(UserEntity);
@@ -197,6 +216,22 @@ export class AdminOwnerApprovalService {
 
       return this.mapToDetailDto(savedRequest, profile);
     });
+
+    try {
+      if (result.requester?.id) {
+        await this.notificationService.createAndSend({
+          userId: result.requester.id,
+          type: 'owner_rejection',
+          title: 'Hồ sơ chủ sân chưa được duyệt',
+          content: `Hồ sơ đăng ký chủ sân của bạn chưa được phê duyệt. Lý do: ${dto.reason || 'Thông tin chưa đáp ứng yêu cầu.'}`,
+          link: '/owner/register',
+        });
+      }
+    } catch {
+      // Best-effort notification delivery
+    }
+
+    return result;
   }
 
   private mapToDetailDto(

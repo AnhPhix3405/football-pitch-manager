@@ -15,8 +15,9 @@ export interface PlayerRankingItem {
   userId: string
   name: string
   avatarUrl: string | null
-  skillLevel: string
+  skillLevel?: string
+  district?: string
   avgRating: number
   totalReviews: number
-  sportsmanshipScore: number
+  sportsmanshipScore?: number
 }

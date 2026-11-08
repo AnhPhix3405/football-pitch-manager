@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import {
   BadRequestException,
   ConflictException,
@@ -47,6 +48,7 @@ export class FieldReviewService {
     }
 
     const review = this.fieldReviewRepository.create({
+      id: randomUUID(),
       fieldId: booking.fieldId,
       reviewerId,
       bookingId: dto.bookingId,

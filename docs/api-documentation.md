@@ -27,6 +27,7 @@ Tài liệu chi tiết toàn bộ các API HTTP REST và WebSocket Gateway của
 | | `GET` | `/auth/test/*` | Dev / Test | Bộ API kiểm thử guard phân quyền |
 | **Quản lý sân bóng** | `GET` | `/fields` | Public | Lấy danh sách sân bóng công khai có phân trang/lọc |
 | | `GET` | `/fields/:id` | Public | Lấy thông tin chi tiết một cụm sân bóng |
+| | `GET` | `/fields/:id/services` | Public | Lấy danh sách dịch vụ đi kèm đang hoạt động của cụm sân |
 | | `POST` | `/owner/fields` | Owner / Admin | Chủ sân tạo mới cụm sân bóng |
 | | `GET` | `/owner/fields` | Owner / Admin | Chủ sân lấy danh sách cụm sân thuộc quyền sở hữu |
 | | `GET` | `/owner/fields/:id` | Owner / Admin | Chủ sân xem chi tiết cụm sân của mình |
@@ -61,7 +62,8 @@ Tài liệu chi tiết toàn bộ các API HTTP REST và WebSocket Gateway của
 | **Quản lý Đặt Sân & Vòng Đời** | `POST` | `/bookings` | User / Active | Tạo yêu cầu đặt sân (kèm dịch vụ & snapshot giá) |
 | | `GET` | `/bookings/me` | User / Active | Xem danh sách đơn đặt sân của cá nhân |
 | | `GET` | `/bookings/:id` | User / Active | Xem chi tiết đơn đặt sân kèm lịch sử trạng thái |
-| | `POST` | `/bookings/:id/cancel` | User / Active | Người đặt hủy đơn sân đang chờ hoặc đã xác nhận |
+| | `GET` | `/bookings/:id/cancellation-preview` | User / Active | Xem trước chính sách hủy sân, tỷ lệ phạt và số tiền hoàn cọc |
+| | `POST` | `/bookings/:id/cancel` | User / Active | Người đặt hủy đơn sân đang chờ hoặc đã xác nhận (tính phạt/hoàn tiền) |
 | | `GET` | `/owner/fields/:fieldId/bookings` | Owner / Admin | Xem danh sách đơn đặt sân tại cụm sân |
 | | `GET` | `/owner/fields/:fieldId/bookings/:bookingId` | Owner / Admin | Xem chi tiết đơn đặt sân thuộc cụm sân |
 | | `POST` | `/owner/fields/:fieldId/bookings/:bookingId/confirm` | Owner / Admin | Xác nhận đơn và gán sân con (Khóa bi quan chống double-booking) |
@@ -117,6 +119,7 @@ Tài liệu chi tiết toàn bộ các API HTTP REST và WebSocket Gateway của
 | | `POST` | `/reviews/fields/:id/report` | User / Active | Báo cáo đánh giá sân bóng |
 | | `PATCH` | `/reviews/fields/:id/moderate` | Admin | Quản trị viên duyệt / ẩn đánh giá sân |
 | **Đánh giá người chơi** | `POST` | `/reviews/users` | User / Active | Đánh giá tinh thần thể thao của người chơi sau trận đấu |
+| | `GET` | `/reviews/users/match-status/:postId` | User / Active | Kiểm tra điều kiện & trạng thái đánh giá sau trận của cặp đấu |
 | | `GET` | `/reviews/users/:userId` | Public | Xem danh sách đánh giá của một người chơi |
 | | `GET` | `/reviews/users/:userId/summary` | Public | Xem tổng hợp điểm tinh thần thể thao của người chơi |
 | | `POST` | `/reviews/users/:id/report` | User / Active | Báo cáo đánh giá người chơi |
@@ -299,6 +302,26 @@ Tài liệu chi tiết toàn bộ các API HTTP REST và WebSocket Gateway của
 - **Path Parameters:**
   - `id` *(UUID)*: ID của cụm sân.
 - **Response (`200 OK` - `FieldResponseDto`):** Chi tiết đối tượng cụm sân như trong mảng `items`.
+
+#### 3.2.2.1. Lấy danh sách dịch vụ đi kèm của sân (`GET /fields/:id/services`)
+- **Quyền truy cập:** Public
+- **Path Parameters:**
+  - `id` *(UUID)*: ID của cụm sân.
+- **Response (`200 OK` - `FieldServiceResponseDto[]`):**
+  ```json
+  [
+    {
+      "id": "s1d2e3f4-a5b6-7890-1234-56789abcdef0",
+      "fieldId": "d3b07384-d113-40e1-95b6-75399589d6e4",
+      "name": "Nước uống cho đội",
+      "price": 50000,
+      "unit": "thùng",
+      "isActive": true,
+      "createdAt": "2026-10-23T08:00:00.000Z",
+      "updatedAt": "2026-10-23T08:00:00.000Z"
+    }
+  ]
+  ```
 
 #### 3.2.3. Chủ sân tạo cụm sân bóng mới (`POST /owner/fields`)
 - **Quyền truy cập:** Đã đăng nhập, quyền `owner` hoặc `admin`, trạng thái `active`.
@@ -601,7 +624,8 @@ Tài liệu chi tiết toàn bộ các API HTTP REST và WebSocket Gateway của
 
 #### 3.3.2. Lấy danh sách bài đăng của tôi (`GET /posts/me`)
 - **Quyền truy cập:** Đã đăng nhập (Active)
-- **Query Parameters:** `page`, `limit`, `status`.
+- **Query Parameters:** `page`, `limit`, `status` (`open` | `matched` | `closed`).
+- **Lưu ý nghiệp vụ:** Khi `status=matched`, trả về tất cả các bài đăng đã ghép thành công mà người dùng là chủ bài đăng (host) hoặc là người tham gia được duyệt ghép (`status='accepted'`) để phục vụ việc xem lại và đánh giá đối thủ.
 - **Response (`200 OK`):** Danh sách bài đăng của tài khoản hiện tại.
 
 #### 3.3.3. Xem chi tiết bài đăng (`GET /posts/:id`)
@@ -769,8 +793,34 @@ Tài liệu chi tiết toàn bộ các API HTTP REST và WebSocket Gateway của
 - **Quyền truy cập:** User (Chính chủ đơn)
 - **Response (`200 OK`):** Chi tiết đơn đặt kèm mảng `statusHistories` theo dòng thời gian (timeline).
 
-#### 3.4.5. Khách hàng hủy đơn đặt sân (`POST /bookings/:id/cancel`)
+#### 3.4.5. Xem trước chính sách hủy sân & tính toán phạt cọc (`GET /bookings/:id/cancellation-preview`)
 - **Quyền truy cập:** User (Chính chủ đơn)
+- **Mô tả:** Kiểm tra điều kiện hủy, thời gian còn lại trước giờ đá, xác định tỷ lệ phạt cọc và số tiền dự kiến được hoàn.
+  - Hủy trước >= 24 giờ: Phạt 0%, hoàn 100% tiền cọc.
+  - Hủy từ 12 - 24 giờ: Phạt 50% tiền cọc, hoàn 50% tiền cọc.
+  - Hủy dưới 12 giờ: Phạt 100% tiền cọc, không hoàn cọc.
+  - Trận đấu đã bắt đầu/kết thúc: `canCancel = false`, không cho phép hủy.
+- **Response (`200 OK`):**
+  ```json
+  {
+    "statusCode": 200,
+    "message": "Xem trước chính sách hủy thành công",
+    "data": {
+      "bookingId": "d3b07384-d113-40e1-95b6-75399589d6e4",
+      "hoursUntilMatch": 26.5,
+      "canCancel": true,
+      "penaltyPercentage": 0,
+      "depositAmount": 300000,
+      "penaltyAmount": 0,
+      "refundAmount": 300000,
+      "policyDescription": "Hủy trước 24 giờ: Miễn phí hủy, hoàn 100% tiền đặt cọc."
+    }
+  }
+  ```
+
+#### 3.4.6. Khách hàng hủy đơn đặt sân (`POST /bookings/:id/cancel`)
+- **Quyền truy cập:** User (Chính chủ đơn)
+- **Mô tả:** Áp dụng chính sách hủy theo số giờ còn lại trước trận đấu, cập nhật trạng thái `cancelled`, khấu trừ phạt cọc / đánh dấu hoàn tiền (`refunded`, `partially_refunded`, `penalty_deducted`), ghi nhận lịch sử trạng thái kèm chi tiết phạt trong `cancelReason`, và tự động gửi thông báo cho cả Người đặt và Chủ sân.
 - **Request Body (`CancelBookingDto`):**
   ```json
   {
@@ -779,7 +829,7 @@ Tài liệu chi tiết toàn bộ các API HTTP REST và WebSocket Gateway của
   ```
 - **Response (`200 OK`):** Chi tiết đơn đặt sân chuyển sang trạng thái `cancelled`.
 
-#### 3.4.6. Chủ sân xem danh sách đơn đặt tại cụm sân (`GET /owner/fields/:fieldId/bookings`)
+#### 3.4.7. Chủ sân xem danh sách đơn đặt tại cụm sân (`GET /owner/fields/:fieldId/bookings`)
 - **Quyền truy cập:** Owner (Chủ cụm sân) / Admin
 - **Query Parameters:** `status`, `courtType`, `courtId`, `bookingDate`, `page`, `limit`.
 
@@ -1109,6 +1159,7 @@ Tài liệu chi tiết toàn bộ các API HTTP REST và WebSocket Gateway của
   }
   ```
 - **Response (`200 OK` - `AdminOwnerApprovalDetailResponseDto`):** Yêu cầu chuyển sang `approved`, vai trò người dùng được nâng cấp lên `owner`.
+- **Hệ quả / Event:** Tự động tạo bản ghi `Notification` (`type: 'owner_approval'`) và phát sự kiện WebSocket `notification:new` tới tài khoản người dùng thông báo hồ sơ đã được duyệt, dẫn tới `/owner`.
 
 #### 3.5.4. Admin từ chối đăng ký chủ sân (`POST /admin/owner-approvals/:id/reject`)
 - **Quyền truy cập:** `admin` (Active)
@@ -1120,6 +1171,7 @@ Tài liệu chi tiết toàn bộ các API HTTP REST và WebSocket Gateway của
   }
   ```
 - **Response (`200 OK` - `AdminOwnerApprovalDetailResponseDto`):** Yêu cầu chuyển sang `rejected`.
+- **Hệ quả / Event:** Tự động tạo bản ghi `Notification` (`type: 'owner_rejection'`) và phát sự kiện WebSocket `notification:new` tới tài khoản người dùng thông báo lý do bị từ chối, dẫn tới `/owner/register`.
 
 #### 3.5.5. Lấy danh sách duyệt sân bóng (`GET /admin/field-approvals`)
 - **Quyền truy cập:** `admin` (Active)
@@ -1772,6 +1824,27 @@ Tài liệu chi tiết toàn bộ các API HTTP REST và WebSocket Gateway của
       "avgRating": "4.90",
       "totalReviews": 10,
       "sportsmanshipScore": "4.65"
+    }
+  }
+  ```
+
+#### 3.14.3. Kiểm tra trạng thái đánh giá sau trận đấu (`GET /reviews/users/match-status/:postId`)
+- **Quyền truy cập:** User đã đăng nhập (Người tạo bài hoặc đối thủ được chấp nhận).
+- **Mô tả:** Kiểm tra trận đấu đã hoàn thành chưa, đã ghép thành công chưa và người dùng hiện tại đã đánh giá đối thủ chưa (đảm bảo chỉ đánh giá 1 lần duy nhất sau khi trận đấu kết thúc).
+- **Response (`200 OK`):**
+  ```json
+  {
+    "success": true,
+    "data": {
+      "isFinished": true,
+      "isMatched": true,
+      "hasReviewedOpponent": false,
+      "opponent": {
+        "id": "123e4567-e89b-12d3-a456-426614174001",
+        "fullName": "Nguyễn Văn A",
+        "avatarUrl": "https://example.com/avatar.jpg"
+      },
+      "canReview": true
     }
   }
   ```

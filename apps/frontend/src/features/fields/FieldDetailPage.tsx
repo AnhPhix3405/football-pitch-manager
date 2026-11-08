@@ -1,19 +1,26 @@
-import {
-  EnvironmentOutlined,
-  LeftOutlined,
-  SafetyCertificateFilled,
-  StarFilled,
-} from '@ant-design/icons'
-import { Button, Empty, Spin, Tag } from 'antd'
 import { useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
-import { BookingFlow } from '../bookings/components/BookingFlow'
-import { formatPrice } from './field.data'
-import { useFieldDetail } from './hooks/useFieldDetail'
+import {
+  CheckCircleFilled,
+  ClockCircleOutlined,
+  EnvironmentOutlined,
+  MessageOutlined,
+  PhoneOutlined,
+  StarFilled,
+  ThunderboltFilled,
+} from '@ant-design/icons'
+import { Button, Empty, Spin } from 'antd'
+import { useTranslation } from 'react-i18next'
+import { Link, useNavigate, useParams } from 'react-router-dom'
+import { BlurCircle } from '~/components/BlurCircle'
 import { useFieldReviews } from '../../hooks/useFieldReviews'
+import { BookingFlow } from '../bookings/components/BookingFlow'
 import { FieldReviewList } from '../reviews/components/FieldReviewList'
+import { DEFAULT_FIELD_FALLBACK_IMAGE, formatPrice } from './field.data'
+import { useFieldDetail } from './hooks/useFieldDetail'
 
 export function FieldDetailPage() {
+  const { t } = useTranslation()
+  const navigate = useNavigate()
   const { fieldId = '' } = useParams()
   const backLink = '/fields'
   const { field, loading } = useFieldDetail(fieldId)
@@ -30,7 +37,7 @@ export function FieldDetailPage() {
 
   if (loading) {
     return (
-      <main className="detail-page" style={{ textAlign: 'center', padding: '100px 0' }}>
+      <main className="detail-page" style={{ textAlign: 'center', padding: '120px 0' }}>
         <Spin size="large" />
       </main>
     )
@@ -39,77 +46,159 @@ export function FieldDetailPage() {
   if (!field) {
     return (
       <main className="detail-page">
-        <Empty description="Không tìm thấy sân bóng này." />
-        <Link to={backLink}>
-          <Button>Quay lại danh sách</Button>
-        </Link>
+        <div className="detail-empty-box">
+          <Empty description={t('fields.empty', { defaultValue: 'Không tìm thấy sân bóng này.' })} />
+          <Link to={backLink} style={{ marginTop: 16 }}>
+            <Button type="primary">{t('fields.backToSearch', { defaultValue: 'Quay lại danh sách' })}</Button>
+          </Link>
+        </div>
       </main>
     )
   }
 
+  const galleryImages =
+    field.gallery && field.gallery.length > 0
+      ? field.gallery
+      : [field.imageUrl || DEFAULT_FIELD_FALLBACK_IMAGE]
+
+  const ratingVal =
+    summary && Number(summary.avgRating) > 0
+      ? Number(summary.avgRating).toFixed(1)
+      : Number(field.rating).toFixed(1)
+
+  const reviewCountVal =
+    summary && summary.totalReviews > 0
+      ? summary.totalReviews
+      : field.reviewCount || 0
+
   return (
     <main className="detail-page">
-      <Link className="back-link" to={backLink}>
-        <LeftOutlined /> Trở lại kết quả tìm kiếm
-      </Link>
+      {/* Hiệu ứng ánh sáng nền ambient glow */}
+      <BlurCircle
+        variant="lime"
+        size={560}
+        top="-40px"
+        right="-80px"
+        opacity={0.25}
+        blur={120}
+      />
+      <BlurCircle
+        variant="emerald"
+        size={480}
+        top="25%"
+        left="-120px"
+        opacity={0.2}
+        blur={110}
+      />
+      <BlurCircle
+        variant="blue"
+        size={400}
+        bottom="10%"
+        right="-40px"
+        opacity={0.15}
+        blur={130}
+      />
+
+      {/* Nút quay lại danh sách đồng bộ phong cách với trang tìm đối */}
+      <nav className="detail-top-nav">
+        <Link className="detail-back-link" to={backLink}>
+          ← {t('common.back', { defaultValue: 'Quay lại' })}
+        </Link>
+      </nav>
+
       <div className="detail-grid">
-        <section>
-          <div className="field-gallery">
-            <img
-              className="field-gallery__main"
-              src={field.gallery[activeImage]}
-              alt={`${field.name}, ảnh ${activeImage + 1}`}
-            />
-            <div>
-              {field.gallery.slice(1).map((image, index) => (
-                <button
-                  type="button"
-                  key={image}
-                  onClick={() => setActiveImage(index + 1)}
-                >
-                  <img src={image} alt={`Xem ảnh ${index + 2} của ${field.name}`} />
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="field-title">
-            <div>
-              <h1>{field.name}</h1>
-              <p>
-                <EnvironmentOutlined /> {field.address}, {field.district}
-              </p>
-              <div>
-                <Tag>{field.format}</Tag>
-                <Tag>{field.surface}</Tag>
-                <Tag color="green">INSTANT BOOK</Tag>
+        {/* Cột trái: Gallery ảnh, Tiêu đề, Thông số và Đánh giá */}
+        <section className="detail-main">
+          {/* Gallery hình ảnh hiện đại */}
+          <div className="field-gallery-card">
+            <div className="field-gallery-card__main-wrap">
+              <img
+                className="field-gallery-card__main-img"
+                src={galleryImages[activeImage] || DEFAULT_FIELD_FALLBACK_IMAGE}
+                alt={`${field.name}, ảnh ${activeImage + 1}`}
+                onError={(e) => {
+                  e.currentTarget.src = DEFAULT_FIELD_FALLBACK_IMAGE
+                }}
+              />
+              <div className="field-gallery-card__badges">
+                <span className="field-gallery-card__badge-format">{field.format}</span>
               </div>
             </div>
-            <strong>
-              <StarFilled />{' '}
-              {summary && Number(summary.avgRating) > 0
-                ? Number(summary.avgRating).toFixed(1)
-                : field.rating}
-              <small>
-                {summary && summary.totalReviews > 0
-                  ? `${summary.totalReviews} đánh giá`
-                  : `${field.reviewCount} đánh giá`}
-              </small>
-            </strong>
+
+            {galleryImages.length > 1 && (
+              <div className="field-gallery-card__thumbs">
+                {galleryImages.map((image, index) => (
+                  <button
+                    type="button"
+                    key={`${image}-${index}`}
+                    onClick={() => setActiveImage(index)}
+                    className={`field-gallery-card__thumb-btn ${activeImage === index ? 'field-gallery-card__thumb-btn--active' : ''
+                      }`}
+                  >
+                    <img
+                      src={image || DEFAULT_FIELD_FALLBACK_IMAGE}
+                      alt={`Thumbnail ${index + 1}`}
+                      onError={(e) => {
+                        e.currentTarget.src = DEFAULT_FIELD_FALLBACK_IMAGE
+                      }}
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
-          <article className="field-specs">
-            <span className="eyebrow">FIELD SPECIFICATIONS</span>
-            <h2>Thông tin sân</h2>
-            <p>{field.description}</p>
-            <h3>Tiện ích</h3>
-            <ul>
-              {field.amenities.map((item) => (
-                <li key={item}>
-                  <SafetyCertificateFilled /> {item}
-                </li>
-              ))}
-            </ul>
+
+          {/* Tiêu đề & Thông tin sân */}
+          <div className="field-header-card">
+            <div className="field-header-card__info">
+              <h1 className="field-header-card__name">{field.name}</h1>
+              <p className="field-header-card__address">
+                <EnvironmentOutlined /> {field.address}, {field.district}, {field.city}
+              </p>
+              <div className="field-header-card__tags">
+                <span className="field-pill-tag field-pill-tag--format">{field.format}</span>
+                <span className="field-pill-tag field-pill-tag--surface">{field.surface}</span>
+              </div>
+            </div>
+
+            <div className="field-header-card__rating">
+              <div className="field-header-card__score">
+                <StarFilled /> {ratingVal}
+              </div>
+              <span className="field-header-card__reviews">
+                {reviewCountVal} {t('fields.rating', { defaultValue: 'đánh giá' })}
+              </span>
+            </div>
+          </div>
+
+          {/* Mô tả & Tiện ích sân */}
+          <article className="field-specs-card">
+            <span className="field-specs-card__eyebrow">FIELD SPECIFICATIONS</span>
+            <h2 className="field-specs-card__title">
+              {t('fields.fieldInfo', { defaultValue: 'Thông tin sân bóng' })}
+            </h2>
+            <p className="field-specs-card__desc">{field.description}</p>
+
+            <h3 className="field-specs-card__sub-title">
+              {t('fields.amenitiesTitle', { defaultValue: 'Tiện ích & Dịch vụ' })}
+            </h3>
+            <div className="field-specs-card__amenities">
+              {field.amenities && field.amenities.length > 0 ? (
+                field.amenities.map((item) => (
+                  <span key={item} className="amenity-chip">
+                    <CheckCircleFilled /> {item}
+                  </span>
+                ))
+              ) : (
+                <span className="amenity-chip">
+                  <CheckCircleFilled /> Mặt sân tiêu chuẩn
+                </span>
+              )}
+            </div>
           </article>
-          <div className="mt-8">
+
+          {/* Khu vực Đánh giá người dùng */}
+          <div className="field-reviews-card">
             <FieldReviewList
               reviews={reviews}
               summary={summary}
@@ -120,41 +209,108 @@ export function FieldDetailPage() {
             />
           </div>
         </section>
-        <aside className="quick-book">
-          <span className="eyebrow">RESERVATION TERMINAL</span>
-          <div className="quick-book__price">
-            <strong>{formatPrice(field.pricePerHour)}</strong>
-            <span>/ giờ</span>
+
+        {/* Cột phải: Terminal Đặt Sân Trực Tuyến Hiện Đại */}
+        <aside className="quick-book-card">
+          <div className="quick-book-card__terminal-header">
+            <span className="quick-book-card__pulse-dot" />
+            <span className="quick-book-card__terminal-title">RESERVATION TERMINAL</span>
           </div>
-          <dl>
-            <div>
-              <dt>LỊCH GẦN NHẤT</dt>
-              <dd>Hôm nay · 20:00</dd>
+
+          <div className="quick-book-card__price-row">
+            <strong className="quick-book-card__price-val">{formatPrice(field.pricePerHour)}</strong>
+            <span className="quick-book-card__price-unit">{t('fields.perHour', { defaultValue: '/ giờ' })}</span>
+          </div>
+
+          <div className="quick-book-card__status-list">
+            <div className="quick-book-card__status-row">
+              <span className="quick-book-card__status-label">
+                <ClockCircleOutlined /> LỊCH GẦN NHẤT
+              </span>
+              <span className="quick-book-card__status-val">Hôm nay · 18:00 - 22:00</span>
             </div>
-            <div>
-              <dt>TRẠNG THÁI</dt>
-              <dd className={field.availableToday ? 'available' : ''}>
-                {field.availableToday ? 'Còn lịch' : 'Hết lịch hôm nay'}
-              </dd>
+            <div className="quick-book-card__status-row">
+              <span className="quick-book-card__status-label">
+                <ThunderboltFilled /> TRẠNG THÁI
+              </span>
+              <span className="quick-book-card__status-val quick-book-card__status-val--active">
+                🟢 Sẵn sàng nhận lịch
+              </span>
             </div>
-          </dl>
-          <div className="slot-preview">
-            <span>17:00 - 18:00</span>
-            <span>19:00 - 20:00</span>
-            <span className="selected">20:00 - 21:00</span>
-            <span className="disabled">21:00 - 22:00</span>
+            <div className="quick-book-card__status-row">
+              <span className="quick-book-card__status-label">
+                <PhoneOutlined /> HOTLINE HỖ TRỢ
+              </span>
+              <span className="quick-book-card__status-val quick-book-card__status-val--phone">
+                {field.phone || '0901 234 567'}
+              </span>
+            </div>
           </div>
-          <div className="quick-book__total">
-            <span>Ước tính (1 giờ)</span>
-            <strong>{formatPrice(field.pricePerHour)}</strong>
+
+          {/* Khung giờ gợi ý trực quan */}
+          <div className="quick-book-card__slots-section">
+            <span className="quick-book-card__slots-label">KHUNG GIỜ PHỔ BIẾN HÔM NAY</span>
+            <div className="quick-book-card__slots-grid">
+              <span className="slot-chip">17:00 - 18:30</span>
+              <span className="slot-chip slot-chip--available">18:30 - 20:00</span>
+              <span className="slot-chip slot-chip--selected">20:00 - 21:30</span>
+              <span className="slot-chip">21:30 - 23:00</span>
+            </div>
           </div>
-          <Button type="primary" size="large" block onClick={() => setBookingOpen(true)}>
-            TIẾN HÀNH ĐẶT SÂN →
+
+          {/* Dự tính chi phí */}
+          <div className="quick-book-card__estimate">
+            <span className="quick-book-card__estimate-label">Ước tính (1 lượt / 1h)</span>
+            <strong className="quick-book-card__estimate-val">{formatPrice(field.pricePerHour)}</strong>
+          </div>
+
+          {/* Nút Đặt sân chính */}
+          <Button
+            type="primary"
+            size="large"
+            block
+            onClick={() => setBookingOpen(true)}
+            className="quick-book-card__btn-book"
+          >
+            {t('fields.proceedBooking', { defaultValue: 'TIẾN HÀNH ĐẶT SÂN →' })}
           </Button>
-          <small>Bạn chưa bị tính phí.</small>
+
+          {/* Nút Gọi Hotline phụ */}
+          <Button
+            size="large"
+            block
+            icon={<PhoneOutlined />}
+            href={`tel:${field.phone || '0901234567'}`}
+            className="quick-book-card__btn-hotline"
+          >
+            {t('fields.callHotline', { defaultValue: 'Gọi hotline sân' })}: {field.phone || '0901 234 567'}
+          </Button>
+
+          {/* Nút Nhắn tin chủ sân */}
+          <Button
+            size="large"
+            block
+            icon={<MessageOutlined />}
+            onClick={() => navigate('/messages')}
+            style={{
+              marginTop: 10,
+              borderRadius: 10,
+              background: 'rgba(255, 255, 255, 0.05)',
+              borderColor: 'var(--border)',
+              color: 'var(--sage)',
+              fontWeight: 600,
+            }}
+          >
+            {t('fields.chatWithOwner', { defaultValue: 'Nhắn tin với chủ sân' })}
+          </Button>
         </aside>
       </div>
-      <BookingFlow field={field} open={bookingOpen} onClose={() => setBookingOpen(false)} />
+
+      <BookingFlow
+        field={field}
+        open={bookingOpen}
+        onClose={() => setBookingOpen(false)}
+      />
     </main>
   )
 }

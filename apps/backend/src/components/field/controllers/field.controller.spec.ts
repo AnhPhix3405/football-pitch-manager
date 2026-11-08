@@ -43,6 +43,7 @@ describe('FieldController', () => {
     service = {
       getPublicFields: jest.fn(),
       getPublicFieldDetail: jest.fn(),
+      getPublicFieldServices: jest.fn(),
     } as unknown as jest.Mocked<FieldService>;
 
     controller = new FieldController(service);
@@ -74,5 +75,26 @@ describe('FieldController', () => {
 
     expect(service.getPublicFieldDetail).toHaveBeenCalledWith(validFieldId);
     expect(result).toEqual(mockFieldResponse);
+  });
+
+  it('getPublicFieldServices delegates ID to FieldService', async () => {
+    const mockServices = [
+      {
+        id: 's-1',
+        fieldId: validFieldId,
+        name: 'Nước suối',
+        price: 10000,
+        unit: 'chai',
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    ];
+    service.getPublicFieldServices.mockResolvedValue(mockServices);
+
+    const result = await controller.getPublicFieldServices(validFieldId);
+
+    expect(service.getPublicFieldServices).toHaveBeenCalledWith(validFieldId);
+    expect(result).toEqual(mockServices);
   });
 });

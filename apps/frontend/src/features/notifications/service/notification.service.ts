@@ -73,7 +73,21 @@ export async function getNotificationsApi(
       limit,
     },
   })
-  const list = response.data?.data ?? []
+  const rawData = response.data?.data
+  const list = Array.isArray(rawData)
+    ? rawData
+    : Array.isArray((rawData as { data?: unknown[] })?.data)
+      ? ((rawData as { data: unknown[] }).data as Array<{
+          id: string
+          type: string
+          title: string
+          content: string | null
+          refId: string | null
+          isRead: boolean
+          createdAt: string
+          link?: string
+        }>)
+      : []
   return list.map(mapBackendNotification)
 }
 

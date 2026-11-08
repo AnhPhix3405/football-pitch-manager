@@ -8,11 +8,12 @@ import {
   EnvironmentOutlined,
   MessageOutlined,
   SendOutlined,
+  StarFilled,
   TeamOutlined,
   UserOutlined,
 } from '@ant-design/icons'
 import { Avatar, Button, Dropdown, Input, Spin, Tag, message } from 'antd'
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useAppSelector } from '../../app/hooks'
@@ -23,6 +24,8 @@ import type { MatchPost } from '../user/user.data'
 import { mapBackendPostToMatchPost } from './hooks/usePublicPosts'
 import { usePostDetail } from './hooks/usePostDetail'
 import type { BackendPostMatch } from './interface/post.types'
+import { UserReviewModal } from '../reviews/components/UserReviewModal'
+import { reviewService } from '../reviews/services/review.service'
 
 function getDisplayName(
   user?: { fullName?: string | null; email?: string } | null,
@@ -35,6 +38,21 @@ function getDisplayName(
     return user.email.trim().split('@')[0]
   }
   return fallback
+}
+
+function checkMatchFinished(
+  playDate?: string | null,
+  startTime?: string | null,
+  endTime?: string | null,
+  serverFinished?: boolean,
+): boolean {
+  if (serverFinished !== undefined) {
+    return serverFinished
+  }
+  if (!playDate) return false
+  const endTimeStr = endTime || startTime
+  const end = new Date(`${playDate}T${endTimeStr}`)
+  return !isNaN(end.getTime()) && new Date() >= end
 }
 
 export function PostDetailPage() {
@@ -67,6 +85,47 @@ export function PostDetailPage() {
   const isOwner = Boolean(currentUser?.id && postData?.userId === currentUser.id)
   const hasApplied = Boolean(
     currentUser?.id && matches.some((m) => m.applicantId === currentUser.id),
+  )
+
+  const [reviewModalOpen, setReviewModalOpen] = useState(false)
+  const [reviewTarget, setReviewTarget] = useState<{ id: string; name: string } | null>(null)
+  const [hasReviewedOpponent, setHasReviewedOpponent] = useState(false)
+  const [reviewStatus, setReviewStatus] = useState<{
+    isFinished: boolean
+    isMatched: boolean
+    hasReviewedOpponent: boolean
+    opponent: { id: string; fullName: string | null; avatarUrl: string | null } | null
+    canReview: boolean
+  } | null>(null)
+
+  useEffect(() => {
+    if (!postId || !currentUser?.id) return
+    reviewService
+      .getPostMatchReviewStatus(postId)
+      .then((res) => {
+        setReviewStatus(res)
+        setHasReviewedOpponent(res.hasReviewedOpponent)
+      })
+      .catch(() => {
+        // Fallback silently
+      })
+  }, [postId, currentUser?.id])
+
+  const acceptedMatch = useMemo(
+    () => matches.find((m) => m.status === 'accepted'),
+    [matches],
+  )
+  const isParticipant = Boolean(
+    currentUser?.id &&
+    (postData?.userId === currentUser.id ||
+      matches.some((m) => m.status === 'accepted' && m.applicantId === currentUser.id)),
+  )
+
+  const isMatchFinished = checkMatchFinished(
+    postData?.playDate,
+    postData?.startTime,
+    postData?.endTime,
+    reviewStatus?.isFinished,
   )
 
   const handleApply = async () => {
@@ -262,8 +321,7 @@ export function PostDetailPage() {
               <div className="post-detail__author-meta">
                 <span className="author-name">{authorName}</span>
                 <span className="author-sub">
-                  {t('posts.detail.authorLabel')}
-                  {postDateFormatted ? ` · ${postDateFormatted}` : ''}
+                  {postDateFormatted ? ` ${postDateFormatted}` : ''}
                 </span>
               </div>
             </div>
@@ -341,8 +399,89 @@ export function PostDetailPage() {
                 disabled={hasApplied}
                 onClick={handleApply}
                 text={hasApplied ? t('posts.applied') : t('posts.applyMatch')}
-                style={{ minWidth: 220 }}
               />
+            </div>
+          )}
+
+          {isMatchFinished && isParticipant && !!acceptedMatch && (
+            <div
+              className="post-detail__post-match-banner"
+              style={{
+                marginTop: 20,
+                padding: '16px 20px',
+                borderRadius: 14,
+                background: 'rgba(234, 179, 8, 0.08)',
+                border: '1px solid rgba(234, 179, 8, 0.25)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: 16,
+                flexWrap: 'wrap',
+              }}
+            >
+              <div>
+                <b
+                  style={{
+                    color: '#eab308',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    fontSize: 14,
+                  }}
+                >
+                  <StarFilled />{' '}
+                  {t('posts.detail.postMatchActions', {
+                    defaultValue: 'Đánh giá sau trận đấu',
+                  })}
+                </b>
+                <p
+                  style={{
+                    margin: '4px 0 0',
+                    color: 'var(--sage)',
+                    fontSize: 13,
+                  }}
+                >
+                  {t('posts.detail.matchFinishedNotice', {
+                    defaultValue:
+                      'Trận đấu đã kết thúc. Hãy gửi đánh giá tinh thần thể thao cho đối thủ!',
+                  })}
+                </p>
+              </div>
+              <Button
+                type="primary"
+                icon={<StarFilled />}
+                disabled={hasReviewedOpponent}
+                onClick={() => {
+                  if (reviewStatus?.opponent) {
+                    setReviewTarget({
+                      id: reviewStatus.opponent.id,
+                      name: reviewStatus.opponent.fullName || 'Đối thủ',
+                    })
+                  } else {
+                    const targetId = isOwner
+                      ? acceptedMatch.applicantId
+                      : postData?.userId || ''
+                    const targetName = isOwner
+                      ? getDisplayName(acceptedMatch.applicant, 'Đối thủ')
+                      : authorName
+                    setReviewTarget({ id: targetId, name: targetName })
+                  }
+                  setReviewModalOpen(true)
+                }}
+                style={{
+                  background: hasReviewedOpponent ? undefined : '#eab308',
+                  borderColor: hasReviewedOpponent ? undefined : '#eab308',
+                  color: hasReviewedOpponent ? undefined : '#0f172a',
+                  fontWeight: 700,
+                  height: 38,
+                  borderRadius: 9999,
+                  padding: '0 20px',
+                }}
+              >
+                {hasReviewedOpponent
+                  ? `✓ ${t('posts.detail.opponentReviewed', { defaultValue: 'Đã đánh giá' })}`
+                  : t('posts.detail.rateOpponent', { defaultValue: 'Đánh giá đối thủ' })}
+              </Button>
             </div>
           )}
         </article>
@@ -390,7 +529,6 @@ export function PostDetailPage() {
                 loading={actionLoading}
                 onClick={handleDeletePost}
               >
-                {t('posts.ownerControls.deleteBtn')}
               </Button>
             </div>
           )}
@@ -425,82 +563,110 @@ export function PostDetailPage() {
             ) : (
               <div className="applicant-list">
                 {matches.map((item) => (
-                  <div className="applicant-card" key={item.id}>
-                    <div className="applicant-card__left">
-                      <Avatar
-                        size="small"
-                        src={item.applicant?.avatarUrl || undefined}
-                        icon={<UserOutlined />}
-                        style={{
-                          background: 'rgba(140, 252, 112, 0.2)',
-                          color: 'var(--lime)',
-                          flexShrink: 0,
-                        }}
-                      >
-                        {getDisplayName(item.applicant).charAt(0).toUpperCase()}
-                      </Avatar>
-                      <div className='flex gap-2 min-w-0'>
-                        <div className="applicant-card__name">
-                          {getDisplayName(item.applicant, 'Đội bạn')}
-                        </div>
-                        <div
-                          style={{ fontSize: '11px', color: '#888', marginTop: 2 }}
+                  <div
+                    className="applicant-card"
+                    key={item.id}
+                  >
+                    {/* Top Row: Avatar + Name + Status Icon */}
+                    <div className="flex items-center justify-between w-full min-w-0">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Avatar
+                          size={28}
+                          src={item.applicant?.avatarUrl || undefined}
+                          icon={<UserOutlined />}
+                          style={{
+                            background: 'rgba(140, 252, 112, 0.2)',
+                            color: 'var(--lime)',
+                            flexShrink: 0,
+                          }}
                         >
-                          <Tag
-                            color={
-                              item.status === 'accepted'
-                                ? 'green'
-                                : item.status === 'rejected'
-                                  ? 'red'
-                                  : 'gold'
-                            }
-                            style={{
-                              marginRight: 0,
-                              fontSize: 10,
-                              lineHeight: '18px',
-                              padding: '0 6px',
-                            }}
-                          >
-                            {item.status.toUpperCase()}
-                          </Tag>
+                          {getDisplayName(item.applicant).charAt(0).toUpperCase()}
+                        </Avatar>
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <span className="applicant-card__name truncate text-xs font-semibold text-white">
+                            {getDisplayName(item.applicant, 'Đội bạn')}
+                          </span>
+                          {item.status === 'accepted' && (
+                            <span
+                              className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-[#8cfc70]/15 text-[#8cfc70] text-[10px] font-bold"
+                              title="Accepted"
+                            >
+                              ✓
+                            </span>
+                          )}
+                          {item.status === 'rejected' && (
+                            <span
+                              className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-red-500/15 text-red-400 text-[10px] font-bold"
+                              title="Denied"
+                            >
+                              ✕
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
 
-                    <div className="applicant-card__actions">
+                    {/* Bottom Row: Actions placed below the avatar */}
+                    <div className="applicant-card__actions flex items-center gap-1.5 pt-0.5 w-full">
                       {isOwner && item.status === 'pending' && (
                         <>
-                          <Button
-                            type="primary"
-                            icon={<CheckOutlined />}
-                            size="small"
-                            loading={actionLoading}
+                          <button
+                            type="button"
+                            disabled={actionLoading}
                             onClick={() => handleDecide(item, true)}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-[#8cfc70]/12 text-[#8cfc70] border border-[#8cfc70]/30 hover:bg-[#8cfc70]/20 active:scale-95 transition-all disabled:opacity-50"
                           >
-                            {t('posts.detail.accept')}
-                          </Button>
-                          <Button
-                            danger
-                            icon={<CloseOutlined />}
-                            size="small"
-                            loading={actionLoading}
+                            <CheckOutlined className="text-[10px]" />
+                            <span>{t('posts.detail.accept', { defaultValue: 'Chấp nhận' })}</span>
+                          </button>
+                          <button
+                            type="button"
+                            disabled={actionLoading}
                             onClick={() => handleDecide(item, false)}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-white/[0.04] text-zinc-400 border border-white/10 hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/30 active:scale-95 transition-all disabled:opacity-50"
                           >
-                            {t('posts.detail.reject')}
-                          </Button>
+                            <CloseOutlined className="text-[10px]" />
+                            <span>{t('posts.detail.reject', { defaultValue: 'Từ chối' })}</span>
+                          </button>
                         </>
                       )}
 
                       {item.status === 'accepted' &&
                         (isOwner || item.applicantId === currentUser?.id) && (
-                          <Button
-                            type="primary"
-                            icon={<MessageOutlined />}
-                            size="small"
-                            onClick={() => navigate('/messages')}
-                          >
-                            {t('posts.detail.chat')}
-                          </Button>
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <button
+                              type="button"
+                              onClick={() => navigate('/messages')}
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-[#8cfc70]/12 text-[#8cfc70] border border-[#8cfc70]/30 hover:bg-[#8cfc70]/20 active:scale-95 transition-all"
+                            >
+                              <MessageOutlined className="text-[11px]" />
+                              <span>{t('posts.detail.chat', { defaultValue: 'Nhắn tin' })}</span>
+                            </button>
+                            {isMatchFinished && (
+                              <button
+                                type="button"
+                                disabled={hasReviewedOpponent}
+                                onClick={() => {
+                                  const targetId = isOwner
+                                    ? item.applicantId
+                                    : postData?.userId || ''
+                                  const targetName = isOwner
+                                    ? getDisplayName(item.applicant, 'Đối thủ')
+                                    : authorName
+                                  setReviewTarget({ id: targetId, name: targetName })
+                                  setReviewModalOpen(true)
+                                }}
+                                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-amber-500/15 text-amber-300 border border-amber-400/30 hover:bg-amber-500/25 active:scale-95 transition-all disabled:opacity-50"
+                              >
+                                <StarFilled className="text-amber-400 text-[10px]" />
+                                <span>
+                                  {hasReviewedOpponent
+                                    ? t('posts.detail.opponentReviewed', { defaultValue: 'Đã đánh giá' })
+                                    : t('posts.detail.rateOpponent', { defaultValue: 'Đánh giá' })}
+                                </span>
+                              </button>
+                            )}
+                          </div>
                         )}
                     </div>
                   </div>
@@ -578,6 +744,24 @@ export function PostDetailPage() {
           </section>
         </aside>
       </div>
+
+      {reviewTarget && (
+        <UserReviewModal
+          open={reviewModalOpen}
+          targetUserId={reviewTarget.id}
+          targetUserName={reviewTarget.name}
+          postId={postId || post?.id}
+          onClose={() => {
+            setReviewModalOpen(false)
+            setReviewTarget(null)
+          }}
+          onSuccess={() => {
+            setHasReviewedOpponent(true)
+            setReviewModalOpen(false)
+            setReviewTarget(null)
+          }}
+        />
+      )}
 
       {ConfirmDialog}
     </section>

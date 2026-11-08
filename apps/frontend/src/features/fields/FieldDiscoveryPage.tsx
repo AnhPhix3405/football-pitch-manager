@@ -1,28 +1,29 @@
-import { AppstoreOutlined, EnvironmentOutlined, UnorderedListOutlined } from '@ant-design/icons'
+import { AppstoreOutlined, UnorderedListOutlined } from '@ant-design/icons'
 import { Button, Empty, Pagination, Select, Spin } from 'antd'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, useSearchParams } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
+import { BlurCircle } from '~/components/BlurCircle'
 import { FieldCard } from './components/FieldCard'
 import { FieldFilter } from './components/FieldFilter'
-import { footballFields } from './field.data'
+import { FieldMap } from './components/FieldMap'
 import { filterAndSortFields, useFields } from './hooks/useFields'
-import type { FieldFilters } from './interface/field.types'
-
-const pageSize = 4
+import type { FieldFilters, FootballField } from './interface/field.types'
 
 export function FieldDiscoveryPage() {
   const { t } = useTranslation()
   const [params, setParams] = useSearchParams()
   const [page, setPage] = useState(1)
   const [showMap, setShowMap] = useState(true)
+  const [selectedFieldId, setSelectedFieldId] = useState<string | null>(null)
 
   const filters: FieldFilters = useMemo(
     () => ({
       query: params.get('q') ?? '',
+      city: params.get('city') ?? 'Hà Nội',
       district: params.get('district') ?? 'all',
       format: (params.get('format') as FieldFilters['format']) ?? 'all',
-      maxPrice: Number(params.get('maxPrice') ?? 1300000),
+      maxPrice: Number(params.get('maxPrice') ?? 1500000),
       availableOnly: params.get('available') === 'true',
       sort: (params.get('sort') as FieldFilters['sort']) ?? 'recommended',
     }),
@@ -32,29 +33,90 @@ export function FieldDiscoveryPage() {
   const changeFilters = (next: FieldFilters) => {
     const query = new URLSearchParams()
     if (next.query) query.set('q', next.query)
+    if (next.city && next.city !== 'all') query.set('city', next.city)
     if (next.district !== 'all') query.set('district', next.district)
     if (next.format !== 'all') query.set('format', next.format)
-    if (next.maxPrice < 1300000) query.set('maxPrice', String(next.maxPrice))
+    if (next.maxPrice < 1500000) query.set('maxPrice', String(next.maxPrice))
     if (next.availableOnly) query.set('available', 'true')
     if (next.sort !== 'recommended') query.set('sort', next.sort)
     setParams(query)
     setPage(1)
   }
 
-  const { apiFields, loading } = useFields(filters.query, filters.district, page)
+  const { combinedFields, loading } = useFields(
+    filters.query,
+    filters.district,
+    page,
+  )
 
-  const dataSource = apiFields.length > 0 ? apiFields : footballFields
-  const results = useMemo(() => filterAndSortFields(dataSource, filters), [dataSource, filters])
+  const results = useMemo(
+    () => filterAndSortFields(combinedFields, filters),
+    [combinedFields, filters],
+  )
+
+  const pageSize = showMap ? 6 : 9
   const visible = results.slice((page - 1) * pageSize, page * pageSize)
+
+  const selectedField = useMemo(
+    () => results.find((f) => f.id === selectedFieldId) || results[0] || null,
+    [results, selectedFieldId],
+  )
+
+  const isFiltered = Boolean(
+    filters.query ||
+    (filters.city && filters.city !== 'Hà Nội') ||
+    (filters.district && filters.district !== 'all') ||
+    (filters.format && filters.format !== 'all') ||
+    filters.maxPrice < 1500000 ||
+    filters.availableOnly ||
+    filters.sort !== 'recommended',
+  )
+
+  const handleResetFilters = () => {
+    setParams(new URLSearchParams())
+    setPage(1)
+  }
+
+  const handleSelectField = (field: FootballField) => {
+    setSelectedFieldId(field.id)
+  }
 
   return (
     <main className="discovery-page">
+      {/* Ambient Blur Circles phát sáng nền phong cách PitchMaster */}
+      <BlurCircle
+        variant="lime"
+        size={560}
+        top="-40px"
+        right="-80px"
+        opacity={0.28}
+        blur={120}
+      />
+      <BlurCircle
+        variant="emerald"
+        size={480}
+        top="35%"
+        left="-120px"
+        opacity={0.22}
+        blur={110}
+      />
+      <BlurCircle
+        variant="blue"
+        size={420}
+        bottom="-40px"
+        right="10%"
+        opacity={0.16}
+        blur={120}
+      />
+
       <section className="discovery-head">
-        <div>
-          <span className="eyebrow">{t('fields.eyebrow')}</span>
-          <h1>{t('fields.title')}</h1>
-          <p>{t('fields.subtitle')}</p>
-        </div>
+        <FieldFilter
+          filters={filters}
+          onChange={changeFilters}
+          onReset={handleResetFilters}
+          isFiltered={isFiltered}
+        />
+
         <div className="view-actions">
           <Button
             icon={<UnorderedListOutlined />}
@@ -75,11 +137,10 @@ export function FieldDiscoveryPage() {
 
       <div className={`discovery-layout${showMap ? '' : ' no-map'}`}>
         <div className="discovery-sidebar">
-          <FieldFilter filters={filters} onChange={changeFilters} />
           <div className="result-toolbar">
-            <b>
-              {results.length} {t('fields.pitchesFound')}
-            </b>
+            <div className="result-toolbar__count">
+              <b>{results.length}</b> {t('fields.pitchesFound', { defaultValue: 'sân phù hợp' })}
+            </div>
             <Select
               value={filters.sort}
               onChange={(sort) => changeFilters({ ...filters, sort })}
@@ -88,49 +149,60 @@ export function FieldDiscoveryPage() {
                 { value: 'rating', label: 'Đánh giá cao' },
                 { value: 'price-asc', label: 'Giá thấp nhất' },
               ]}
+              popupMatchSelectWidth={false}
+              className="result-toolbar__sort"
             />
           </div>
+
           {loading ? (
             <div style={{ textAlign: 'center', padding: '40px 0' }}>
               <Spin size="large" />
             </div>
           ) : visible.length ? (
-            <div className="result-list">
+            <div className={`result-list${showMap ? ' result-list--compact' : ''}`}>
               {visible.map((field) => (
-                <FieldCard compact field={field} key={field.id} />
+                <FieldCard
+                  compact={showMap}
+                  field={field}
+                  key={field.id}
+                  isSelected={selectedField?.id === field.id}
+                  onSelect={handleSelectField}
+                />
               ))}
             </div>
           ) : (
-            <Empty description={t('fields.empty')} />
+            <div className="empty-results-box" style={{ textAlign: 'center', padding: '32px 16px' }}>
+              <Empty
+                description={t('fields.empty', { defaultValue: 'Không tìm thấy sân phù hợp với bộ lọc.' })}
+              />
+              {isFiltered && (
+                <Button
+                  onClick={handleResetFilters}
+                  style={{ marginTop: 14 }}
+                >
+                  {t('fields.resetFilters', { defaultValue: 'Đặt lại bộ lọc' })}
+                </Button>
+              )}
+            </div>
           )}
+
           <Pagination
             current={page}
             pageSize={pageSize}
             total={results.length}
             hideOnSinglePage
             onChange={setPage}
+            style={{ marginTop: 20, textAlign: 'center' }}
           />
         </div>
 
         {showMap && (
-          <div className="field-network-map">
-            <div className="map-grid" />
-            <span className="map-location">
-              <EnvironmentOutlined /> {t('fields.yourLocation', { defaultValue: 'Vị trí của bạn' })}
-            </span>
-            {results.map((field) => (
-              <Link
-                to={`/fields/${field.id}`}
-                key={field.id}
-                className="map-pin"
-                style={{ left: `${field.coordinates.x}%`, top: `${field.coordinates.y}%` }}
-                aria-label={`Xem ${field.name}`}
-              >
-                <i />
-                <span>{field.name}</span>
-              </Link>
-            ))}
-          </div>
+          <FieldMap
+            fields={results}
+            selectedField={selectedField}
+            city={filters.city || 'Hà Nội'}
+            onSelectField={handleSelectField}
+          />
         )}
       </div>
     </main>

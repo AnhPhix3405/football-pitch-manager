@@ -45,8 +45,9 @@ export class FieldRatingSummaryRepository {
       });
     }
 
-    qb.orderBy('summary.bayesianScore', 'DESC')
+    qb.orderBy('summary.avgRating', 'DESC')
       .addOrderBy('summary.totalReviews', 'DESC')
+      .addOrderBy('summary.updatedAt', 'ASC')
       .take(limit);
 
     return qb.getMany();

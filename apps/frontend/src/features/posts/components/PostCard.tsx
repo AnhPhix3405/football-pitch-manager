@@ -15,6 +15,7 @@ import { Link } from 'react-router-dom'
 import { ClickSpark } from '~/components/ClickSpark'
 import { compressImageUrl, getOptimizedImageUrl } from '~/utils/image-compressor.utils'
 import type { MatchPost } from '../../user/user.data'
+import { usePostDetail } from '../hooks/usePostDetail'
 
 const STORAGE_KEY_PREFIX = 'pm_post_like_'
 
@@ -27,6 +28,7 @@ export function PostCard({
   manage?: boolean
   onDelete?: (postId: string) => void
 }) {
+  const { comments } = usePostDetail(post.id)
   const { t } = useTranslation()
   const [messageApi, contextHolder] = message.useMessage()
   const detailUrl = `/posts/${post.id}`
@@ -247,14 +249,23 @@ export function PostCard({
 
           <div
             className="post-card__action-btn post-card__action-btn--static"
-            title={t('posts.applicants', { defaultValue: 'Lượt quan tâm' })}
+            title={t('posts.detail.discussionTitle', { defaultValue: 'Bình luận' })}
           >
             <MessageOutlined className="post-card__action-icon" />
-            <span className="post-card__action-count">{post.applicants}</span>
+            <span className="post-card__action-count">{comments?.length ?? 0}</span>
           </div>
         </div>
 
         <div className="post-card__footer-right">
+          {post.status === 'matched' && (
+            <Link
+              to={detailUrl}
+              className="px-3 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-400/40 hover:bg-amber-500 hover:text-black transition-all flex items-center gap-1"
+            >
+              ★ {t('posts.rateOpponent', { defaultValue: 'Đánh giá đối thủ' })}
+            </Link>
+          )}
+
           <Tooltip title={t('posts.shareLink', { defaultValue: 'Sao chép liên kết' })}>
             <button
               type="button"

@@ -21,7 +21,6 @@ function RedirectBookingDetail() {
 import { AuthPage } from '../features/auth/AuthPage'
 import { AdminApprovalsPage } from '../features/admin/AdminApprovalsPage'
 import { BookingDetailPage } from '../features/bookings/BookingDetailPage'
-import { MyBookingsPage } from '../features/bookings/MyBookingsPage'
 import { MessagesPage } from '../features/chat/MessagesPage'
 import { FieldDetailPage } from '../features/fields/FieldDetailPage'
 import { FieldDiscoveryPage } from '../features/fields/FieldDiscoveryPage'
@@ -72,7 +71,7 @@ export function AppRouter() {
           {/* Protected user routes with new Navbar layout */}
           <Route element={<ProtectedRoute />}>
             <Route path="posts/new" element={<Navigate to="/opponents" replace />} />
-            <Route path="bookings" element={<MyBookingsPage />} />
+            <Route path="bookings" element={<Navigate to="/profile" replace />} />
             <Route path="bookings/:id" element={<BookingDetailPage />} />
             <Route path="messages" element={<MessagesPage />} />
             <Route path="settings" element={<ProfileSettingsPage />} />
@@ -85,7 +84,7 @@ export function AppRouter() {
           <Route index element={<Navigate to="/fields" replace />} />
           <Route path="fields" element={<Navigate to="/fields" replace />} />
           <Route path="fields/:fieldId" element={<RedirectFieldDetail />} />
-          <Route path="bookings" element={<Navigate to="/bookings" replace />} />
+          <Route path="bookings" element={<Navigate to="/profile" replace />} />
           <Route path="bookings/:bookingId" element={<RedirectBookingDetail />} />
           <Route path="opponents" element={<Navigate to="/opponents" replace />} />
           <Route path="posts" element={<Navigate to="/posts" replace />} />
