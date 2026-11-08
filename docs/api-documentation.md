@@ -739,7 +739,7 @@ Tài liệu chi tiết toàn bộ các API HTTP REST và WebSocket Gateway của
 
 #### 3.4.2. Tạo yêu cầu đặt sân (`POST /bookings`)
 - **Quyền truy cập:** User đã đăng nhập (`active`)
-- **Mô tả:** Khách hàng tạo yêu cầu đặt sân cho một loại sân (`courtType`: `5` | `7` | `11`) trong khung giờ cụ thể, đính kèm dịch vụ tùy chọn. Hệ thống tự động kiểm tra giờ mở cửa, tính tổng tiền, tiền cọc (30%), tạo snapshot giá dịch vụ, ghi nhận bản ghi `booking_status_histories` ban đầu (`toStatus: 'pending'`) và để `fieldCourtId = NULL`.
+- **Mô tả:** Khách hàng tạo yêu cầu đặt sân cho một loại sân (`courtType`: `5` | `7` | `11`) trong khung giờ cụ thể, đính kèm dịch vụ tùy chọn. Hệ thống tự động kiểm tra giờ mở cửa, tính tổng tiền, tiền cọc (30%), tạo snapshot giá dịch vụ, ghi nhận bản ghi `booking_status_histories` ban đầu (`toStatus: 'pending'`), để `fieldCourtId = NULL`, đồng thời tự động gửi thông báo Realtime (`booking_new`) tới Chủ sân để vào xếp sân con.
 - **Request Body (`CreateBookingDto`):**
   ```json
   {
@@ -838,7 +838,7 @@ Tài liệu chi tiết toàn bộ các API HTTP REST và WebSocket Gateway của
 
 #### 3.4.8. Chủ sân xác nhận và gán sân con (`POST /owner/fields/:fieldId/bookings/:bookingId/confirm`)
 - **Quyền truy cập:** Owner (Chủ cụm sân) / Admin
-- **Mô tả:** Sử dụng khóa bi quan (`pessimistic_write`) trong transaction TypeORM để ngăn chặn tuyệt đối tình trạng double-booking. Kiểm tra loại sân tương thích (`COURT_TYPE_MISMATCH`), xung đột lịch với các đơn đã `confirmed` hoặc các khung giờ bị khóa (`COURT_ALREADY_OCCUPIED`).
+- **Mô tả:** Sử dụng khóa bi quan (`pessimistic_write`) trong transaction TypeORM để ngăn chặn tuyệt đối tình trạng double-booking. Kiểm tra loại sân tương thích (`COURT_TYPE_MISMATCH`), xung đột lịch với các đơn đã `confirmed` hoặc các khung giờ bị khóa (`COURT_ALREADY_OCCUPIED`). Hệ thống tự động gửi thông báo Realtime WebSocket (`booking_confirmed`) cho người dùng đặt sân kèm thông tin sân con được phân bổ và link dẫn tới `/bookings/:id`.
 - **Request Body (`ConfirmBookingDto`):**
   ```json
   {
@@ -850,6 +850,7 @@ Tài liệu chi tiết toàn bộ các API HTTP REST và WebSocket Gateway của
 
 #### 3.4.9. Chủ sân từ chối đơn đặt (`POST /owner/fields/:fieldId/bookings/:bookingId/reject`)
 - **Quyền truy cập:** Owner (Chủ cụm sân) / Admin
+- **Mô tả:** Chủ sân từ chối đơn đặt sân đang ở trạng thái `pending` kèm lý do. Hệ thống chuyển trạng thái đơn sang `rejected` và tự động gửi thông báo Realtime WebSocket (`booking_rejected`) đến khách hàng kèm lưu ý *"Vui lòng liên hệ với chủ sân để hoàn cọc"*. Link trong thông báo dẫn trực tiếp tới `/messages?fieldId=:fieldId` để tự động tạo hoặc mở đoạn hội thoại với chủ sân.
 - **Request Body (`RejectBookingDto`):**
   ```json
   {
@@ -860,6 +861,7 @@ Tài liệu chi tiết toàn bộ các API HTTP REST và WebSocket Gateway của
 
 #### 3.4.10. Chủ sân hủy đơn đặt (`POST /owner/fields/:fieldId/bookings/:bookingId/cancel`)
 - **Quyền truy cập:** Owner (Chủ cụm sân) / Admin
+- **Mô tả:** Chủ sân hủy đơn đặt sân (đang chờ hoặc đã xác nhận). Hệ thống cập nhật `status = 'cancelled'`, ghi nhận `cancelledBy`, `cancelReason`, và gửi thông báo Realtime WebSocket (`booking_cancelled`) cho khách hàng kèm link hỗ trợ nhắn tin với chủ sân (`/messages?fieldId=:fieldId`).
 - **Request Body (`CancelBookingDto`):**
   ```json
   {
@@ -1627,7 +1629,7 @@ Tài liệu chi tiết toàn bộ các API HTTP REST và WebSocket Gateway của
 
 #### 3.12.4. Webhook IPN xử lý kết quả thanh toán từ VNPay (`GET /payments/vnpay/ipn`)
 - **Quyền truy cập:** Cổng thanh toán VNPay (Server-to-Server, Public)
-- **Mô tả:** Webhook nhận thông báo kết quả giao dịch ngầm. Hệ thống kiểm tra checksum HMAC-SHA512, đối soát số tiền `vnp_Amount`, áp dụng cơ chế chống callback lặp (Idempotency). Khi giao dịch thành công (`vnp_ResponseCode = '00'`), tự động cập nhật `bookings.payment_status = 'paid'`.
+- **Mô tả:** Webhook nhận thông báo kết quả giao dịch ngầm. Hệ thống kiểm tra checksum HMAC-SHA512, đối soát số tiền `vnp_Amount`, áp dụng cơ chế chống callback lặp (Idempotency). Khi giao dịch thành công (`vnp_ResponseCode = '00'`), tự động cập nhật `bookings.payment_status = 'paid'` và phát thông báo Realtime (`booking_deposit_paid`) tới Chủ sân để duyệt và xếp sân con.
 - **Response (`200 OK` - Chuẩn VNPay):**
   ```json
   {

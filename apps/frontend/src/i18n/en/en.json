@@ -126,6 +126,15 @@
       "statusPenaltyDeducted": "No deposit refund (100% penalty for < 12h).",
       "failed": "An error occurred while cancelling booking"
     },
+    "rejected": {
+      "bannerTitle": "Booking Rejected by Field Owner",
+      "reasonLabel": "Rejection reason:",
+      "defaultReason": "The field owner cannot accommodate this time slot.",
+      "depositPaidNotice": "Deposit of {{amount}} VND has been paid. Please contact the field owner directly to receive your 100% deposit refund.",
+      "refundNotice": "Please contact the field owner directly for refund instructions and questions.",
+      "chatWithOwnerBtn": "Chat with Owner for Refund",
+      "callOwnerBtn": "Call Owner"
+    },
     "card": {
       "dateTime": "DATE & TIME",
       "total": "TOTAL",
@@ -838,7 +847,8 @@
     "deleteConversation": "Delete conversation",
     "deleteConversationConfirm": "Are you sure you want to delete this conversation? Past message history will no longer be visible.",
     "deleteConversationSuccess": "Conversation deleted successfully.",
-    "deleteConversationError": "Failed to delete conversation. Please try again."
+    "deleteConversationError": "Failed to delete conversation. Please try again.",
+    "startConversationError": "Unable to initiate chat with the field owner."
   },
   "language": {
     "vi": "Tiếng Việt",

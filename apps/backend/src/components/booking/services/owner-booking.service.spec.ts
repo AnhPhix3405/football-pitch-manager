@@ -9,6 +9,7 @@ jest.mock('@nestjs/typeorm', () => ({
 }));
 
 import { DataSource, EntityManager } from 'typeorm';
+import { NotificationService } from '~/components/notification/services/notification.service';
 import { BookingEntity } from '~/entities/booking.entity';
 import { FieldCourtEntity } from '~/entities/field-court.entity';
 import { BookingRepository } from '~/repositories/booking.repository';
@@ -21,6 +22,7 @@ describe('OwnerBookingService', () => {
   let bookingRepository: jest.Mocked<BookingRepository>;
   let fieldCourtRepository: jest.Mocked<FieldCourtRepository>;
   let stateMachineService: jest.Mocked<BookingStateMachineService>;
+  let notificationService: jest.Mocked<NotificationService>;
   let dataSource: jest.Mocked<DataSource>;
   let em: jest.Mocked<EntityManager>;
 
@@ -38,6 +40,10 @@ describe('OwnerBookingService', () => {
       transitionStatus: jest.fn().mockResolvedValue(undefined),
     } as unknown as jest.Mocked<BookingStateMachineService>;
 
+    notificationService = {
+      createAndSend: jest.fn().mockResolvedValue({} as any),
+    } as unknown as jest.Mocked<NotificationService>;
+
     em = {
       createQueryBuilder: jest.fn(),
       save: jest
@@ -54,6 +60,7 @@ describe('OwnerBookingService', () => {
       fieldCourtRepository,
       stateMachineService,
       dataSource,
+      notificationService,
     );
   });
 

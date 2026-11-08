@@ -382,6 +382,83 @@ export function BookingDetailPage() {
         </div>
       )}
 
+      {/* Rejection Notice Banner */}
+      {booking.status === BOOKING_STATUS.REJECTED && (
+        <div
+          style={{
+            background: 'rgba(250, 173, 20, 0.08)',
+            border: '1px solid rgba(250, 173, 20, 0.35)',
+            borderRadius: 12,
+            padding: '16px 20px',
+            marginBottom: 20,
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: 14,
+          }}
+        >
+          <ExclamationCircleFilled style={{ color: '#faad14', fontSize: '1.35rem', marginTop: 2 }} />
+          <div style={{ flex: 1 }}>
+            <div style={{ fontWeight: 700, color: '#faad14', fontSize: '1rem', marginBottom: 4 }}>
+              {t('booking.rejected.bannerTitle', { defaultValue: 'Đơn đặt sân đã bị chủ sân từ chối' })}
+            </div>
+            <p style={{ margin: '0 0 8px 0', fontSize: '0.88rem', color: 'var(--sage)', lineHeight: 1.5 }}>
+              <span style={{ fontWeight: 600, color: '#fff' }}>
+                {t('booking.rejected.reasonLabel', { defaultValue: 'Lý do từ chối:' })}
+              </span>{' '}
+              {booking.ownerNote ||
+                t('booking.rejected.defaultReason', {
+                  defaultValue: 'Chủ sân hiện không thể tiếp nhận khung giờ này.',
+                })}
+            </p>
+            <div
+              style={{
+                background: 'rgba(250, 173, 20, 0.1)',
+                border: '1px dashed rgba(250, 173, 20, 0.4)',
+                borderRadius: 8,
+                padding: '10px 14px',
+                marginBottom: 12,
+                fontSize: '0.85rem',
+                color: '#fff',
+                lineHeight: 1.5,
+              }}
+            >
+              ℹ️ {Number(booking.depositAmount) > 0 ? (
+                <>
+                  {t('booking.rejected.depositPaidNotice', {
+                    defaultValue: `Đơn đã thanh toán cọc ${Number(booking.depositAmount).toLocaleString('vi-VN')}đ. Vui lòng liên hệ trực tiếp với chủ sân để nhận lại 100% tiền cọc.`,
+                    amount: Number(booking.depositAmount).toLocaleString('vi-VN'),
+                  })}
+                </>
+              ) : (
+                t('booking.rejected.refundNotice', {
+                  defaultValue: 'Vui lòng liên hệ với chủ sân để được giải đáp thắc mắc.',
+                })
+              )}
+            </div>
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              <Link to={`/messages?fieldId=${booking.fieldId}`}>
+                <PillButton
+                  variant="primary"
+                  icon={<MessageOutlined />}
+                  text={t('booking.rejected.chatWithOwnerBtn', {
+                    defaultValue: 'Nhắn tin chủ sân nhận hoàn cọc',
+                  })}
+                />
+              </Link>
+              {booking.phone && (
+                <a href={`tel:${booking.phone}`}>
+                  <PillButton
+                    variant="secondary"
+                    icon={<PhoneOutlined />}
+                    text={`${t('booking.rejected.callOwnerBtn', { defaultValue: 'Gọi chủ sân' })}: ${booking.phone}`}
+                  />
+                </a>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Main Grid Content: Tỷ lệ thông tin chính chiếm ưu thế, khối thanh toán nhỏ gọn bằng khoảng một nửa */}
       <div className="booking-detail-content-grid">
         {/* Left Column: Match & Facility Info */}
@@ -522,7 +599,7 @@ export function BookingDetailPage() {
               </Button>
             )}
 
-            <Link to="/messages">
+            <Link to={`/messages?fieldId=${booking.fieldId}`}>
               <PillButton
                 variant="secondary"
                 icon={<MessageOutlined />}

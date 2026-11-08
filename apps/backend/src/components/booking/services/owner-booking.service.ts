@@ -1,6 +1,7 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { ApplicationException } from '~/common/exceptions/application.exception';
+import { NotificationService } from '~/components/notification/services/notification.service';
 import { BookingEntity } from '~/entities/booking.entity';
 import { FieldBlockedSlotEntity } from '~/entities/field-blocked-slot.entity';
 import { BookingRepository } from '~/repositories/booking.repository';
@@ -19,6 +20,7 @@ export class OwnerBookingService {
     private readonly fieldCourtRepository: FieldCourtRepository,
     private readonly stateMachineService: BookingStateMachineService,
     private readonly dataSource: DataSource,
+    private readonly notificationService: NotificationService,
   ) {}
 
   async getOwnerBookings(
@@ -163,6 +165,19 @@ export class OwnerBookingService {
       );
     });
 
+    try {
+      await this.notificationService.createAndSend({
+        userId: booking.userId,
+        type: 'booking_confirmed',
+        title: 'Đơn đặt sân đã được xác nhận',
+        content: `Đơn đặt #${booking.id.slice(0, 8).toUpperCase()} tại sân ${booking.field?.name || 'bóng'} đã được chủ sân xác nhận thành công. Sân thi đấu: ${court.name}.`,
+        refId: booking.id,
+        link: `/bookings/${booking.id}`,
+      });
+    } catch {
+      // Best-effort notification delivery
+    }
+
     const updated = await this.bookingRepository.findDetailById(bookingId);
     return BookingResponseDto.fromEntity(updated!);
   }
@@ -201,6 +216,19 @@ export class OwnerBookingService {
         dto.reason,
       );
     });
+
+    try {
+      await this.notificationService.createAndSend({
+        userId: booking.userId,
+        type: 'booking_rejected',
+        title: 'Đơn đặt sân đã bị từ chối',
+        content: `Đơn đặt #${booking.id.slice(0, 8).toUpperCase()} tại sân ${booking.field?.name || 'bóng'} đã bị từ chối. Lý do: "${dto.reason}". Vui lòng liên hệ với chủ sân để hoàn cọc.`,
+        refId: booking.fieldId,
+        link: `/messages?fieldId=${booking.fieldId}`,
+      });
+    } catch {
+      // Best-effort notification delivery
+    }
 
     const updated = await this.bookingRepository.findDetailById(bookingId);
     return BookingResponseDto.fromEntity(updated!);
@@ -241,6 +269,19 @@ export class OwnerBookingService {
         dto.reason,
       );
     });
+
+    try {
+      await this.notificationService.createAndSend({
+        userId: booking.userId,
+        type: 'booking_cancelled',
+        title: 'Đơn đặt sân đã bị hủy bởi chủ sân',
+        content: `Đơn đặt #${booking.id.slice(0, 8).toUpperCase()} tại sân ${booking.field?.name || 'bóng'} đã bị chủ sân hủy. Lý do: "${dto.reason}". Vui lòng liên hệ với chủ sân để được hỗ trợ hoàn cọc.`,
+        refId: booking.fieldId,
+        link: `/messages?fieldId=${booking.fieldId}`,
+      });
+    } catch {
+      // Best-effort notification delivery
+    }
 
     const updated = await this.bookingRepository.findDetailById(bookingId);
     return BookingResponseDto.fromEntity(updated!);

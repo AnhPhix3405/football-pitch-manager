@@ -12,14 +12,24 @@ export class NotificationService {
     private readonly chatGateway: ChatGateway,
   ) {}
 
-  private resolveLink(type: string): string | undefined {
+  private resolveLink(
+    type: string,
+    refId?: string | null,
+  ): string | undefined {
     switch (type) {
       case 'match_request':
       case 'match_confirmed':
       case 'message':
         return '/messages';
       case 'booking_confirmed':
-        return '/bookings';
+        return refId ? `/bookings/${refId}` : '/bookings';
+      case 'booking_rejected':
+        return refId ? `/messages?fieldId=${refId}` : '/messages';
+      case 'booking_cancelled':
+        return refId ? `/bookings/${refId}` : '/bookings';
+      case 'booking_new':
+      case 'booking_deposit_paid':
+        return '/owner';
       default:
         return undefined;
     }
@@ -37,7 +47,7 @@ export class NotificationService {
       refId: entity.refId,
       isRead: entity.isRead,
       createdAt: entity.createdAt,
-      link: customLink || this.resolveLink(entity.type),
+      link: customLink || this.resolveLink(entity.type, entity.refId),
     };
   }
 

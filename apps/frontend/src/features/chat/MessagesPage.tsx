@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Empty, message } from 'antd'
+import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import chatPanelBg from '../../assets/chat_panel.jpg'
 import { useChatConversations } from '~/hooks/useChatConversations'
@@ -12,6 +13,7 @@ import { MessageThread } from './components/MessageThread'
 
 export function MessagesPage() {
   const { t } = useTranslation()
+  const [searchParams] = useSearchParams()
   const [messageApi, contextHolder] = message.useMessage()
   const {
     activeId,
@@ -23,7 +25,53 @@ export function MessagesPage() {
     loading: conversationsLoading,
     deleteConversation,
     clearConversationUnread,
+    startConversation,
   } = useChatConversations()
+
+  const fieldIdParam = searchParams.get('fieldId')
+  const userIdParam = searchParams.get('userId') || searchParams.get('targetUserId')
+  const conversationIdParam = searchParams.get('conversationId')
+  const initiatedRef = useRef<string | null>(null)
+
+  useEffect(() => {
+    if (conversationIdParam) {
+      setActiveId(conversationIdParam)
+      return
+    }
+
+    if (fieldIdParam && initiatedRef.current !== `field:${fieldIdParam}`) {
+      initiatedRef.current = `field:${fieldIdParam}`
+      startConversation({ relatedFieldId: fieldIdParam })
+        .catch(() => {
+          messageApi.error(
+            t('chat.startConversationError', {
+              defaultValue: 'Không thể kết nối trò chuyện với chủ sân.',
+            }),
+          )
+        })
+      return
+    }
+
+    if (userIdParam && initiatedRef.current !== `user:${userIdParam}`) {
+      initiatedRef.current = `user:${userIdParam}`
+      startConversation({ targetUserId: userIdParam })
+        .catch(() => {
+          messageApi.error(
+            t('chat.startConversationError', {
+              defaultValue: 'Không thể kết nối trò chuyện với người dùng.',
+            }),
+          )
+        })
+    }
+  }, [
+    fieldIdParam,
+    userIdParam,
+    conversationIdParam,
+    startConversation,
+    setActiveId,
+    messageApi,
+    t,
+  ])
 
   const {
     messages,

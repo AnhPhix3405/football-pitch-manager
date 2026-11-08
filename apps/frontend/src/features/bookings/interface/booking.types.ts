@@ -25,6 +25,7 @@ export interface BackendBooking {
   id: string
   fieldId: string
   fieldName?: string
+  fieldPhoneNumber?: string
   requestedCourtType: string
   fieldCourtId?: string | null
   courtName?: string | null
@@ -133,6 +134,8 @@ export interface UiBooking {
   paymentStatus: string
   image: string
   services?: BookingServiceItemDto[]
+  ownerNote?: string | null
+  phone?: string | null
   cancelReason?: string | null
   createdAt?: string
   updatedAt?: string

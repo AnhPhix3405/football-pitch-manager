@@ -13,6 +13,7 @@ export class BookingResponseDto {
   id!: string;
   fieldId!: string;
   fieldName?: string;
+  fieldPhoneNumber?: string;
   requestedCourtType!: string;
   fieldCourtId!: string | null;
   courtName?: string | null;
@@ -38,6 +39,7 @@ export class BookingResponseDto {
     dto.id = entity.id;
     dto.fieldId = entity.fieldId;
     dto.fieldName = entity.field?.name;
+    dto.fieldPhoneNumber = entity.field?.owner?.phone ?? undefined;
     dto.requestedCourtType = entity.requestedCourtType;
     dto.fieldCourtId = entity.fieldCourtId;
     dto.courtName = entity.fieldCourt?.name ?? null;

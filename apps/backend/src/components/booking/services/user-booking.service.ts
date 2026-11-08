@@ -176,6 +176,21 @@ export class UserBookingService {
       await this.stateMachineService.recordInitialStatus(em, bookingId, userId);
     });
 
+    try {
+      if (field.ownerId) {
+        await this.notificationService.createAndSend({
+          userId: field.ownerId,
+          type: 'booking_new',
+          title: 'Đơn đặt sân mới cần xử lý',
+          content: `Đơn đặt #${bookingId.slice(0, 8).toUpperCase()} lúc ${dto.startTime}-${dto.endTime} ngày ${dto.bookingDate} tại sân ${field.name}. Vui lòng kiểm tra và xếp sân.`,
+          refId: bookingId,
+          link: '/owner',
+        });
+      }
+    } catch {
+      // Best-effort notification delivery
+    }
+
     const fullDetail = await this.bookingRepository.findDetailById(bookingId);
     return BookingResponseDto.fromEntity(fullDetail!);
   }

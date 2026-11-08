@@ -3,6 +3,8 @@ import {
   CalendarOutlined,
   CheckCircleOutlined,
   CheckOutlined,
+  CloseCircleOutlined,
+  DollarCircleOutlined,
   MessageOutlined,
   TeamOutlined,
 } from '@ant-design/icons'
@@ -22,7 +24,13 @@ function getNotificationIcon(type: NotificationType): React.ReactNode {
     case NOTIFICATION_TYPES.MATCH_CONFIRMED:
       return <TeamOutlined className="notification-item__icon notification-item__icon--team" />
     case NOTIFICATION_TYPES.BOOKING_CONFIRMED:
+    case NOTIFICATION_TYPES.BOOKING_NEW:
       return <CalendarOutlined className="notification-item__icon notification-item__icon--booking" />
+    case NOTIFICATION_TYPES.BOOKING_REJECTED:
+    case NOTIFICATION_TYPES.BOOKING_CANCELLED:
+      return <CloseCircleOutlined className="notification-item__icon" style={{ color: '#ff4d4f' }} />
+    case NOTIFICATION_TYPES.BOOKING_DEPOSIT_PAID:
+      return <DollarCircleOutlined className="notification-item__icon" style={{ color: '#52c41a' }} />
     case NOTIFICATION_TYPES.MESSAGE:
       return <MessageOutlined className="notification-item__icon notification-item__icon--message" />
     case NOTIFICATION_TYPES.SYSTEM:

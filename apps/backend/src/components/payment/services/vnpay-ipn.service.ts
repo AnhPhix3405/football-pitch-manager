@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
+import { NotificationService } from '~/components/notification/services/notification.service';
 import { BookingRepository } from '~/repositories/booking.repository';
+import { FieldRepository } from '~/repositories/field.repository';
 import { TransactionRepository } from '~/repositories/transaction.repository';
 import {
   PaymentMethod,
@@ -15,6 +17,8 @@ export class VnpayIpnService {
     private readonly vnpayService: VnpayService,
     private readonly transactionRepository: TransactionRepository,
     private readonly bookingRepository: BookingRepository,
+    private readonly fieldRepository: FieldRepository,
+    private readonly notificationService: NotificationService,
   ) {}
 
   async processIpn(
@@ -87,6 +91,22 @@ export class VnpayIpnService {
         booking.paymentStatus = 'paid';
         booking.paymentMethod = PaymentMethod.VNPAY;
         await this.bookingRepository.save(booking);
+
+        try {
+          const field = await this.fieldRepository.findById(booking.fieldId);
+          if (field?.ownerId) {
+            await this.notificationService.createAndSend({
+              userId: field.ownerId,
+              type: 'booking_deposit_paid',
+              title: 'Đã thanh toán cọc đơn đặt sân',
+              content: `Đơn đặt #${booking.id.slice(0, 8).toUpperCase()} đã thanh toán tiền cọc ${Number(booking.depositAmount).toLocaleString('vi-VN')}đ thành công. Vui lòng xếp sân con.`,
+              refId: booking.id,
+              link: '/owner',
+            });
+          }
+        } catch {
+          // Best-effort notification delivery
+        }
       }
     } else {
       transaction.status = TransactionStatus.FAILED;

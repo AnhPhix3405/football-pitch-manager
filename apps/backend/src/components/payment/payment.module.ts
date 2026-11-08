@@ -6,9 +6,11 @@ import { OwnerProfileEntity } from '~/entities/owner-profile.entity';
 import { TransactionEntity } from '~/entities/transaction.entity';
 import { UserEntity } from '~/entities/user.entity';
 import { BookingRepository } from '~/repositories/booking.repository';
+import { FieldRepository } from '~/repositories/field.repository';
 import { OwnerProfileRepository } from '~/repositories/owner-profile.repository';
 import { TransactionRepository } from '~/repositories/transaction.repository';
 import { AuthModule } from '../auth/auth.module';
+import { NotificationModule } from '../notification/notification.module';
 import { OwnerPaymentController } from './controllers/owner-payment.controller';
 import { RefundController } from './controllers/refund.controller';
 import { UserPaymentController } from './controllers/user-payment.controller';
@@ -28,6 +30,7 @@ import { VnpayService } from './services/vnpay.service';
       UserEntity,
     ]),
     AuthModule,
+    NotificationModule,
   ],
   controllers: [
     UserPaymentController,
@@ -38,6 +41,7 @@ import { VnpayService } from './services/vnpay.service';
   providers: [
     TransactionRepository,
     BookingRepository,
+    FieldRepository,
     OwnerProfileRepository,
     PaymentService,
     VnpayService,

@@ -3,9 +3,11 @@ jest.mock('@nestjs/typeorm', () => ({
   InjectRepository: () => () => undefined,
 }));
 
+import { NotificationService } from '~/components/notification/services/notification.service';
 import { BookingEntity } from '~/entities/booking.entity';
 import { TransactionEntity } from '~/entities/transaction.entity';
 import { BookingRepository } from '~/repositories/booking.repository';
+import { FieldRepository } from '~/repositories/field.repository';
 import { TransactionRepository } from '~/repositories/transaction.repository';
 import {
   PaymentMethod,
@@ -20,6 +22,8 @@ describe('VnpayIpnService - Idempotency & Webhook handling', () => {
   let vnpayService: jest.Mocked<VnpayService>;
   let transactionRepo: jest.Mocked<TransactionRepository>;
   let bookingRepo: jest.Mocked<BookingRepository>;
+  let fieldRepo: jest.Mocked<FieldRepository>;
+  let notificationService: jest.Mocked<NotificationService>;
 
   beforeEach(() => {
     vnpayService = {
@@ -37,10 +41,20 @@ describe('VnpayIpnService - Idempotency & Webhook handling', () => {
       save: jest.fn(),
     } as unknown as jest.Mocked<BookingRepository>;
 
+    fieldRepo = {
+      findById: jest.fn(),
+    } as unknown as jest.Mocked<FieldRepository>;
+
+    notificationService = {
+      createAndSend: jest.fn().mockResolvedValue({} as any),
+    } as unknown as jest.Mocked<NotificationService>;
+
     ipnService = new VnpayIpnService(
       vnpayService,
       transactionRepo,
       bookingRepo,
+      fieldRepo,
+      notificationService,
     );
   });
 

@@ -126,6 +126,15 @@
       "statusPenaltyDeducted": "Không hoàn tiền cọc (Phạt 100% do hủy sát giờ đá < 12h).",
       "failed": "Có lỗi xảy ra khi hủy đặt sân"
     },
+    "rejected": {
+      "bannerTitle": "Đơn đặt sân đã bị chủ sân từ chối",
+      "reasonLabel": "Lý do từ chối:",
+      "defaultReason": "Chủ sân hiện không thể tiếp nhận khung giờ này.",
+      "depositPaidNotice": "Đơn đã thanh toán cọc {{amount}}đ. Vui lòng liên hệ trực tiếp với chủ sân để nhận lại 100% tiền cọc.",
+      "refundNotice": "Vui lòng liên hệ với chủ sân để được hỗ trợ hoàn cọc và giải đáp thắc mắc.",
+      "chatWithOwnerBtn": "Nhắn tin chủ sân nhận hoàn cọc",
+      "callOwnerBtn": "Gọi chủ sân"
+    },
     "card": {
       "dateTime": "NGÀY & GIỜ",
       "total": "TỔNG TIỀN",
@@ -838,7 +847,8 @@
     "deleteConversation": "Xóa đoạn chat",
     "deleteConversationConfirm": "Bạn có chắc chắn muốn xóa đoạn chat này không? Lịch sử tin nhắn cũ sẽ không còn hiển thị.",
     "deleteConversationSuccess": "Đã xóa đoạn chat thành công.",
-    "deleteConversationError": "Xóa đoạn chat thất bại. Vui lòng thử lại."
+    "deleteConversationError": "Xóa đoạn chat thất bại. Vui lòng thử lại.",
+    "startConversationError": "Không thể kết nối trò chuyện với chủ sân."
   },
   "language": {
     "vi": "Tiếng Việt",
