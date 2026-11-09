@@ -53,4 +53,8 @@ export class FieldCourtRepository extends BaseRepository<FieldCourtEntity> {
       where: { id, fieldId },
     });
   }
+
+  async countTotal(): Promise<number> {
+    return this.repository.count();
+  }
 }

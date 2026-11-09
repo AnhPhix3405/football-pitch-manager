@@ -78,6 +78,11 @@ function Navigation({
       title: t('nav.sectionGovernance', { defaultValue: 'QUẢN TRỊ & BÁO CÁO' }),
       items: [
         {
+          to: '/admin/fields',
+          label: t('nav.allFields', { defaultValue: 'Sân bóng hệ thống' }),
+          icon: <ShopOutlined />,
+        },
+        {
           to: '/admin/management',
           label: t('nav.management', { defaultValue: 'Quản lý & Kiểm duyệt' }),
           icon: <TeamOutlined />,

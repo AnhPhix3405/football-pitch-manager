@@ -1,0 +1,302 @@
+/* ==========================================================================
+   Admin Fields Management Page - Athletic Dark Governance Theme
+   ========================================================================== */
+
+.admin-fields-page {
+  padding: 24px;
+  background-color: var(--ground, #0b0f19);
+  min-height: 100vh;
+  color: #f8fafc;
+}
+
+/* Header */
+.admin-fields-header {
+  margin-bottom: 24px;
+}
+
+.admin-fields-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #f1f5f9;
+  margin: 0 0 6px 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-fields-subtitle {
+  font-size: 14px;
+  color: #94a3b8;
+  margin: 0;
+}
+
+/* KPI Grid */
+.admin-fields-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.admin-fields-kpi-card {
+  background: #111827;
+  border: 1px solid #1f2937;
+  border-radius: 12px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.admin-fields-kpi-card:hover {
+  border-color: #374151;
+  transform: translateY(-2px);
+}
+
+.kpi-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.kpi-card-title {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: #94a3b8;
+  text-transform: uppercase;
+}
+
+.kpi-icon-wrap {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.kpi-card-value {
+  font-size: 28px;
+  font-weight: 700;
+  margin-top: 10px;
+  line-height: 1;
+}
+
+/* Toolbar */
+.admin-fields-toolbar {
+  background: #111827;
+  border: 1px solid #1f2937;
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.admin-fields-toolbar-left {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.admin-fields-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Table Container */
+.admin-fields-table-wrap {
+  background: #111827;
+  border: 1px solid #1f2937;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.admin-fields-table-wrap .ant-table {
+  background: transparent;
+  color: #f1f5f9;
+}
+
+.admin-fields-table-wrap .ant-table-thead > tr > th {
+  background: #0f172a;
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border-bottom: 1px solid #1f2937;
+  padding: 14px 16px;
+}
+
+.admin-fields-table-wrap .ant-table-tbody > tr > td {
+  border-bottom: 1px solid #1f2937;
+  padding: 14px 16px;
+  color: #e2e8f0;
+}
+
+.admin-fields-table-wrap .ant-table-tbody > tr:hover > td {
+  background: #1e293b !important;
+}
+
+.admin-fields-table-wrap .ant-pagination {
+  padding: 16px 20px;
+  margin: 0;
+}
+
+/* Table Cells Formatting */
+.field-cell-title {
+  font-weight: 600;
+  color: #f8fafc;
+  font-size: 14px;
+  margin-bottom: 2px;
+}
+
+.field-cell-address {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.owner-cell-name {
+  font-weight: 500;
+  color: #f1f5f9;
+  font-size: 13px;
+}
+
+.owner-cell-meta {
+  font-size: 11px;
+  color: #64748b;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin-top: 2px;
+}
+
+.courts-summary-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.courts-type-badges {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+/* Drawer styles */
+.drawer-dossier-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.drawer-owner-card {
+  padding: 14px 16px;
+  background: #050811;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.owner-card-item {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+}
+
+.owner-item-label {
+  color: #94a3b8;
+}
+
+.owner-item-value {
+  color: #f1f5f9;
+  font-weight: 500;
+}
+
+.courts-drawer-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+}
+
+.court-drawer-chip {
+  background: #0b1120;
+  border: 1px solid #1e293b;
+  border-radius: 6px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.court-chip-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.court-chip-name {
+  font-weight: 600;
+  font-size: 13px;
+  color: #f8fafc;
+}
+
+.court-chip-badge {
+  font-size: 11px;
+  color: #38bdf8;
+}
+
+.services-drawer-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.service-drawer-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: #0b1120;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.service-row-name {
+  color: #e2e8f0;
+}
+
+.service-row-price {
+  color: #10b981;
+  font-weight: 600;
+}
+
+.gallery-drawer-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 10px;
+}
+
+.gallery-thumb-wrap {
+  position: relative;
+}
+
+.gallery-primary-badge {
+  position: absolute;
+  bottom: 4px;
+  left: 4px;
+  background: rgba(16, 185, 129, 0.9);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+}

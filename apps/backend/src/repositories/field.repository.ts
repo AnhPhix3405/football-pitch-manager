@@ -47,6 +47,16 @@ export interface FindPublicFieldsOptions {
   sortOrder?: 'ASC' | 'DESC';
 }
 
+export interface FindAdminFieldsOptions {
+  page?: number;
+  limit?: number;
+  search?: string;
+  status?: string;
+  district?: string;
+  sortBy?: 'createdAt' | 'name';
+  sortOrder?: 'ASC' | 'DESC';
+}
+
 @Injectable()
 export class FieldRepository extends BaseRepository<FieldEntity> {
   constructor(
@@ -181,6 +191,91 @@ export class FieldRepository extends BaseRepository<FieldEntity> {
     }
     return this.repository.find({
       where: { id: In(ids) },
+    });
+  }
+
+  async findAdminFieldsWithPagination(
+    options: FindAdminFieldsOptions = {},
+  ): Promise<{ items: FieldEntity[]; total: number }> {
+    const page = Math.max(1, options.page ?? 1);
+    const limit = Math.min(100, Math.max(1, options.limit ?? 10));
+    const skip = (page - 1) * limit;
+
+    const qb = this.repository
+      .createQueryBuilder('field')
+      .leftJoinAndSelect('field.owner', 'owner');
+
+    if (options.status && options.status !== 'ALL') {
+      qb.andWhere('field.status = :status', { status: options.status });
+    }
+
+    if (options.district?.trim()) {
+      qb.andWhere('TRIM(LOWER(field.district)) = LOWER(:district)', {
+        district: options.district.trim(),
+      });
+    }
+
+    if (options.search?.trim()) {
+      const sanitized = options.search.trim().replace(/[%_\\]/g, '\\$&');
+      qb.andWhere(
+        '(field.name ILIKE :search OR field.address ILIKE :search OR owner.email ILIKE :search OR owner.phone ILIKE :search)',
+        { search: `%${sanitized}%` },
+      );
+    }
+
+    const sortColumn =
+      options.sortBy === 'name' ? 'field.name' : 'field.createdAt';
+    const sortDirection =
+      options.sortOrder?.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
+
+    qb.orderBy(sortColumn, sortDirection).addOrderBy('field.id', 'ASC');
+    qb.skip(skip).take(limit);
+
+    const [items, total] = await qb.getManyAndCount();
+    return { items, total };
+  }
+
+  async countAdminKpi(): Promise<{
+    totalFields: number;
+    activeFields: number;
+    inactiveFields: number;
+    pendingFields: number;
+    rejectedFields: number;
+  }> {
+    const raw = await this.repository
+      .createQueryBuilder('field')
+      .select('field.status', 'status')
+      .addSelect('COUNT(field.id)', 'count')
+      .groupBy('field.status')
+      .getRawMany<{ status: string; count: string }>();
+
+    let totalFields = 0;
+    let activeFields = 0;
+    let inactiveFields = 0;
+    let pendingFields = 0;
+    let rejectedFields = 0;
+
+    for (const row of raw) {
+      const c = parseInt(row.count, 10) || 0;
+      totalFields += c;
+      if (row.status === 'active') activeFields = c;
+      else if (row.status === 'inactive') inactiveFields = c;
+      else if (row.status === 'pending') pendingFields = c;
+      else if (row.status === 'rejected') rejectedFields = c;
+    }
+
+    return {
+      totalFields,
+      activeFields,
+      inactiveFields,
+      pendingFields,
+      rejectedFields,
+    };
+  }
+
+  async countDepositRequired(): Promise<number> {
+    return this.repository.count({
+      where: { requireDeposit: true },
     });
   }
 }

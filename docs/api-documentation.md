@@ -100,6 +100,10 @@ Tài liệu chi tiết toàn bộ các API HTTP REST và WebSocket Gateway của
 | | `GET` | `/admin/field-approvals/:id` | Admin | Xem chi tiết yêu cầu duyệt sân bóng |
 | | `POST` | `/admin/field-approvals/:id/approve` | Admin | Phê duyệt sân bóng |
 | | `POST` | `/admin/field-approvals/:id/reject` | Admin | Từ chối phê duyệt sân bóng |
+| | `GET` | `/admin/fields/kpi` | Admin | Lấy chỉ số KPI vận hành sân bóng toàn hệ thống |
+| | `GET` | `/admin/fields` | Admin | Lấy danh sách sân bóng toàn hệ thống kèm summary chuẩn hóa |
+| | `GET` | `/admin/fields/:id` | Admin | Xem chi tiết toàn diện hồ sơ sân bóng |
+| | `PATCH` | `/admin/fields/:id/status` | Admin | Khóa hoặc kích hoạt lại cụm sân (cascade vô hiệu hóa sân con khi khóa) |
 | | `GET` | `/admin/audit-logs` | Admin | Lấy danh sách nhật ký kiểm toán hệ thống (Audit logs) |
 | | `GET` | `/admin/audit-logs/:id` | Admin | Lấy thông tin chi tiết một sự kiện kiểm toán theo ID |
 | | `GET` | `/admin/audit-logs/export` | Admin | Xuất tệp tin nhật ký kiểm toán ra định dạng CSV hoặc JSON |

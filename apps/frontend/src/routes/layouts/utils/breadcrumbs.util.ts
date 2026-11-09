@@ -33,6 +33,8 @@ export function buildDashboardBreadcrumbs(
     items.push({ title: t('nav.ownerApprovals', { defaultValue: 'Duyệt chủ sân' }) })
   } else if (normalized.startsWith('/admin/approvals/fields')) {
     items.push({ title: t('nav.fieldApprovals', { defaultValue: 'Duyệt sân bóng' }) })
+  } else if (normalized.startsWith('/admin/fields')) {
+    items.push({ title: t('nav.allFields', { defaultValue: 'Sân bóng hệ thống' }) })
   } else if (normalized.startsWith('/admin/management')) {
     items.push({ title: t('nav.management', { defaultValue: 'Quản lý & Kiểm duyệt' }) })
   } else if (normalized.startsWith('/admin/reports')) {

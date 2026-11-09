@@ -1,5 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes, useParams } from 'react-router-dom'
 import { AdminDashboardPage } from '../features/admin/AdminDashboardPage'
+import { AdminFieldsPage } from '../features/admin/AdminFieldsPage'
 import { AdminManagementPage } from '../features/admin/AdminManagementPage'
 import { AdminReportsPage } from '../features/admin/AdminReportsPage'
 import { AdminSubscriptionsPage } from '../features/admin/AdminSubscriptionsPage'
@@ -118,6 +119,7 @@ export function AppRouter() {
             <Route path="approvals" element={<Navigate to="/admin/approvals/owners" replace />} />
             <Route path="approvals/owners" element={<AdminApprovalsPage forcedType="owner" />} />
             <Route path="approvals/fields" element={<AdminApprovalsPage forcedType="field" />} />
+            <Route path="fields" element={<AdminFieldsPage />} />
             <Route path="management" element={<AdminManagementPage />} />
             <Route path="reports" element={<AdminReportsPage />} />
             <Route path="subscriptions" element={<AdminSubscriptionsPage />} />

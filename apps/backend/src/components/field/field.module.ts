@@ -19,6 +19,7 @@ import { FieldPricingRepository } from '~/repositories/field-pricing.repository'
 import { FieldRepository } from '~/repositories/field.repository';
 import { FieldServiceRepository } from '~/repositories/field-service.repository';
 import { AuthModule } from '../auth/auth.module';
+import { AdminFieldController } from './controllers/admin-field.controller';
 import { FieldAvailabilityController } from './controllers/field-availability.controller';
 import { FieldController } from './controllers/field.controller';
 import { FieldPricingController } from './controllers/field-pricing.controller';
@@ -31,6 +32,7 @@ import { OwnerFieldPricingController } from './controllers/owner-field-pricing.c
 import { OwnerFieldServiceController } from './controllers/owner-field-service.controller';
 import { OwnerFieldController } from './controllers/owner-field.controller';
 import { FieldOwnershipGuard } from './guards/field-ownership.guard';
+import { AdminFieldService } from './services/admin-field.service';
 import { FieldAvailabilityService } from './services/field-availability.service';
 import { FieldPricingCalculatorService } from './services/field-pricing-calculator.service';
 import { FieldService } from './services/field.service';
@@ -58,6 +60,7 @@ import { OwnerFieldService } from './services/owner-field.service';
     AuthModule,
   ],
   controllers: [
+    AdminFieldController,
     OwnerFieldController,
     FieldController,
     FieldPricingController,
@@ -80,6 +83,7 @@ import { OwnerFieldService } from './services/owner-field.service';
     FieldBlockedSlotRepository,
     FieldPricingRepository,
     BookingRepository,
+    AdminFieldService,
     OwnerFieldService,
     OwnerFieldCourtService,
     OwnerFieldImageService,
@@ -101,6 +105,7 @@ import { OwnerFieldService } from './services/owner-field.service';
     FieldBlockedSlotRepository,
     FieldPricingRepository,
     BookingRepository,
+    AdminFieldService,
     OwnerFieldService,
     OwnerFieldCourtService,
     OwnerFieldImageService,
