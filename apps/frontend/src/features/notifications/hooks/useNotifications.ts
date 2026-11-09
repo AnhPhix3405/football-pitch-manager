@@ -1,6 +1,7 @@
 import { useEffect, useState, useTransition } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { notification as antNotification } from 'antd'
+import { useTranslation } from 'react-i18next'
 import { useAppSelector } from '~/app/hooks'
 import { connectChatSocket } from '~/features/chat/service/chat-socket.service'
 import type {
@@ -10,6 +11,7 @@ import type {
 import {
   filterNotifications,
   getNotificationsApi,
+  getUnreadCountApi,
   mapBackendNotification,
   markAllAsReadInList,
   markAllNotificationsAsReadApi,
@@ -19,11 +21,14 @@ import {
 
 export function useNotifications() {
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const [, startTransition] = useTransition()
   const [open, setOpen] = useState(false)
   const [items, setItems] = useState<AppNotification[]>([])
   const [filter, setFilter] = useState<NotificationFilter>('all')
   const [loading, setLoading] = useState(false)
+  const [unreadCount, setUnreadCount] = useState(0)
+  const [revision, setRevision] = useState(0)
 
   const currentUser = useAppSelector((state) => state.auth.user)
   const isLoggedIn = Boolean(currentUser)
@@ -32,6 +37,7 @@ export function useNotifications() {
   useEffect(() => {
     if (!isLoggedIn) {
       setItems([])
+      setUnreadCount(0)
       return
     }
 
@@ -51,10 +57,16 @@ export function useNotifications() {
         if (isSubscribed) setLoading(false)
       })
 
+    getUnreadCountApi()
+      .then((count) => {
+        if (isSubscribed) setUnreadCount(count)
+      })
+      .catch(() => undefined)
+
     return () => {
       isSubscribed = false
     }
-  }, [isLoggedIn, currentUser?.id, filter])
+  }, [isLoggedIn, currentUser?.id, filter, revision])
 
   // 2. Real-time socket listener for new notifications
   useEffect(() => {
@@ -76,6 +88,7 @@ export function useNotifications() {
       }) => {
         if (!raw) return
         const formatted = mapBackendNotification(raw)
+        setRevision((value) => value + 1)
 
         setItems((prev) => {
           if (prev.some((n) => n.id === formatted.id)) {
@@ -86,7 +99,7 @@ export function useNotifications() {
 
         // Hiển thị toast popup thông báo nhanh
         antNotification.info({
-          message: formatted.title,
+          message: t(`notifications.eventTitles.${formatted.type}`, { defaultValue: formatted.title }),
           description: formatted.content,
           placement: 'topRight',
           onClick: () => {
@@ -100,16 +113,18 @@ export function useNotifications() {
       }
 
       socket.on('notification:new', onNewNotification)
+      const onConnect = () => setRevision((value) => value + 1)
+      socket.on('connect', onConnect)
 
       return () => {
         socket?.off('notification:new', onNewNotification)
+        socket?.off('connect', onConnect)
       }
     } catch {
       // Socket connection error handling
     }
-  }, [isLoggedIn, currentUser?.id, navigate])
+  }, [isLoggedIn, currentUser?.id, navigate, t])
 
-  const unreadCount = items.filter((n) => !n.isRead).length
   const displayedItems = filterNotifications(items, filter)
 
   const markAllRead = async (e?: React.MouseEvent) => {
@@ -120,7 +135,9 @@ export function useNotifications() {
     try {
       await markAllNotificationsAsReadApi()
     } catch {
-      // Rollback or ignore
+      // The refresh restores the persisted read state if the request failed.
+    } finally {
+      setRevision((value) => value + 1)
     }
   }
 
@@ -129,7 +146,9 @@ export function useNotifications() {
     try {
       await markNotificationAsReadApi(id)
     } catch {
-      // Rollback or ignore
+      // The refresh restores the persisted read state if the request failed.
+    } finally {
+      setRevision((value) => value + 1)
     }
   }
 

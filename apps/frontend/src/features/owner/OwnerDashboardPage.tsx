@@ -1,46 +1,15 @@
-import {
-  ArrowRightOutlined,
-  CalendarOutlined,
-  DollarOutlined,
-  RiseOutlined,
-  ShopOutlined,
-} from '@ant-design/icons'
-import { Button, Progress, Tag } from 'antd'
+import { ArrowRightOutlined, CalendarOutlined, DollarOutlined, RiseOutlined, ShopOutlined } from '@ant-design/icons'
+import { Alert, Button, Empty, Progress, Spin, Tag } from 'antd'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
+import { useOwnerDashboard } from '../../hooks/useOwnerDashboard'
 import { formatPrice } from '../fields/field.data'
-import { useOwnerBookings } from './hooks/useOwnerBookings'
 
 export function OwnerDashboardPage() {
-  const { t } = useTranslation()
-  const { fieldId, bookings } = useOwnerBookings('all')
-
-  const metrics = [
-    {
-      icon: <DollarOutlined />,
-      label: t('owner.metricRevenue'),
-      value: '48,6 triệu',
-      delta: '+12.4%',
-    },
-    {
-      icon: <CalendarOutlined />,
-      label: t('owner.metricBookings'),
-      value: '13',
-      delta: '86% capacity',
-    },
-    {
-      icon: <ShopOutlined />,
-      label: t('owner.metricActive'),
-      value: '2 / 3',
-      delta: '1 pending',
-    },
-    {
-      icon: <RiseOutlined />,
-      label: t('owner.metricUtilization'),
-      value: '78%',
-      delta: '+6.2%',
-    },
-  ]
+  const { t, i18n } = useTranslation()
+  const { stats, error, retry } = useOwnerDashboard()
+  const number = new Intl.NumberFormat(i18n.language, { maximumFractionDigits: 1 })
+  const unavailable = t('owner.dashboard.unavailable')
 
   return (
     <section className="owner-page">
@@ -55,50 +24,81 @@ export function OwnerDashboardPage() {
         </Link>
       </header>
 
-      <div className="owner-metrics">
-        {metrics.map((item) => (
-          <article key={item.label}>
-            <span>{item.icon}</span>
-            <small>{item.label}</small>
-            <strong>{item.value}</strong>
-            <em>{item.delta}</em>
-          </article>
-        ))}
-      </div>
+      {error && (
+        <Alert type="error" showIcon title={t('owner.dashboard.loadError')}
+          action={<Button onClick={retry}>{t('common.retry')}</Button>} />
+      )}
+      {!stats && !error && <Spin aria-label={t('common.loading')} />}
+      {stats && (
+        <>
+          <div className="owner-metrics">
+            <article>
+              <span><DollarOutlined /></span>
+              <small>{t('owner.metricRevenue')}</small>
+              <strong>{formatPrice(stats.monthlyRevenue)}</strong>
+            </article>
+            <article>
+              <span><CalendarOutlined /></span>
+              <small>{t('owner.metricBookings')}</small>
+              <strong>{number.format(stats.todayBookings)}</strong>
+            </article>
+            <article>
+              <span><ShopOutlined /></span>
+              <small>{t('owner.metricActive')}</small>
+              <strong>{number.format(stats.activeFields)} / {number.format(stats.totalFields)}</strong>
+            </article>
+            <article>
+              <span><RiseOutlined /></span>
+              <small>{t('owner.metricUtilization')}</small>
+              <strong>{stats.utilizationPercent === null ? unavailable : `${number.format(stats.utilizationPercent)}%`}</strong>
+            </article>
+          </div>
 
-      <div className="owner-dashboard-grid">
-        <section className="owner-panel">
-          <header>
-            <h2>{t('owner.recentBookings')}</h2>
-            <Link to="/owner/bookings">
-              {t('owner.viewAll')} <ArrowRightOutlined />
-            </Link>
-          </header>
-          {bookings.slice(0, 4).map((booking) => (
-            <Link className="owner-booking-row" to={`/owner/bookings/${booking.id}?fieldId=${fieldId}`} key={booking.id}>
-              <div>
-                <b>{booking.id}</b>
-                <small>
-                  {booking.courtName || `${booking.requestedCourtType}v${booking.requestedCourtType}`} · {booking.startTime}–{booking.endTime}
-                </small>
-              </div>
-              <Tag color={booking.status === 'confirmed' || booking.status === 'completed' ? 'green' : 'gold'}>{booking.status}</Tag>
-              <strong>{formatPrice(booking.totalPrice)}</strong>
-            </Link>
-          ))}
-        </section>
+          <div className="owner-dashboard-grid">
+            <section className="owner-panel">
+              <header>
+                <h2>{t('owner.recentBookings')}</h2>
+                <Link to="/owner/bookings">
+                  {t('owner.viewAll')} <ArrowRightOutlined />
+                </Link>
+              </header>
+              {stats.recentBookings.length === 0 && <Empty description={t('owner.dashboard.noRecentBookings')} />}
+              {stats.recentBookings.map((booking) => (
+                <Link className="owner-booking-row" to={`/owner/bookings/${booking.id}?fieldId=${booking.fieldId}`} key={booking.id}>
+                  <div>
+                    <b>{booking.fieldName || booking.id}</b>
+                    <small>
+                      {booking.courtName || `${booking.requestedCourtType}v${booking.requestedCourtType}`} · {booking.bookingDate} · {booking.startTime}–{booking.endTime}
+                    </small>
+                  </div>
+                  <Tag color={booking.status === 'confirmed' || booking.status === 'completed' ? 'green' : 'gold'}>{t(`ownerOps.status.${booking.status}`)}</Tag>
+                  <strong>{formatPrice(booking.totalPrice)}</strong>
+                </Link>
+              ))}
+            </section>
 
-        <section className="owner-panel utilization">
-          <header>
-            <h2>{t('owner.todayCapacity')}</h2>
-          </header>
-          <Progress type="dashboard" percent={78} strokeColor="#8cfc70" trailColor="#263125" />
-          <p>13 / 17 {t('owner.bookedSlots')}</p>
-          <Link to="/owner/bookings">
-            <Button block>{t('owner.viewSchedule')}</Button>
-          </Link>
-        </section>
-      </div>
+            <section className="owner-panel utilization">
+              <header>
+                <h2>{t('owner.todayCapacity')}</h2>
+              </header>
+              {stats.utilizationPercent === null ? (
+                <p>{t('owner.dashboard.noCapacity')}</p>
+              ) : (
+                <>
+                  <Progress type="dashboard" percent={stats.utilizationPercent} strokeColor="#8cfc70" />
+                  <p>{t('owner.dashboard.capacityMinutes', {
+                    booked: number.format(stats.bookedMinutes),
+                    available: number.format(stats.availableMinutes),
+                  })}</p>
+                </>
+              )}
+              <Link to="/owner/timeline">
+                <Button block>{t('owner.viewSchedule')}</Button>
+              </Link>
+            </section>
+          </div>
+        </>
+      )}
     </section>
   )
 }

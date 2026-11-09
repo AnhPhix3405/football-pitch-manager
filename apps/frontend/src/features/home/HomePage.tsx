@@ -14,7 +14,7 @@ import { Link } from 'react-router-dom'
 import heroPanelBg from '../../assets/hero_panel.jpg'
 import { BlurCircle } from '../../components/BlurCircle'
 import { FieldCard } from '../fields/components/FieldCard'
-import { footballFields } from '../fields/field.data'
+import { useFields } from '../../hooks/useFields'
 import { QuickReserveCard } from './components/QuickReserveCard'
 import { SpotlightCard } from '../../components/SpotlightCard'
 
@@ -47,7 +47,8 @@ const matches = [
 
 export function HomePage() {
   const { t } = useTranslation()
-  const featuredPitch = footballFields.find((field) => field.featured) ?? footballFields[0]
+  const { apiFields } = useFields()
+  const featuredPitch = apiFields[0]
 
   return (
     <div className="home-page">
@@ -84,9 +85,11 @@ export function HomePage() {
             </div>
           </div>
 
-          <div className="home-hero__widget">
-            <QuickReserveCard field={featuredPitch} />
-          </div>
+          {featuredPitch && (
+            <div className="home-hero__widget">
+              <QuickReserveCard field={featuredPitch} />
+            </div>
+          )}
         </div>
       </section>
 
@@ -141,8 +144,7 @@ export function HomePage() {
           </Link>
         </header>
         <div className="featured-fields">
-          {footballFields
-            .filter((field) => field.featured)
+          {apiFields
             .slice(0, 3)
             .map((field) => (
               <FieldCard field={field} key={field.id} />

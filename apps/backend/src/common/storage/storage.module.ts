@@ -4,6 +4,7 @@ import { AuthModule } from '~/components/auth/auth.module';
 import { storageConfig } from '~/config/storage.config';
 import { STORAGE_SERVICE_TOKEN } from './constants/storage.constant';
 import { UploadController } from './controllers/upload.controller';
+import { LocalImageStorageService } from './services/local-image-storage.service';
 import { SupabaseStorageService } from './services/supabase-storage.service';
 
 @Global()
@@ -11,6 +12,7 @@ import { SupabaseStorageService } from './services/supabase-storage.service';
   imports: [ConfigModule.forFeature(storageConfig), AuthModule],
   controllers: [UploadController],
   providers: [
+    LocalImageStorageService,
     SupabaseStorageService,
     {
       provide: STORAGE_SERVICE_TOKEN,

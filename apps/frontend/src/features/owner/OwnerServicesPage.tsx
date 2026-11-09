@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import {
   ArrowLeftOutlined,
   DeleteOutlined,
@@ -37,6 +38,7 @@ import type {
 import './OwnerServicesPage.css'
 
 export function OwnerServicesPage() {
+  const { t } = useTranslation()
   const { fieldId: paramFieldId } = useParams<{ fieldId?: string }>()
   const navigate = useNavigate()
   const { fields, loading: loadingFields } = useOwnerFields()
@@ -82,17 +84,17 @@ export function OwnerServicesPage() {
         unit: values.unit?.trim() || 'lượt',
         isActive: values.isActive ?? true,
       })
-      message.success('Đã tạo dịch vụ đi kèm mới thành công!')
+      message.success(t('owner.servicePage.created'))
       setCreateModalOpen(false)
       createForm.resetFields()
     } catch (err: unknown) {
       const errorMsg =
         (err as { response?: { data?: { error?: { code?: string; message?: string } } } })?.response
           ?.data?.error?.message ||
-        (err instanceof Error ? err.message : 'Lỗi khi tạo dịch vụ')
+        (err instanceof Error ? err.message : t('owner.servicePage.createError'))
 
       if (errorMsg.includes('SERVICE_NAME_ALREADY_EXISTS') || errorMsg.includes('trùng')) {
-        message.error('Tên dịch vụ đã tồn tại trong cụm sân này. Vui lòng chọn tên khác!')
+        message.error(t('owner.servicePage.duplicate'))
       } else {
         message.error(errorMsg)
       }
@@ -112,10 +114,10 @@ export function OwnerServicesPage() {
         unit: values.unit?.trim(),
         isActive: values.isActive,
       })
-      message.success('Đã cập nhật dịch vụ thành công!')
+      message.success(t('owner.servicePage.updated'))
       setEditingService(null)
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Lỗi khi cập nhật dịch vụ'
+      const msg = err instanceof Error ? err.message : t('owner.servicePage.editError')
       message.error(msg)
     } finally {
       setSubmitting(false)
@@ -128,13 +130,13 @@ export function OwnerServicesPage() {
       if (!checked) {
         // DELETE /owner/fields/:fieldId/services/:serviceId sets isActive = false
         await deleteService(service.id)
-        message.success(`Đã tắt trạng thái hoạt động của dịch vụ "${service.name}".`)
+        message.success(t('owner.servicePage.deactivated', { name: service.name }))
       } else {
         await updateService(service.id, { isActive: true })
-        message.success(`Đã bật lại dịch vụ "${service.name}".`)
+        message.success(t('owner.servicePage.reactivated', { name: service.name }))
       }
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Lỗi khi thay đổi trạng thái dịch vụ'
+      const msg = err instanceof Error ? err.message : t('owner.servicePage.toggleError')
       message.error(msg)
     }
   }
@@ -145,29 +147,29 @@ export function OwnerServicesPage() {
         <div>
           <Breadcrumb
             items={[
-              { title: <Link to="/owner/fields">Sân của tôi</Link> },
-              { title: currentField?.name || 'Cụm sân' },
-              { title: 'Dịch vụ đi kèm' },
+              { title: <Link to="/owner/fields">{t('owner.servicePage.navFields')}</Link> },
+              { title: currentField?.name || t('owner.servicePage.field') },
+              { title: t('owner.servicePage.section') },
             ]}
             style={{ marginBottom: 8 }}
           />
           <h1 style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <ShoppingOutlined style={{ color: 'var(--lime)' }} />
-            Quản lý dịch vụ đi kèm (Services - FIELD-05)
+            {t('owner.servicePage.title')}
           </h1>
-          <p>Cấu hình các tiện ích & dịch vụ bán kèm như bóng, áo bib, nước uống, trọng tài...</p>
+          <p>{t('owner.servicePage.description')}</p>
         </div>
 
         <div style={{ display: 'flex', gap: 10 }}>
           {paramFieldId && (
             <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/owner/fields')}>
-              Quay lại
+              {t('owner.servicePage.back')}
             </Button>
           )}
           <PillButton
             variant="primary"
             icon={<PlusOutlined />}
-            text="Thêm dịch vụ"
+            text={t('owner.servicePage.add')}
             onClick={() => {
               createForm.resetFields()
               setCreateModalOpen(true)
@@ -180,10 +182,10 @@ export function OwnerServicesPage() {
       <div className="osp-toolbar">
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: 13, color: 'var(--sage)' }}>Cụm sân:</span>
+            <span style={{ fontSize: 13, color: 'var(--sage)' }}>{t('owner.servicePage.fieldLabel')}</span>
             <Select
               value={selectedFieldId || undefined}
-              placeholder="Chọn cụm sân"
+              placeholder={t('owner.servicePage.chooseField')}
               onChange={(val) => {
                 setSelectedFieldId(val)
                 if (paramFieldId) navigate(`/owner/fields/${val}/services`)
@@ -195,15 +197,15 @@ export function OwnerServicesPage() {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: 13, color: 'var(--sage)' }}>Trạng thái:</span>
+            <span style={{ fontSize: 13, color: 'var(--sage)' }}>{t('owner.servicePage.statusLabel')}</span>
             <Select
               value={filterActive}
               style={{ width: 160 }}
               onChange={handleFilterChange}
               options={[
-                { value: 'all', label: 'Tất cả trạng thái' },
-                { value: 'active', label: 'Đang hoạt động' },
-                { value: 'inactive', label: 'Đã tạm ngưng' },
+                { value: 'all', label: t('owner.servicePage.allStatuses') },
+                { value: 'active', label: t('owner.servicePage.active') },
+                { value: 'inactive', label: t('owner.servicePage.inactive') },
               ]}
             />
           </div>
@@ -214,7 +216,7 @@ export function OwnerServicesPage() {
           loading={loading}
           onClick={() => handleFilterChange(filterActive)}
         >
-          Làm mới
+          {t('owner.servicePage.refresh')}
         </Button>
       </div>
 
@@ -225,7 +227,7 @@ export function OwnerServicesPage() {
         {loading ? (
           <div style={{ textAlign: 'center', padding: '50px 0' }}>
             <Spin size="large" />
-            <p style={{ marginTop: 12, color: 'var(--sage)' }}>Đang tải danh sách dịch vụ...</p>
+            <p style={{ marginTop: 12, color: 'var(--sage)' }}>{t('owner.servicePage.loading')}</p>
           </div>
         ) : services.length > 0 ? (
           <Table
@@ -234,12 +236,12 @@ export function OwnerServicesPage() {
             pagination={false}
             columns={[
               {
-                title: 'TÊN DỊCH VỤ',
+                title: t('owner.servicePage.nameHeader'),
                 dataIndex: 'name',
                 render: (val: string) => <strong style={{ color: 'var(--white)' }}>{val}</strong>,
               },
               {
-                title: 'ĐƠN GIÁ',
+                title: t('owner.servicePage.priceHeader'),
                 render: (_, item) => (
                   <span style={{ color: 'var(--lime)', fontWeight: 600 }}>
                     {formatPrice(item.price)} <small style={{ color: 'var(--sage)' }}>/ {item.unit}</small>
@@ -247,7 +249,7 @@ export function OwnerServicesPage() {
                 ),
               },
               {
-                title: 'TRẠNG THÁI',
+                title: t('owner.servicePage.statusHeader'),
                 render: (_, item) => (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <Switch
@@ -255,13 +257,13 @@ export function OwnerServicesPage() {
                       onChange={(checked) => handleToggleActive(item, checked)}
                     />
                     <Tag color={item.isActive ? 'green' : 'default'}>
-                      {item.isActive ? 'Hoạt động' : 'Tạm ngưng'}
+                      {item.isActive ? t('owner.servicePage.active') : t('owner.servicePage.inactive')}
                     </Tag>
                   </div>
                 ),
               },
               {
-                title: 'THAO TÁC',
+                title: t('owner.servicePage.actions'),
                 align: 'right',
                 render: (_, item) => (
                   <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
@@ -278,19 +280,19 @@ export function OwnerServicesPage() {
                         })
                       }}
                     >
-                      Sửa
+                      {t('owner.servicePage.edit')}
                     </Button>
 
                     {item.isActive && (
                       <Popconfirm
-                        title="Tắt trạng thái hoạt động dịch vụ này?"
-                        okText="Tắt"
-                        cancelText="Hủy"
+                        title={t('owner.servicePage.disableConfirm')}
+                        okText={t('owner.servicePage.disable')}
+                        cancelText={t('owner.servicePage.cancel')}
                         okButtonProps={{ danger: true }}
                         onConfirm={() => handleToggleActive(item, false)}
                       >
                         <Button size="small" danger icon={<DeleteOutlined />}>
-                          Tắt
+                          {t('owner.servicePage.disable')}
                         </Button>
                       </Popconfirm>
                     )}
@@ -300,7 +302,7 @@ export function OwnerServicesPage() {
             ]}
           />
         ) : (
-          <Empty description="Chưa có dịch vụ đi kèm nào cho cụm sân này. Hãy thêm dịch vụ đầu tiên!" />
+          <Empty description={t('owner.servicePage.empty')} />
         )}
       </div>
 
@@ -308,11 +310,11 @@ export function OwnerServicesPage() {
       <Modal
         open={createModalOpen}
         onCancel={() => setCreateModalOpen(false)}
-        title="Tạo dịch vụ đi kèm mới"
+        title={t('owner.servicePage.createTitle')}
         onOk={() => createForm.submit()}
         confirmLoading={submitting}
-        okText="Tạo dịch vụ"
-        cancelText="Hủy"
+        okText={t('owner.servicePage.create')}
+        cancelText={t('owner.servicePage.cancel')}
         className="osp-modal"
         destroyOnClose
       >
@@ -324,32 +326,32 @@ export function OwnerServicesPage() {
         >
           <Form.Item
             name="name"
-            label="Tên dịch vụ"
-            rules={[{ required: true, message: 'Vui lòng nhập tên dịch vụ' }]}
+            label={t('owner.servicePage.name')}
+            rules={[{ required: true, message: t('owner.servicePage.nameRequired') }]}
           >
-            <Input placeholder="Ví dụ: Thuê bóng thi đấu, Áo bib, Nước khoáng..." />
+            <Input placeholder={t('owner.servicePage.namePlaceholder')} />
           </Form.Item>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: 12 }}>
             <Form.Item
               name="price"
-              label="Đơn giá (VND)"
-              rules={[{ required: true, message: 'Nhập giá >= 0' }]}
+              label={t('owner.servicePage.price')}
+              rules={[{ required: true, message: t('owner.servicePage.priceRequired') }]}
             >
               <InputNumber min={0} step={5000} style={{ width: '100%' }} addonAfter="VND" />
             </Form.Item>
 
             <Form.Item
               name="unit"
-              label="Đơn vị tính"
-              rules={[{ required: true, message: 'Nhập đơn vị' }]}
+              label={t('owner.servicePage.unit')}
+              rules={[{ required: true, message: t('owner.servicePage.unitRequired') }]}
             >
-              <Input placeholder="quả / trận, bộ, thùng..." />
+              <Input placeholder={t('owner.servicePage.unitPlaceholder')} />
             </Form.Item>
           </div>
 
-          <Form.Item name="isActive" label="Trạng thái hoạt động ban đầu" valuePropName="checked">
-            <Switch checkedChildren="Bật" unCheckedChildren="Tắt" />
+          <Form.Item name="isActive" label={t('owner.servicePage.initialStatus')} valuePropName="checked">
+            <Switch checkedChildren={t('owner.servicePage.enable')} unCheckedChildren={t('owner.servicePage.disable')} />
           </Form.Item>
         </Form>
       </Modal>
@@ -358,19 +360,19 @@ export function OwnerServicesPage() {
       <Modal
         open={Boolean(editingService)}
         onCancel={() => setEditingService(null)}
-        title={`Chỉnh sửa dịch vụ: ${editingService?.name || ''}`}
+        title={t('owner.servicePage.editTitle', { name: editingService?.name })}
         onOk={() => editForm.submit()}
         confirmLoading={submitting}
-        okText="Lưu thay đổi"
-        cancelText="Hủy"
+        okText={t('owner.servicePage.save')}
+        cancelText={t('owner.servicePage.cancel')}
         className="osp-modal"
         destroyOnClose
       >
         <Form form={editForm} layout="vertical" onFinish={handleEditSubmit}>
           <Form.Item
             name="name"
-            label="Tên dịch vụ"
-            rules={[{ required: true, message: 'Vui lòng nhập tên dịch vụ' }]}
+            label={t('owner.servicePage.name')}
+            rules={[{ required: true, message: t('owner.servicePage.nameRequired') }]}
           >
             <Input />
           </Form.Item>
@@ -378,19 +380,19 @@ export function OwnerServicesPage() {
           <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: 12 }}>
             <Form.Item
               name="price"
-              label="Đơn giá (VND)"
-              rules={[{ required: true, message: 'Nhập giá' }]}
+              label={t('owner.servicePage.price')}
+              rules={[{ required: true, message: t('owner.servicePage.priceRequired') }]}
             >
               <InputNumber min={0} step={5000} style={{ width: '100%' }} addonAfter="VND" />
             </Form.Item>
 
-            <Form.Item name="unit" label="Đơn vị tính">
+            <Form.Item name="unit" label={t('owner.servicePage.unit')}>
               <Input />
             </Form.Item>
           </div>
 
-          <Form.Item name="isActive" label="Đang hoạt động" valuePropName="checked">
-            <Switch checkedChildren="Bật" unCheckedChildren="Tắt" />
+          <Form.Item name="isActive" label={t('owner.servicePage.active')} valuePropName="checked">
+            <Switch checkedChildren={t('owner.servicePage.enable')} unCheckedChildren={t('owner.servicePage.disable')} />
           </Form.Item>
         </Form>
       </Modal>

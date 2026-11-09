@@ -4,6 +4,7 @@ import { DataSource } from 'typeorm';
 import { ApplicationException } from '~/common/exceptions/application.exception';
 import { FieldAvailabilityService } from '~/components/field/services/field-availability.service';
 import { FieldPricingCalculatorService } from '~/components/field/services/field-pricing-calculator.service';
+import { NotificationService } from '~/components/notification/services/notification.service';
 import { BookingServiceEntity } from '~/entities/booking-service.entity';
 import { BookingEntity } from '~/entities/booking.entity';
 import { FieldServiceEntity } from '~/entities/field-service.entity';
@@ -11,7 +12,6 @@ import { BookingRepository } from '~/repositories/booking.repository';
 import { FieldOpeningHourRepository } from '~/repositories/field-opening-hour.repository';
 import { FieldServiceRepository } from '~/repositories/field-service.repository';
 import { FieldRepository } from '~/repositories/field.repository';
-import { NotificationService } from '~/components/notification/services/notification.service';
 import { BookingResponseDto } from '../dto/booking-response.dto';
 import { CancelBookingDto } from '../dto/cancel-booking.dto';
 import { CancellationPreviewResponseDto } from '../dto/cancellation-preview-response.dto';
@@ -136,7 +136,7 @@ export class UserBookingService {
 
     const bookingId = randomUUID();
 
-    await this.dataSource.transaction(async (em) => {
+    const notification = await this.dataSource.transaction(async (em) => {
       const bookingEntity = em.create(BookingEntity, {
         id: bookingId,
         userId,
@@ -174,22 +174,14 @@ export class UserBookingService {
       }
 
       await this.stateMachineService.recordInitialStatus(em, bookingId, userId);
+      return this.notificationService.recordOwnerNotification(em, {
+        userId: field.ownerId,
+        type: 'booking_new',
+        fieldName: field.name,
+        refId: bookingId,
+      });
     });
-
-    try {
-      if (field.ownerId) {
-        await this.notificationService.createAndSend({
-          userId: field.ownerId,
-          type: 'booking_new',
-          title: 'Đơn đặt sân mới cần xử lý',
-          content: `Đơn đặt #${bookingId.slice(0, 8).toUpperCase()} lúc ${dto.startTime}-${dto.endTime} ngày ${dto.bookingDate} tại sân ${field.name}. Vui lòng kiểm tra và xếp sân.`,
-          refId: bookingId,
-          link: '/owner',
-        });
-      }
-    } catch {
-      // Best-effort notification delivery
-    }
+    this.notificationService.publish(field.ownerId, notification);
 
     const fullDetail = await this.bookingRepository.findDetailById(bookingId);
     return BookingResponseDto.fromEntity(fullDetail!);

@@ -6,6 +6,7 @@ import {
   ReviewerSummaryDto,
 } from '~/components/admin-approval/dto/admin-owner-approval-detail-response.dto';
 import { FieldResponseDto } from '~/components/field/dto/field-response.dto';
+import { NotificationService } from '~/components/notification/services/notification.service';
 import { ApprovalRequestEntity } from '~/entities/approval-request.entity';
 import { FieldEntity } from '~/entities/field.entity';
 import { UserEntity } from '~/entities/user.entity';
@@ -41,6 +42,7 @@ export class AdminFieldApprovalService {
     private readonly fieldRepository: FieldRepository,
     private readonly userRepository: UserRepository,
     private readonly dataSource: DataSource,
+    private readonly notifications: NotificationService,
   ) {}
 
   async getFieldApprovals(
@@ -98,7 +100,7 @@ export class AdminFieldApprovalService {
   ): Promise<AdminFieldApprovalDetailResponseDto> {
     const adminUser = await this.userRepository.findById(adminUserId);
 
-    return this.dataSource.transaction(async (manager) => {
+    const result = await this.dataSource.transaction(async (manager) => {
       const approvalRepo = manager.getRepository(ApprovalRequestEntity);
       const fieldRepo = manager.getRepository(FieldEntity);
       const userRepo = manager.getRepository(UserEntity);
@@ -188,8 +190,23 @@ export class AdminFieldApprovalService {
         savedRequest.requester = user;
       }
 
-      return this.mapToDetailDto(savedRequest, savedField);
+      const notification = await this.notifications.recordOwnerNotification(
+        manager,
+        {
+          userId: savedField.ownerId,
+          type: 'owner_field_approved',
+          fieldName: savedField.name,
+          refId: savedField.id,
+        },
+      );
+      return {
+        detail: this.mapToDetailDto(savedRequest, savedField),
+        ownerId: savedField.ownerId,
+        notification,
+      };
     });
+    this.notifications.publish(result.ownerId, result.notification);
+    return result.detail;
   }
 
   async rejectFieldRequest(

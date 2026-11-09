@@ -35,6 +35,17 @@ export interface OwnerBookingListResponse {
   limit: number
 }
 
+export interface OwnerDashboardStats {
+  monthlyRevenue: number
+  todayBookings: number
+  activeFields: number
+  totalFields: number
+  bookedMinutes: number
+  availableMinutes: number
+  utilizationPercent: number | null
+  recentBookings: OwnerBooking[]
+}
+
 export interface OwnerCourt {
   id: string
   name: string

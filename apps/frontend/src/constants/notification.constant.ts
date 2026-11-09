@@ -6,6 +6,8 @@ export const NOTIFICATION_TYPES = {
   BOOKING_CANCELLED: 'booking_cancelled',
   BOOKING_NEW: 'booking_new',
   BOOKING_DEPOSIT_PAID: 'booking_deposit_paid',
+  OWNER_BOOKING_CREATED: 'owner_booking_created',
+  OWNER_FIELD_APPROVED: 'owner_field_approved',
   MESSAGE: 'message',
   SYSTEM: 'system',
 } as const

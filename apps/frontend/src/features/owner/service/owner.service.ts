@@ -32,7 +32,13 @@ import type {
   OwnerBookingQuery,
   OwnerCourt,
   OwnerCourtTimeline,
+  OwnerDashboardStats,
 } from '../interface/owner-booking.types'
+
+export async function getOwnerDashboardStats(signal?: AbortSignal): Promise<OwnerDashboardStats> {
+  const response = await apiClient.get<ApiResponse<OwnerDashboardStats>>('/owner/dashboard/stats', { signal })
+  return response.data.data
+}
 
 export interface RegisterOwnerPayload {
   businessName: string

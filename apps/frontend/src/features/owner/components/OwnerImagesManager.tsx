@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next'
+import { useUploadImage } from '../../../hooks/useUploadImage'
 import {
   DeleteOutlined,
   EditOutlined,
@@ -18,6 +20,7 @@ import {
   Popconfirm,
   Spin,
   Switch,
+  Upload,
   Tag,
   Tooltip,
   message,
@@ -45,6 +48,8 @@ const SAMPLE_PITCH_IMAGES = [
 ]
 
 export function OwnerImagesManager({ fieldId }: OwnerImagesManagerProps) {
+  const { t } = useTranslation()
+  const imageUpload = useUploadImage()
   const {
     images,
     loading,
@@ -68,8 +73,17 @@ export function OwnerImagesManager({ fieldId }: OwnerImagesManagerProps) {
   const handleAddSubmit = async (values: CreateImagePayload) => {
     try {
       setSubmitting(true)
+      let url = values.url?.trim()
+      if (imageUpload.file) {
+        const uploaded = await imageUpload.upload()
+        if (!uploaded) return
+        url = uploaded.url
+        addForm.setFieldValue('url', url)
+      }
+      if (!url) return
+
       await addImage({
-        url: values.url.trim(),
+        url,
         displayOrder: Number(values.displayOrder ?? 0),
         isThumbnail: Boolean(values.isThumbnail),
       })
@@ -238,7 +252,11 @@ export function OwnerImagesManager({ fieldId }: OwnerImagesManagerProps) {
       {/* Modal 1: Thêm hình ảnh (POST /owner/fields/:fieldId/images) */}
       <Modal
         open={addModalOpen}
-        onCancel={() => setAddModalOpen(false)}
+        onCancel={() => {
+          if (submitting) return
+          imageUpload.clearFile()
+          setAddModalOpen(false)
+        }}
         title="Thêm hình ảnh cụm sân (Images - FIELD-04)"
         onOk={() => addForm.submit()}
         confirmLoading={submitting}
@@ -257,12 +275,26 @@ export function OwnerImagesManager({ fieldId }: OwnerImagesManagerProps) {
             name="url"
             label="Đường dẫn URL hình ảnh"
             rules={[
-              { required: true, message: 'Vui lòng nhập đường dẫn URL hình ảnh' },
-              { type: 'url', message: 'Vui lòng nhập đúng định dạng URL hợp lệ' },
+              { required: !imageUpload.file, message: t('owner.imageUrlRequired') },
+              ...(imageUpload.file ? [] : [{ type: 'url' as const, message: t('owner.imageUrlInvalid') }]),
             ]}
           >
-            <Input placeholder="https://example.com/pitch-image.jpg" />
+            <Input disabled={Boolean(imageUpload.file)} placeholder="https://example.com/pitch-image.jpg" />
           </Form.Item>
+
+          <Upload
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            disabled={submitting}
+            maxCount={1}
+            fileList={imageUpload.file ? [{ uid: 'selected', name: imageUpload.file.name }] : []}
+            beforeUpload={async (file) => {
+              await imageUpload.selectFile(file)
+              return Upload.LIST_IGNORE
+            }}
+            onRemove={() => imageUpload.clearFile()}
+          >
+            <Button disabled={submitting}>{t('owner.selectImageFile')}</Button>
+          </Upload>
 
           <div>
             <span style={{ fontSize: 12, color: 'var(--sage)' }}>Ảnh mẫu gợi ý (click để chọn nhanh):</span>
@@ -271,7 +303,10 @@ export function OwnerImagesManager({ fieldId }: OwnerImagesManagerProps) {
                 <div
                   key={idx}
                   className="oim-sample-preset-btn"
-                  onClick={() => addForm.setFieldsValue({ url: sampleUrl })}
+                  onClick={() => {
+                    imageUpload.clearFile()
+                    addForm.setFieldValue('url', sampleUrl)
+                  }}
                   title={`Chọn ảnh mẫu #${idx + 1}`}
                 >
                   <img src={sampleUrl} alt={`Sample ${idx}`} />

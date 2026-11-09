@@ -18,8 +18,15 @@ import { AdminApproveFieldDto } from '../dto/admin-approve-field.dto';
 import { AdminFieldApprovalQueryDto } from '../dto/admin-field-approval-query.dto';
 import { AdminRejectFieldDto } from '../dto/admin-reject-field.dto';
 import { AdminFieldApprovalService } from './admin-field-approval.service';
+import { NotificationService } from '~/components/notification/services/notification.service';
 
 describe('AdminFieldApprovalService', () => {
+  const notifications = {
+    recordOwnerNotification: jest
+      .fn()
+      .mockResolvedValue({ id: 'notification-1' }),
+    publish: jest.fn(),
+  };
   let service: AdminFieldApprovalService;
   let approvalRequestRepository: jest.Mocked<ApprovalRequestRepository>;
   let fieldRepository: jest.Mocked<FieldRepository>;
@@ -126,6 +133,7 @@ describe('AdminFieldApprovalService', () => {
       fieldRepository,
       userRepository,
       dataSource,
+      notifications as unknown as NotificationService,
     );
   });
 
@@ -240,6 +248,16 @@ describe('AdminFieldApprovalService', () => {
       );
       expect(result.status).toBe('approved');
       expect(result.targetField?.status).toBe('active');
+      expect(notifications.recordOwnerNotification).toHaveBeenCalledWith(
+        mockManager,
+        expect.objectContaining({
+          type: 'owner_field_approved',
+          refId: 'field-1',
+        }),
+      );
+      expect(notifications.publish).toHaveBeenCalledWith('owner-1', {
+        id: 'notification-1',
+      });
     });
 
     it('approves field_update request and applies proposed changes to field', async () => {

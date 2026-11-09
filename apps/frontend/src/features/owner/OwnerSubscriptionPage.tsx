@@ -1,14 +1,15 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { CheckOutlined, DownloadOutlined, RocketOutlined } from '@ant-design/icons'
-import { Button, Modal, Segmented, Table, Tag, Spin } from 'antd'
+import { Button, Empty, Modal, Segmented, Table, Tag, Spin } from 'antd'
 import { useTranslation } from 'react-i18next'
 import { formatPrice } from '../fields/field.data'
 import { transactions } from './owner.data'
 import { useSubscription } from '../subscription/hooks/useSubscription'
 
 export function OwnerSubscriptionPage() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [tab, setTab] = useState<'plan' | 'transactions'>('plan')
+  const [manageOpen, setManageOpen] = useState(false)
   const {
     plans,
     mySubscription,
@@ -18,31 +19,12 @@ export function OwnerSubscriptionPage() {
     handleCancel,
   } = useSubscription()
 
-  const defaultPlans = [
-    {
-      id: 'default-starter',
-      name: 'Starter',
-      price: '0',
-      durationDays: 30,
-      features: ['1 cụm sân', 'Quản lý lịch cơ bản', 'Báo cáo cơ bản'],
-    },
-    {
-      id: 'default-pro',
-      name: 'Pro Facility',
-      price: '499000',
-      durationDays: 30,
-      features: ['Không giới hạn sân', 'Giá linh hoạt cao điểm', 'Báo cáo doanh thu nâng cao', 'Hỗ trợ ưu tiên 24/7'],
-    },
-    {
-      id: 'default-enterprise',
-      name: 'Enterprise',
-      price: '1990000',
-      durationDays: 30,
-      features: ['Chuỗi nhiều chi nhánh', 'API kết nối riêng', 'Quản lý tài khoản VIP', 'Cam kết SLA 99.9%'],
-    },
-  ]
-
-  const displayPlans = plans.length > 0 ? plans : defaultPlans
+  const plansRef = useRef<HTMLDivElement>(null)
+  const currentSubscription =
+    mySubscription?.status === 'active' || mySubscription?.status === 'pending_payment'
+      ? mySubscription
+      : null
+  const currentPlan = currentSubscription?.plan ?? plans.find((plan) => plan.id === currentSubscription?.planId)
 
   const confirmCancel = (id: string) => {
     Modal.confirm({
@@ -87,49 +69,55 @@ export function OwnerSubscriptionPage() {
               <RocketOutlined />
               <span>
                 <small>{t('subscription.currentPlanLabel', { defaultValue: 'GÓI HIỆN TẠI' })}</small>
-                <h2>{mySubscription?.plan?.name || 'PRO FACILITY'}</h2>
-                <p>
-                  {mySubscription?.endDate
-                    ? t('subscription.renewsOn', {
-                        date: new Date(mySubscription.endDate).toLocaleDateString('vi-VN'),
-                        defaultValue: `Hết hạn vào ${new Date(mySubscription.endDate).toLocaleDateString('vi-VN')}`,
-                      })
-                    : t('subscription.renewsOn', {
-                        date: '22/11/2026',
-                        defaultValue: 'Gia hạn vào 22/11/2026',
-                      })}
-                </p>
+                <h2>{currentPlan?.name ?? t('owner.subscription.noCurrentPlan')}</h2>
+                {currentSubscription?.endDate && (
+                  <p>{t('subscription.renewsOn', {
+                    date: new Intl.DateTimeFormat(i18n.language).format(new Date(currentSubscription.endDate)),
+                  })}</p>
+                )}
               </span>
             </div>
-            <strong>
-              {formatPrice(Number(mySubscription?.plan?.price || 499000))}
-              <small>/tháng</small>
-            </strong>
-            {mySubscription?.id ? (
-              <Button
-                danger
-                loading={subscribing}
-                onClick={() => confirmCancel(mySubscription.id)}
-              >
-                {t('subscription.cancelBtn', { defaultValue: 'Hủy gói' })}
-              </Button>
-            ) : (
-              <Button onClick={() => setTab('plan')}>
-                {t('subscription.manageBtn', { defaultValue: 'Quản lý gói' })}
-              </Button>
-            )}
+            {currentPlan && <strong>{formatPrice(Number(currentPlan.price))}</strong>}
+            <Button onClick={() => setManageOpen(true)}>
+              {t('subscription.manageBtn')}
+            </Button>
           </article>
 
-          <div className="plan-grid">
-            {displayPlans.map((plan) => {
-              const isCurrent =
-                mySubscription?.planId === plan.id ||
-                (!mySubscription && plan.name === 'Pro Facility')
+          <Modal
+            title={t('subscription.manageBtn')}
+            open={manageOpen}
+            onCancel={() => setManageOpen(false)}
+            footer={[
+              <Button key="close" onClick={() => setManageOpen(false)}>{t('common.close')}</Button>,
+              currentSubscription ? (
+                <Button key="cancel-plan" danger onClick={() => {
+                  setManageOpen(false)
+                  confirmCancel(currentSubscription.id)
+                }}>
+                  {t('subscription.cancelBtn')}
+                </Button>
+              ) : (
+                <Button key="view-plans" type="primary" onClick={() => {
+                  setManageOpen(false)
+                  plansRef.current?.scrollIntoView({ block: 'start', behavior: 'smooth' })
+                  plansRef.current?.focus({ preventScroll: true })
+                }}>
+                  {t('owner.subscription.availablePlans')}
+                </Button>
+              ),
+            ]}
+          >
+            <p>{currentPlan?.name ?? t('owner.subscription.noCurrentPlan')}</p>
+          </Modal>
 
-              const features =
-                'features' in plan && Array.isArray(plan.features)
-                  ? plan.features
-                  : ['Quản lý cụm sân bóng', 'Báo cáo doanh thu', 'Hỗ trợ kỹ thuật']
+          <div ref={plansRef} tabIndex={-1} aria-label={t('owner.subscription.availablePlans')}>
+            {plans.length === 0 && <Empty description={t('owner.subscription.noPlans')} />}
+            <div className="plan-grid">
+            {plans.map((plan) => {
+              const isCurrent = currentSubscription?.planId === plan.id
+              const features = Array.isArray(plan.benefit?.features)
+                ? plan.benefit.features.filter((feature): feature is string => typeof feature === 'string')
+                : []
 
               return (
                 <article
@@ -137,7 +125,7 @@ export function OwnerSubscriptionPage() {
                   key={plan.id}
                 >
                   <h2>{plan.name}</h2>
-                  <strong>{Number(plan.price) === 0 ? 'Miễn phí' : formatPrice(Number(plan.price))}</strong>
+                  <strong>{Number(plan.price) === 0 ? t('owner.subscription.free') : formatPrice(Number(plan.price))}</strong>
                   <ul>
                     {features.map((feature: string) => (
                       <li key={feature}>
@@ -149,7 +137,7 @@ export function OwnerSubscriptionPage() {
                     type={isCurrent ? 'primary' : 'default'}
                     block
                     loading={subscribing}
-                    disabled={isCurrent}
+                    disabled={Boolean(currentSubscription)}
                     onClick={() => handleSubscribe(plan.id)}
                   >
                     {isCurrent
@@ -159,6 +147,7 @@ export function OwnerSubscriptionPage() {
                 </article>
               )
             })}
+            </div>
           </div>
         </>
       ) : (

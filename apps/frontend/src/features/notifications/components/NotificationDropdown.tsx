@@ -25,6 +25,7 @@ function getNotificationIcon(type: NotificationType): React.ReactNode {
       return <TeamOutlined className="notification-item__icon notification-item__icon--team" />
     case NOTIFICATION_TYPES.BOOKING_CONFIRMED:
     case NOTIFICATION_TYPES.BOOKING_NEW:
+    case NOTIFICATION_TYPES.OWNER_BOOKING_CREATED:
       return <CalendarOutlined className="notification-item__icon notification-item__icon--booking" />
     case NOTIFICATION_TYPES.BOOKING_REJECTED:
     case NOTIFICATION_TYPES.BOOKING_CANCELLED:
@@ -112,7 +113,9 @@ export function NotificationDropdown() {
               <div className="notification-item__icon-wrapper">{getNotificationIcon(item.type)}</div>
               <div className="notification-item__body">
                 <div className="notification-item__top">
-                  <span className="notification-item__title">{item.title}</span>
+                  <span className="notification-item__title">
+                    {t(`notifications.eventTitles.${item.type}`, { defaultValue: item.title })}
+                  </span>
                   <span className="notification-item__time">{item.createdAt}</span>
                 </div>
                 <p className="notification-item__content">{item.content}</p>

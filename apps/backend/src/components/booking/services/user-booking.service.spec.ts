@@ -79,6 +79,10 @@ describe('UserBookingService', () => {
     } as unknown as jest.Mocked<DataSource>;
 
     notificationService = {
+      recordOwnerNotification: jest
+        .fn()
+        .mockResolvedValue({ id: 'notification-1' }),
+      publish: jest.fn(),
       createAndSend: jest.fn().mockResolvedValue({}),
     } as unknown as jest.Mocked<NotificationService>;
 
@@ -185,6 +189,7 @@ describe('UserBookingService', () => {
     it('creates booking with snapshot of pitch price and services', async () => {
       fieldRepository.findById.mockResolvedValue({
         id: 'f-1',
+        ownerId: 'owner-1',
         status: 'active',
       } as FieldEntity);
       openingHourRepository.findByFieldAndDay.mockResolvedValue({
@@ -267,6 +272,9 @@ describe('UserBookingService', () => {
       expect(result.totalPrice).toBe(440000);
       expect(result.depositAmount).toBe(132000);
       expect(result.status).toBe('pending');
+      expect(notificationService.publish).toHaveBeenCalledWith('owner-1', {
+        id: 'notification-1',
+      });
     });
   });
 
