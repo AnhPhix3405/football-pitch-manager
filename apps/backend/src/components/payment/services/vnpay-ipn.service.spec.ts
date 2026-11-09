@@ -14,6 +14,7 @@ import {
   TransactionStatus,
   VnpayResponseCode,
 } from '../constants/payment.constant';
+import { ManagedBookingPaymentService } from './managed-booking-payment.service';
 import { VnpayIpnService } from './vnpay-ipn.service';
 import { VnpayService } from './vnpay.service';
 
@@ -55,6 +56,7 @@ describe('VnpayIpnService - Idempotency & Webhook handling', () => {
       bookingRepo,
       fieldRepo,
       notificationService,
+      {} as ManagedBookingPaymentService,
     );
   });
 
@@ -62,7 +64,7 @@ describe('VnpayIpnService - Idempotency & Webhook handling', () => {
     vnpayService.verifySecureHash.mockReturnValue(false);
 
     const result = await ipnService.processIpn({
-      vnp_TxnRef: 'tx-1',
+      vnp_TxnRef: '810fe347-f2cb-44ca-8057-096c06cf23dc',
       vnp_SecureHash: 'invalid',
     });
 
@@ -86,14 +88,15 @@ describe('VnpayIpnService - Idempotency & Webhook handling', () => {
   it('rejects IPN when amount does not match', async () => {
     vnpayService.verifySecureHash.mockReturnValue(true);
     const mockTx = {
-      id: 'tx-1',
+      id: '810fe347-f2cb-44ca-8057-096c06cf23dc',
       amount: '200000.00',
+      gateway: PaymentMethod.VNPAY,
       status: TransactionStatus.PENDING,
     } as TransactionEntity;
     transactionRepo.findById.mockResolvedValue(mockTx);
 
     const result = await ipnService.processIpn({
-      vnp_TxnRef: 'tx-1',
+      vnp_TxnRef: '810fe347-f2cb-44ca-8057-096c06cf23dc',
       vnp_Amount: '10000000', // 100,000 VND != 200,000 VND
     });
 
@@ -103,16 +106,18 @@ describe('VnpayIpnService - Idempotency & Webhook handling', () => {
   it('returns Order already confirmed on duplicate IPN without reprocessing', async () => {
     vnpayService.verifySecureHash.mockReturnValue(true);
     const mockTx = {
-      id: 'tx-1',
+      id: '810fe347-f2cb-44ca-8057-096c06cf23dc',
       amount: '100000.00',
+      gateway: PaymentMethod.VNPAY,
       status: TransactionStatus.SUCCESS, // already processed!
     } as TransactionEntity;
     transactionRepo.findById.mockResolvedValue(mockTx);
 
     const result = await ipnService.processIpn({
-      vnp_TxnRef: 'tx-1',
+      vnp_TxnRef: '810fe347-f2cb-44ca-8057-096c06cf23dc',
       vnp_Amount: '10000000',
       vnp_ResponseCode: '00',
+      vnp_TransactionStatus: '00',
     });
 
     expect(result.RspCode).toBe(VnpayResponseCode.ORDER_ALREADY_CONFIRMED);
@@ -123,9 +128,10 @@ describe('VnpayIpnService - Idempotency & Webhook handling', () => {
   it('processes IPN successfully and marks transaction and booking as paid', async () => {
     vnpayService.verifySecureHash.mockReturnValue(true);
     const mockTx = {
-      id: 'tx-1',
+      id: '810fe347-f2cb-44ca-8057-096c06cf23dc',
       refId: 'booking-1',
       amount: '100000.00',
+      gateway: PaymentMethod.VNPAY,
       status: TransactionStatus.PENDING,
     } as TransactionEntity;
     const mockBooking = {
@@ -139,9 +145,10 @@ describe('VnpayIpnService - Idempotency & Webhook handling', () => {
     bookingRepo.save.mockImplementation((item) => Promise.resolve(item));
 
     const result = await ipnService.processIpn({
-      vnp_TxnRef: 'tx-1',
+      vnp_TxnRef: '810fe347-f2cb-44ca-8057-096c06cf23dc',
       vnp_Amount: '10000000',
       vnp_ResponseCode: '00',
+      vnp_TransactionStatus: '00',
       vnp_TransactionNo: 'VNP999888',
     });
 

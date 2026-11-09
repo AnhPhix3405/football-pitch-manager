@@ -51,8 +51,6 @@ export function buildDashboardBreadcrumbs(
     items.push({ title: t('nav.bookings', { defaultValue: 'Booking' }) })
   } else if (normalized.startsWith('/owner/timeline')) {
     items.push({ title: t('nav.timeline', { defaultValue: 'Lịch vận hành' }) })
-  } else if (normalized.startsWith('/owner/subscription')) {
-    items.push({ title: t('nav.subscription', { defaultValue: 'Gói & giao dịch' }) })
   }
   // User/Player routes
   else if (normalized.startsWith('/app/fields')) {

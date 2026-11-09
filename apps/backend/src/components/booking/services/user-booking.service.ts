@@ -132,7 +132,15 @@ export class UserBookingService {
     }
 
     const totalPrice = pitchPrice + servicesTotal;
-    const depositAmount = Math.round(totalPrice * 0.3);
+    const configuredDeposit = Number(field.depositValue ?? 0);
+    const depositAmount = field.requireDeposit
+      ? Math.min(
+          totalPrice,
+          field.depositType === 'percentage'
+            ? Math.round((totalPrice * configuredDeposit) / 100)
+            : configuredDeposit,
+        )
+      : 0;
 
     const bookingId = randomUUID();
 
@@ -150,6 +158,8 @@ export class UserBookingService {
         totalPrice: totalPrice.toString(),
         depositAmount: depositAmount.toString(),
         paymentStatus: 'unpaid',
+        paymentOptions: field.paymentOptions ?? ['cash'],
+        paidAmount: '0',
         paymentMethod: null,
         ownerNote: null,
         cancelledBy: null,
@@ -371,8 +381,9 @@ export class UserBookingService {
       booking.cancelReason = formattedReason;
 
       if (
-        booking.paymentStatus === 'paid' ||
-        booking.paymentStatus === 'partially_paid'
+        !booking.paymentOptions &&
+        (booking.paymentStatus === 'paid' ||
+          booking.paymentStatus === 'partially_paid')
       ) {
         if (policy.refundAmount === 0) {
           booking.paymentStatus = 'penalty_deducted';

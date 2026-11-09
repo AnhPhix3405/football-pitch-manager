@@ -191,6 +191,9 @@ describe('UserBookingService', () => {
         id: 'f-1',
         ownerId: 'owner-1',
         status: 'active',
+        requireDeposit: true,
+        depositType: 'percentage',
+        depositValue: '30',
       } as FieldEntity);
       openingHourRepository.findByFieldAndDay.mockResolvedValue({
         isClosed: false,

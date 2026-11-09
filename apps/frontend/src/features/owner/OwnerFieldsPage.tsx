@@ -201,6 +201,7 @@ export function OwnerFieldsPage() {
 
               {/* Thao tác (Actions) */}
               <div className="owner-field-card__actions">
+                <Link to={`/owner/fields/${field.id}/payment-settings`}>{t('payment.settings.title')}</Link>
                 <Link to={`/owner/fields/${field.id}/courts`}>
                   <Button size="small" icon={<AppstoreOutlined />}>
                     Sân con

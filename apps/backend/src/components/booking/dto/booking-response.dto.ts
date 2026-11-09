@@ -23,6 +23,8 @@ export class BookingResponseDto {
   status!: string;
   totalPrice!: number;
   depositAmount!: number;
+  paidAmount!: number | null;
+  paymentOptions!: string[] | null;
   paymentStatus!: string;
   paymentMethod!: string | null;
   ownerNote!: string | null;
@@ -52,6 +54,9 @@ export class BookingResponseDto {
     dto.status = entity.status;
     dto.totalPrice = Number(entity.totalPrice);
     dto.depositAmount = entity.depositAmount ? Number(entity.depositAmount) : 0;
+    dto.paidAmount =
+      entity.paidAmount == null ? null : Number(entity.paidAmount);
+    dto.paymentOptions = entity.paymentOptions ?? null;
     dto.paymentStatus = entity.paymentStatus;
     dto.paymentMethod = entity.paymentMethod;
     dto.ownerNote = entity.ownerNote;

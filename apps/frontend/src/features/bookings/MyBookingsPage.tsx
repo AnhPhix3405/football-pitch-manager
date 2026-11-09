@@ -100,6 +100,8 @@ export function MyBookingsPage() {
           bookingId={payingBooking.id}
           bookingCode={payingBooking.id}
           amount={payingBooking.price}
+          depositAmount={payingBooking.depositAmount}
+          options={payingBooking.paymentOptions}
           onClose={() => setPayingBooking(null)}
           onSuccess={() => {
             messageApi.success('Thao tác thanh toán hoàn tất.')

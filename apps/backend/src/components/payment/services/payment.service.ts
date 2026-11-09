@@ -13,7 +13,7 @@ import { CreateVnpayUrlDto } from '../dto/create-vnpay-url.dto';
 import { PaymentTransactionResponseDto } from '../dto/payment-transaction-response.dto';
 import { SelectPaymentMethodDto } from '../dto/select-payment-method.dto';
 import { VnpayUrlResponseDto } from '../dto/vnpay-url-response.dto';
-import { VnpayService } from './vnpay.service';
+import { ManagedBookingPaymentService } from './managed-booking-payment.service';
 
 @Injectable()
 export class PaymentService {
@@ -21,14 +21,14 @@ export class PaymentService {
     private readonly bookingRepository: BookingRepository,
     private readonly transactionRepository: TransactionRepository,
     private readonly ownerProfileRepository: OwnerProfileRepository,
-    private readonly vnpayService: VnpayService,
+    private readonly managed: ManagedBookingPaymentService,
   ) {}
 
   async selectPaymentMethod(
     bookingId: string,
     userId: string,
     dto: SelectPaymentMethodDto,
-  ): Promise<PaymentTransactionResponseDto> {
+  ): Promise<PaymentTransactionResponseDto | { method: PaymentMethod }> {
     const booking = await this.bookingRepository.findById(bookingId);
     if (!booking) {
       throw new ApplicationException({
@@ -45,6 +45,16 @@ export class PaymentService {
         status: HttpStatus.FORBIDDEN,
       });
     }
+
+    if (dto.method === PaymentMethod.VNPAY) {
+      throw new ApplicationException({
+        code: 'PAYMENT_OPTION_UNAVAILABLE',
+        messageKey: 'error.paymentOptionUnavailable',
+        status: HttpStatus.BAD_REQUEST,
+      });
+    }
+    if (booking.paymentOptions)
+      return this.managed.chooseCash(bookingId, userId);
 
     if (booking.paymentStatus === 'paid') {
       throw new ApplicationException({
@@ -100,21 +110,7 @@ export class PaymentService {
     dto: CreateVnpayUrlDto,
     ipAddr: string,
   ): Promise<VnpayUrlResponseDto> {
-    const txDto = await this.selectPaymentMethod(dto.bookingId, userId, {
-      method: PaymentMethod.VNPAY,
-    });
-
-    const paymentUrl = this.vnpayService.createPaymentUrl({
-      amount: Number(txDto.amount),
-      orderInfo: dto.orderInfo || `Thanh toan don dat san ${dto.bookingId}`,
-      txnRef: txDto.id,
-      ipAddr,
-    });
-
-    const response = new VnpayUrlResponseDto();
-    response.paymentUrl = paymentUrl;
-    response.txnRef = txDto.id;
-    return response;
+    return this.managed.createVnpayUrl(userId, dto, ipAddr);
   }
 
   async confirmCashPayment(
@@ -152,6 +148,9 @@ export class PaymentService {
         status: HttpStatus.FORBIDDEN,
       });
     }
+
+    if (booking.paymentOptions)
+      return this.managed.confirmCash(bookingId, ownerUserId, dto?.note);
 
     if (booking.paymentStatus === 'paid') {
       throw new ApplicationException({

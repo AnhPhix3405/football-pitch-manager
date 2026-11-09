@@ -50,6 +50,14 @@ export class RefundService {
       }
     }
 
+    if (booking.paymentOptions) {
+      throw new ApplicationException({
+        code: 'PAYMENT_RECONCILIATION_REQUIRED',
+        messageKey: 'error.paymentAwaitingReconciliation',
+        status: HttpStatus.CONFLICT,
+      });
+    }
+
     // Eligibility check
     if (booking.paymentStatus === 'refunded') {
       throw new ApplicationException({

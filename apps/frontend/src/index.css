@@ -8466,6 +8466,8 @@ input:focus-visible {
     text-decoration: none;
     font-size: 10px;
     white-space: nowrap;
+    cursor: pointer;
+    text-align: left;
 }
 
 .owner-timeline__slot--pending {
@@ -8482,6 +8484,12 @@ input:focus-visible {
 .owner-timeline__slot span {
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+.owner-timeline__slot:hover,
+.owner-timeline__slot:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: -2px;
 }
 
 .owner-timeline__legend {

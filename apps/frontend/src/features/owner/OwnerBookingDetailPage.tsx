@@ -110,18 +110,17 @@ export function OwnerBookingDetailPage() {
 
   const onConfirmCash = () => {
     if (!booking) return
-    const remaining = booking.totalPrice - booking.depositAmount
+    const amount = booking.paidAmount == null
+      ? (booking.depositAmount || booking.totalPrice)
+      : Math.max(0, booking.totalPrice - booking.paidAmount)
     Modal.confirm({
-      title: 'Xác nhận đã nhận tiền mặt?',
-      content: `Xác nhận khách hàng đã thanh toán số tiền còn lại ${formatPrice(remaining)}?`,
-      okText: 'Xác nhận thu tiền',
+      title: t('ownerOps.confirmCashTitle'),
+      content: t('ownerOps.confirmCashContent', { amount: formatPrice(amount) }),
+      okText: t('ownerOps.confirmCashAction'),
       onOk: async () => {
-        const tx = await handleConfirmCash(booking.id, {
-          amount: remaining,
-          notes: 'Thu tiền mặt tại sân',
-        })
+        const tx = await handleConfirmCash(booking.id)
         if (tx) {
-          messageApi.success('Đã xác nhận thanh toán tiền mặt thành công!')
+          messageApi.success(t('ownerOps.confirmCashSuccess'))
           await reload()
         }
       },
@@ -179,7 +178,8 @@ export function OwnerBookingDetailPage() {
         ? 'red'
         : 'gold'
 
-  const remainingAmount = Math.max(0, booking.totalPrice - booking.depositAmount)
+  const received = booking.paidAmount ?? (booking.paymentStatus === 'paid' ? (booking.depositAmount || booking.totalPrice) : 0)
+  const remainingAmount = Math.max(0, booking.totalPrice - received)
 
   return (
     <section className="owner-page">
@@ -279,6 +279,10 @@ export function OwnerBookingDetailPage() {
               <dd className="lime">{formatPrice(booking.depositAmount)}</dd>
             </div>
             <div>
+              <dt>{t('payment.settings.paid')}</dt>
+              <dd>{formatPrice(received)}</dd>
+            </div>
+            <div>
               <dt>{t('ownerOps.remainingAmount')}</dt>
               <dd>{formatPrice(remainingAmount)}</dd>
             </div>
@@ -286,6 +290,8 @@ export function OwnerBookingDetailPage() {
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 16 }}>
             {remainingAmount > 0 &&
+              (booking.paymentOptions ? (booking.paymentMethod === 'cash' || received > 0) : booking.paymentStatus === 'unpaid') &&
+              !(booking.paymentMethod === 'vnpay' && booking.paymentStatus === 'pending') &&
               booking.status !== 'rejected' &&
               booking.status !== 'cancelled' && (
                 <Button
@@ -295,11 +301,11 @@ export function OwnerBookingDetailPage() {
                   block
                   onClick={onConfirmCash}
                 >
-                  Xác nhận thu tiền mặt
+                  {t('ownerOps.confirmCashAction')}
                 </Button>
               )}
 
-            {booking.depositAmount > 0 &&
+            {!booking.paymentOptions && booking.depositAmount > 0 &&
               (booking.status === 'cancelled' || booking.status === 'rejected') && (
                 <Button
                   danger

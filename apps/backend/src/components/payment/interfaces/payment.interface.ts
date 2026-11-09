@@ -25,4 +25,7 @@ export interface CreateVnpayUrlParams {
   orderInfo: string;
   txnRef: string;
   returnUrl?: string;
+  expiresAt?: Date;
+  createdAt?: Date;
+  merchant?: { tmnCode: string; hashSecret: string };
 }

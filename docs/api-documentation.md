@@ -2480,3 +2480,15 @@ Tài liệu chi tiết toàn bộ các API HTTP REST và WebSocket Gateway của
 
 
 
+
+#### Cấu hình thanh toán theo cụm sân
+
+- **Public** `GET /payments/fields/:fieldId/options`. Không có body. Phản hồi `200` chứa `data: { options, depositType, depositValue }`. `options` gồm `cash` (tại sân), `deposit` (cọc VNPay), `full` (trả đủ qua VNPay). Cụm chưa cài đặt chỉ có `cash`.
+- **Owner đang hoạt động, đúng chủ cụm sân** `GET /owner/fields/:fieldId/payment-settings`. Không có body. Phản hồi giống API công khai và thêm `terminalCode: string | null`.
+- **Owner đang hoạt động, đúng chủ cụm sân** `PUT /owner/fields/:fieldId/payment-settings`. Body gồm `options` là mảng không rỗng, `depositType` là `fixed` hoặc `percentage`, và `depositValue` là số nguyên dương khi bật cọc. `terminalCode` và `hashSecret` nhận khi kết nối hoặc thay khóa VNPay. Phản hồi `200` giống GET của owner. Khóa ký chỉ ghi và được mã hóa bằng `VNPAY_MERCHANT_ENCRYPTION_KEY`.
+- **User đang đăng nhập, đúng người đặt** `POST /payments/vnpay/create-url` nhận `{ bookingId, option?: "deposit" | "full", orderInfo? }`, trả `{ paymentUrl, txnRef }`. Backend tính số tiền từ đơn và giữ sân tối đa 15 phút. Link dùng phiên bản merchant được lưu trong giao dịch.
+- **Server VNPay** `GET /payments/vnpay/ipn` nhận query có chữ ký VNPay, trả trực tiếp `{ RspCode, Message }`. Backend đối chiếu merchant, chữ ký, số tiền và cả hai mã thành công. Giao dịch đã xử lý trả mã `02`. **Public** `GET /payments/vnpay/return` dùng query có chữ ký và trả trạng thái từ bản ghi giao dịch. URL trả về không ghi nhận thanh toán.
+- **User đang đăng nhập, đúng người đặt** `POST /bookings/:bookingId/payment-method` nhận `{ method: "cash" }`. Với đơn tạo theo chính sách mới trả `{ method: "cash" }`. Thanh toán VNPay khởi tạo qua `create-url`.
+- **Owner** `POST /owner/bookings/:bookingId/confirm-cash` nhận `{ note? }`. Với đơn mới ghi nhận đúng số tiền còn thiếu bằng giao dịch `booking_full` hoặc `booking_balance`. Với đơn cũ giữ cách thu hiện hành.
+- Phản hồi đơn đặt có `paidAmount: number | null` và `paymentOptions: string[] | null`. Giá trị `null` biểu thị đơn có trước thay đổi.
+- Luồng mới chưa tự động hoàn tiền. Giao dịch VNPay chưa rõ kết quả cần đối soát trước khi đổi cách thanh toán. Khi IPN thành công về sau thời gian giữ, hệ thống ghi nhận tiền nhưng giải phóng gán sân tạm để owner xử lý xếp lại sân hoặc đối soát hoàn tiền.

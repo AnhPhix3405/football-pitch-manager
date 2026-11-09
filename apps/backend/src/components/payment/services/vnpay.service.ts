@@ -30,12 +30,12 @@ export class VnpayService {
   }
 
   createPaymentUrl(params: CreateVnpayUrlParams): string {
-    const createDate = this.formatDate(new Date());
+    const createDate = this.formatDate(params.createdAt ?? new Date());
 
     const vnpParams: Record<string, string> = {
       vnp_Version: '2.1.0',
       vnp_Command: 'pay',
-      vnp_TmnCode: this.tmnCode,
+      vnp_TmnCode: params.merchant?.tmnCode ?? this.tmnCode,
       vnp_Locale: 'vn',
       vnp_CurrCode: 'VND',
       vnp_TxnRef: params.txnRef,
@@ -45,21 +45,31 @@ export class VnpayService {
       vnp_ReturnUrl: params.returnUrl || this.returnUrl,
       vnp_IpAddr: params.ipAddr || '127.0.0.1',
       vnp_CreateDate: createDate,
+      ...(params.expiresAt
+        ? { vnp_ExpireDate: this.formatDate(params.expiresAt) }
+        : {}),
     };
 
     const sortedParams = this.sortObject(vnpParams);
     const signData = this.buildQueryString(sortedParams);
-    const signed = this.signHmacSha512(this.hashSecret, signData);
+    const signed = this.signHmacSha512(
+      params.merchant?.hashSecret ?? this.hashSecret,
+      signData,
+    );
 
     return `${this.vnpUrl}?${signData}&vnp_SecureHash=${signed}`;
   }
 
   verifySecureHash(
     params: Record<string, string | number | undefined | null>,
+    merchant?: CreateVnpayUrlParams['merchant'],
   ): boolean {
     const inputHash =
       typeof params.vnp_SecureHash === 'string' ? params.vnp_SecureHash : '';
-    if (!inputHash) {
+    if (
+      !/^[0-9a-f]{128}$/i.test(inputHash) ||
+      (merchant && params.vnp_TmnCode !== merchant.tmnCode)
+    ) {
       return false;
     }
 
@@ -78,9 +88,15 @@ export class VnpayService {
 
     const sortedParams = this.sortObject(cleanParams);
     const signData = this.buildQueryString(sortedParams);
-    const calculatedHash = this.signHmacSha512(this.hashSecret, signData);
+    const calculatedHash = this.signHmacSha512(
+      merchant?.hashSecret ?? this.hashSecret,
+      signData,
+    );
 
-    return inputHash.toLowerCase() === calculatedHash.toLowerCase();
+    return crypto.timingSafeEqual(
+      Buffer.from(inputHash, 'hex'),
+      Buffer.from(calculatedHash, 'hex'),
+    );
   }
 
   signHmacSha512(secret: string, data: string): string {
@@ -102,20 +118,22 @@ export class VnpayService {
   private buildQueryString(obj: Record<string, string>): string {
     return Object.keys(obj)
       .map(
-        (key) => `${encodeURIComponent(key)}=${encodeURIComponent(obj[key])}`,
+        (key) =>
+          `${encodeURIComponent(key)}=${encodeURIComponent(obj[key]).replace(/%20/g, '+')}`,
       )
       .join('&');
   }
 
   private formatDate(date: Date): string {
+    const local = new Date(date.getTime() + 7 * 60 * 60 * 1000);
     const pad = (n: number) => (n < 10 ? `0${n}` : `${n}`);
     return (
-      date.getFullYear().toString() +
-      pad(date.getMonth() + 1) +
-      pad(date.getDate()) +
-      pad(date.getHours()) +
-      pad(date.getMinutes()) +
-      pad(date.getSeconds())
+      local.getUTCFullYear().toString() +
+      pad(local.getUTCMonth() + 1) +
+      pad(local.getUTCDate()) +
+      pad(local.getUTCHours()) +
+      pad(local.getUTCMinutes()) +
+      pad(local.getUTCSeconds())
     );
   }
 }

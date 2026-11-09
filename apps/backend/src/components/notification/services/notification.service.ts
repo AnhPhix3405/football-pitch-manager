@@ -82,7 +82,7 @@ export class NotificationService {
     manager: EntityManager,
     params: {
       userId: string;
-      type: 'booking_new' | 'owner_field_approved';
+      type: 'booking_new' | 'owner_field_approved' | 'booking_deposit_paid';
       fieldName: string;
       refId: string;
     },
@@ -94,7 +94,9 @@ export class NotificationService {
       title:
         params.type === 'booking_new'
           ? 'Có đơn đặt sân mới'
-          : 'Cụm sân đã được duyệt',
+          : params.type === 'booking_deposit_paid'
+            ? 'Đã nhận thanh toán đặt sân'
+            : 'Cụm sân đã được duyệt',
       content: params.fieldName,
       refId: params.refId,
       isRead: false,

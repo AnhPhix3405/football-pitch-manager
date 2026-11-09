@@ -19,7 +19,7 @@ import { UserEntity } from './user.entity';
 )
 @Check(
   'CHK_transactions_type',
-  `"type" IN ('booking_deposit', 'subscription', 'refund')`,
+  `"type" IN ('booking_deposit', 'booking_full', 'booking_balance', 'subscription', 'refund')`,
 )
 @Check(
   'CHK_transactions_gateway',
@@ -47,6 +47,12 @@ export class TransactionEntity extends UuidEntity {
 
   @Column({ type: 'varchar', nullable: true })
   gateway!: string | null;
+
+  @Column({ name: 'merchant_id', type: 'uuid', nullable: true })
+  merchantId!: string | null;
+
+  @Column({ name: 'expires_at', type: 'timestamptz', nullable: true })
+  expiresAt!: Date | null;
 
   @Column({ name: 'gateway_ref', type: 'varchar', nullable: true })
   gatewayRef!: string | null;

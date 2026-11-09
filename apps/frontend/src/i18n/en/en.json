@@ -1031,6 +1031,9 @@
     "courtType": "Court",
     "bookingSlot": "Booking",
     "blockedSlot": "Blocked",
+    "blockedSlotDetail": "Blocked slot details",
+    "blockedSlotTime": "Date and time",
+    "blockedSlotReason": "Reason",
     "closedDay": "This field complex is closed on this date.",
     "noCourts": "No courts found for this field complex.",
     "noTimeline": "Timeline is unavailable.",
@@ -1065,6 +1068,10 @@
     "bookingTotal": "BOOKING TOTAL",
     "totalAmount": "Total amount",
     "remainingAmount": "Remaining",
+    "confirmCashTitle": "Confirm cash received?",
+    "confirmCashContent": "Confirm that you received {{amount}} in cash for this booking.",
+    "confirmCashAction": "Confirm cash payment",
+    "confirmCashSuccess": "Cash payment recorded.",
     "status": {
       "pending": "Pending",
       "confirmed": "Confirmed",
@@ -1074,6 +1081,27 @@
     }
   },
   "payment": {
+    "options": {
+      "cash": "Pay at the venue",
+      "deposit": "Pay deposit via VNPay",
+      "full": "Pay in full via VNPay"
+    },
+    "settings": {
+      "title": "Payment settings",
+      "error": "Could not load or save payment settings.",
+      "saved": "Payment settings saved.",
+      "save": "Save settings",
+      "terminal": "VNPay merchant code",
+      "secret": "VNPay signing key",
+      "secretHelp": "Leave blank to keep the saved key. Enable online payment only for your VNPay merchant account.",
+      "depositType": "Deposit calculation",
+      "depositValue": "Deposit value",
+      "percentage": "Percentage",
+      "fixed": "Fixed amount (VND)",
+      "payNow": "Pay {{amount}} now",
+      "paid": "Amount received",
+      "pending": "Waiting for VNPay confirmation"
+    },
     "selector": {
       "title": "Payment Method",
       "vnpayTitle": "VNPay Gateway",

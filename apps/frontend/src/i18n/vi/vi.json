@@ -1030,6 +1030,9 @@
     "courtType": "Sân",
     "bookingSlot": "Booking",
     "blockedSlot": "Đã khóa",
+    "blockedSlotDetail": "Chi tiết khung giờ khóa",
+    "blockedSlotTime": "Ngày và giờ",
+    "blockedSlotReason": "Lý do",
     "closedDay": "Cụm sân đóng cửa vào ngày này.",
     "noCourts": "Không tìm thấy sân con trong cụm sân này.",
     "noTimeline": "Không có dữ liệu lịch vận hành.",
@@ -1064,6 +1067,10 @@
     "bookingTotal": "TỔNG BOOKING",
     "totalAmount": "Tổng tiền",
     "remainingAmount": "Còn lại",
+    "confirmCashTitle": "Xác nhận đã nhận tiền mặt?",
+    "confirmCashContent": "Xác nhận đã nhận {{amount}} tiền mặt cho đơn này.",
+    "confirmCashAction": "Xác nhận thu tiền mặt",
+    "confirmCashSuccess": "Đã ghi nhận thanh toán tiền mặt.",
     "status": {
       "pending": "Chờ xử lý",
       "confirmed": "Đã xác nhận",
@@ -1073,6 +1080,27 @@
     }
   },
   "payment": {
+    "options": {
+      "cash": "Thanh toán tại sân",
+      "deposit": "Đặt cọc qua VNPay",
+      "full": "Thanh toán toàn bộ qua VNPay"
+    },
+    "settings": {
+      "title": "Cài đặt thanh toán",
+      "error": "Không tải hoặc lưu được cấu hình thanh toán.",
+      "saved": "Đã lưu cài đặt thanh toán.",
+      "save": "Lưu cài đặt",
+      "terminal": "Mã merchant VNPay",
+      "secret": "Khóa ký VNPay",
+      "secretHelp": "Để trống để giữ khóa đã lưu. Chỉ bật thanh toán online với merchant VNPay của bạn.",
+      "depositType": "Cách tính tiền cọc",
+      "depositValue": "Mức cọc",
+      "percentage": "Phần trăm",
+      "fixed": "Số tiền cố định (VND)",
+      "payNow": "Thanh toán ngay {{amount}}",
+      "paid": "Đã thu",
+      "pending": "Đang chờ VNPay xác nhận"
+    },
     "selector": {
       "title": "Phương thức thanh toán",
       "vnpayTitle": "Cổng thanh toán VNPay",

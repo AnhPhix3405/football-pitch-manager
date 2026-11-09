@@ -50,7 +50,7 @@ export function BookingCard({ booking, onCancel, onViewDetails, onReview, onPay 
 
         {/* Top Right: Quick Actions */}
         <div className="booking-card__top-actions">
-          {onPay && booking.status === 'pending' && (
+          {onPay && booking.status === 'pending' && booking.paymentStatus !== 'paid' && booking.paymentStatus !== 'partially_paid' && (
             <Tooltip title={t('booking.card.payDeposit', { defaultValue: 'Thanh toán cọc' })}>
               <button
                 type="button"

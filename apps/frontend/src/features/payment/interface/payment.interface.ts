@@ -6,6 +6,7 @@ export interface SelectPaymentMethodPayload {
 
 export interface CreateVnpayUrlPayload {
   bookingId: string
+  option?: Exclude<BookingPaymentOption, 'cash'>
   orderInfo?: string
 }
 
@@ -28,6 +29,7 @@ export interface PaymentTransaction {
 }
 
 export interface VnpayReturnVerification {
+  status?: string
   isValid: boolean
   isSuccess: boolean
   txnRef?: string
@@ -37,9 +39,26 @@ export interface VnpayReturnVerification {
   message: string
 }
 
+export type BookingPaymentOption = 'cash' | 'deposit' | 'full'
+export type CashPaymentSelection = { method: 'cash' }
+
+export interface FieldPaymentOptions {
+  options: BookingPaymentOption[]
+  depositType: 'fixed' | 'percentage' | null
+  depositValue: number | null
+}
+
+export interface OwnerPaymentSettings extends FieldPaymentOptions {
+  terminalCode: string | null
+}
+
+export interface SaveOwnerPaymentSettings extends FieldPaymentOptions {
+  terminalCode?: string
+  hashSecret?: string
+}
+
 export interface ConfirmCashPaymentPayload {
-  amount?: number
-  notes?: string
+  note?: string
 }
 
 export interface RefundPaymentPayload {

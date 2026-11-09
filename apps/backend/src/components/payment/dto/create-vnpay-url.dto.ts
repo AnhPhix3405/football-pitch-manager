@@ -1,5 +1,11 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
+import {
+  IsIn,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsUUID,
+} from 'class-validator';
 
 export class CreateVnpayUrlDto {
   @ApiProperty({
@@ -9,6 +15,11 @@ export class CreateVnpayUrlDto {
   @IsNotEmpty()
   @IsUUID()
   bookingId!: string;
+
+  @ApiPropertyOptional({ enum: ['deposit', 'full'] })
+  @IsOptional()
+  @IsIn(['deposit', 'full'])
+  option?: 'deposit' | 'full';
 
   @ApiPropertyOptional({
     description: 'Mô tả nội dung thanh toán',

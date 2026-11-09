@@ -1,3 +1,6 @@
+import { DataSource } from 'typeorm';
+import { BookingEntity } from '~/entities/booking.entity';
+import { FieldCourtEntity } from '~/entities/field-court.entity';
 import { randomUUID } from 'node:crypto';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { ApplicationException } from '~/common/exceptions/application.exception';
@@ -15,6 +18,7 @@ export class OwnerBlockedSlotService {
   constructor(
     private readonly slotRepository: FieldBlockedSlotRepository,
     private readonly courtRepository: FieldCourtRepository,
+    private readonly db: DataSource,
   ) {}
 
   async createBlockedSlot(
@@ -44,34 +48,51 @@ export class OwnerBlockedSlotService {
       });
     }
 
-    // 3. Check overlap collision
-    const overlapping = await this.slotRepository.findOverlappingSlots(
-      courtId,
-      dto.blockedDate,
-      dto.startTime,
-      dto.endTime,
-    );
-
-    if (overlapping.length > 0) {
-      throw new ApplicationException({
-        code: 'BLOCKED_SLOT_OVERLAP',
-        messageKey: 'error.blockedSlotOverlap',
-        status: HttpStatus.CONFLICT,
+    return this.db.transaction(async (manager) => {
+      await manager.findOneOrFail(FieldCourtEntity, {
+        where: { id: courtId, fieldId },
+        lock: { mode: 'pessimistic_write' },
       });
-    }
-
-    // 4. Save blocked slot
-    const slot = this.slotRepository.create({
-      id: randomUUID(),
-      fieldCourtId: courtId,
-      blockedDate: dto.blockedDate,
-      startTime: dto.startTime,
-      endTime: dto.endTime,
-      reason: dto.reason?.trim() ?? null,
+      const params = {
+        courtId,
+        date: dto.blockedDate,
+        start: dto.startTime,
+        end: dto.endTime,
+      };
+      const conflictingBooking = await manager
+        .getRepository(BookingEntity)
+        .createQueryBuilder('b')
+        .where('b.fieldCourtId = :courtId AND b.bookingDate = :date', params)
+        .andWhere('b.startTime < :end AND b.endTime > :start', params)
+        .andWhere(
+          "(b.status IN ('confirmed', 'completed') OR (b.status = 'pending' AND (b.paymentHoldUntil > now() OR b.paidAmount > 0)))",
+        )
+        .getExists();
+      const conflictingBlock = await manager
+        .getRepository(FieldBlockedSlotEntity)
+        .createQueryBuilder('s')
+        .where('s.fieldCourtId = :courtId AND s.blockedDate = :date', params)
+        .andWhere('s.startTime < :end AND s.endTime > :start', params)
+        .getExists();
+      if (conflictingBooking || conflictingBlock) {
+        throw new ApplicationException({
+          code: 'BLOCKED_SLOT_OVERLAP',
+          messageKey: 'error.blockedSlotOverlap',
+          status: HttpStatus.CONFLICT,
+        });
+      }
+      const slot = manager.create(FieldBlockedSlotEntity, {
+        id: randomUUID(),
+        fieldCourtId: courtId,
+        blockedDate: dto.blockedDate,
+        startTime: dto.startTime,
+        endTime: dto.endTime,
+        reason: dto.reason?.trim() ?? null,
+      });
+      return this.mapToResponse(
+        await manager.save(FieldBlockedSlotEntity, slot),
+      );
     });
-
-    const saved = await this.slotRepository.save(slot);
-    return this.mapToResponse(saved);
   }
 
   async getBlockedSlots(

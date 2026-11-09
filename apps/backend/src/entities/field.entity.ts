@@ -42,6 +42,14 @@ export class FieldEntity extends UuidEntity {
   @Column({ type: 'varchar', default: 'pending' })
   status!: string;
 
+  @Column({
+    name: 'payment_options',
+    type: 'varchar',
+    array: true,
+    nullable: true,
+  })
+  paymentOptions!: string[] | null;
+
   @Column({ name: 'require_deposit', type: 'boolean', default: false })
   requireDeposit!: boolean;
 

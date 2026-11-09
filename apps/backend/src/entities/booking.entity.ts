@@ -47,7 +47,7 @@ import { UserEntity } from './user.entity';
 @Check('CHK_bookings_court_type', `"requested_court_type" IN ('5', '7', '11')`)
 @Check(
   'CHK_bookings_payment_status',
-  `"payment_status" IN ('unpaid', 'pending', 'paid', 'refunded', 'failed')`,
+  `"payment_status" IN ('unpaid', 'pending', 'paid', 'partially_paid', 'refunded', 'partially_refunded', 'penalty_deducted', 'failed')`,
 )
 export class BookingEntity extends UuidEntity {
   @Column({ name: 'user_id', type: 'uuid' })
@@ -92,6 +92,26 @@ export class BookingEntity extends UuidEntity {
 
   @Column({ name: 'total_price', type: 'decimal', precision: 15, scale: 2 })
   totalPrice!: string;
+
+  @Column({
+    name: 'payment_options',
+    type: 'varchar',
+    array: true,
+    nullable: true,
+  })
+  paymentOptions!: string[] | null;
+
+  @Column({
+    name: 'paid_amount',
+    type: 'decimal',
+    precision: 15,
+    scale: 2,
+    nullable: true,
+  })
+  paidAmount!: string | null;
+
+  @Column({ name: 'payment_hold_until', type: 'timestamptz', nullable: true })
+  paymentHoldUntil!: Date | null;
 
   @Column({ name: 'payment_method', type: 'varchar', nullable: true })
   paymentMethod!: string | null;

@@ -1,3 +1,4 @@
+import type { BookingPaymentOption } from '../../payment/interface/payment.interface'
 import type { BOOKING_STATUS, BookingStatus } from '~/constants/booking.constant'
 import type { FootballField } from '../../fields/interface/field.types'
 
@@ -35,6 +36,8 @@ export interface BackendBooking {
   status: BookingStatus
   totalPrice: number
   depositAmount: number
+  paidAmount?: number | null
+  paymentOptions?: BookingPaymentOption[] | null
   paymentStatus: string
   paymentMethod?: string | null
   ownerNote?: string | null
@@ -128,6 +131,8 @@ export interface UiBooking {
   price: number
   depositAmount: number
   remainingAmount: number
+  paidAmount?: number | null
+  paymentOptions?: BookingPaymentOption[] | null
   status: BookingStatus
   courtName?: string | null
   courtType: string

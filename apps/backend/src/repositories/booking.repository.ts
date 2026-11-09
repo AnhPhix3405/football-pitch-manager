@@ -46,6 +46,9 @@ export class BookingRepository extends BaseRepository<BookingEntity> {
       .andWhere('booking.status NOT IN (:...excludedStatuses)', {
         excludedStatuses: ['cancelled', 'rejected'],
       })
+      .andWhere(
+        "(booking.status <> 'pending' OR booking.paymentHoldUntil IS NULL OR booking.paymentHoldUntil > now())",
+      )
       .andWhere('booking.startTime < :endTime', { endTime })
       .andWhere('booking.endTime > :startTime', { startTime })
       .getMany();
@@ -62,6 +65,9 @@ export class BookingRepository extends BaseRepository<BookingEntity> {
       .andWhere('booking.status NOT IN (:...excludedStatuses)', {
         excludedStatuses: ['cancelled', 'rejected'],
       })
+      .andWhere(
+        "(booking.status <> 'pending' OR booking.paymentHoldUntil IS NULL OR booking.paymentHoldUntil > now())",
+      )
       .orderBy('booking.startTime', 'ASC')
       .getMany();
   }

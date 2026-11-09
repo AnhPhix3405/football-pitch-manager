@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { Modal, Button, Typography, Space } from 'antd'
+import { Modal, Button, Typography, Space, Select } from 'antd'
 import { useTranslation } from 'react-i18next'
-import { PAYMENT_METHOD, type PaymentMethod } from '../constants/payment.constant'
-import { PaymentMethodSelector } from './PaymentMethodSelector'
+import { PAYMENT_METHOD } from '../constants/payment.constant'
+import type { BookingPaymentOption } from '../interface/payment.interface'
 import { usePayment } from '../hooks/usePayment'
 import { formatPrice } from '../../fields/field.data'
 
@@ -13,6 +13,8 @@ interface PaymentMethodModalProps {
   bookingId: string
   bookingCode?: string
   amount: number
+  depositAmount?: number
+  options?: BookingPaymentOption[] | null
   onClose: () => void
   onSuccess?: () => void
 }
@@ -22,18 +24,24 @@ export function PaymentMethodModal({
   bookingId,
   bookingCode,
   amount,
+  depositAmount,
+  options,
   onClose,
   onSuccess,
 }: PaymentMethodModalProps) {
   const { t } = useTranslation()
-  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>(PAYMENT_METHOD.VNPAY)
+  const [selection, setSelection] = useState<BookingPaymentOption>()
+  const allowed = options ?? ['cash']
+  const selectedOption = selection ?? allowed[0]
+  const selectedMethod = selectedOption === 'cash' ? PAYMENT_METHOD.CASH : PAYMENT_METHOD.VNPAY
   const { loading, processPayment } = usePayment()
 
   const handlePay = async () => {
     const result = await processPayment(
       bookingId,
       selectedMethod,
-      `Thanh toan don dat san ${bookingCode || bookingId}`,
+      undefined,
+      selectedOption === 'cash' ? undefined : selectedOption,
     )
     if (result) {
       if (selectedMethod === PAYMENT_METHOD.CASH) {
@@ -62,15 +70,18 @@ export function PaymentMethodModal({
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <Text type="secondary">{t('payment.modal.amountToPay', { defaultValue: 'Số tiền thanh toán:' })}</Text>
             <Title level={4} style={{ margin: 0, color: '#8cfc70' }}>
-              {formatPrice(amount)}
+              {formatPrice(selectedOption === 'deposit' ? (depositAmount ?? amount) : amount)}
             </Title>
           </div>
         </Space>
 
-        <PaymentMethodSelector
-          value={selectedMethod}
-          onChange={setSelectedMethod}
+        <Select
+          aria-label={t('payment.selector.title')}
+          value={selectedOption}
+          onChange={setSelection}
           disabled={loading}
+          options={allowed.map(value => ({ value, label: t(`payment.options.${value}`) }))}
+          style={{ width: '100%' }}
         />
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 24 }}>
@@ -80,6 +91,7 @@ export function PaymentMethodModal({
           <Button
             type="primary"
             loading={loading}
+            disabled={!selectedOption}
             onClick={handlePay}
             style={{ minWidth: 140 }}
           >

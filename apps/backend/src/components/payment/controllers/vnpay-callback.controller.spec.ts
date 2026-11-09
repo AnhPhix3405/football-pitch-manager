@@ -3,6 +3,9 @@ jest.mock('@nestjs/typeorm', () => ({
   InjectRepository: () => () => undefined,
 }));
 
+import type { FastifyReply } from 'fastify';
+import { TransactionRepository } from '~/repositories/transaction.repository';
+import { ManagedBookingPaymentService } from '../services/managed-booking-payment.service';
 import { VnpayResponseCode } from '../constants/payment.constant';
 import { PaymentService } from '../services/payment.service';
 import { VnpayIpnService } from '../services/vnpay-ipn.service';
@@ -32,6 +35,8 @@ describe('VnpayCallbackController', () => {
       paymentService,
       vnpayService,
       vnpayIpnService,
+      {} as TransactionRepository,
+      {} as ManagedBookingPaymentService,
     );
   });
 
@@ -63,24 +68,27 @@ describe('VnpayCallbackController', () => {
     };
     vnpayIpnService.processIpn.mockResolvedValue(mockRes);
 
-    const result = await controller.handleIpn({ vnp_TxnRef: 'tx-1' });
-    expect(result).toBe(mockRes);
+    const send = jest.fn();
+    await controller.handleIpn({ vnp_TxnRef: 'tx-1' }, {
+      send,
+    } as unknown as FastifyReply);
+    expect(send).toHaveBeenCalledWith(mockRes);
     expect(vnpayIpnService.processIpn).toHaveBeenCalledWith({
       vnp_TxnRef: 'tx-1',
     });
   });
 
-  it('handleReturn verifies signature and returns success status', () => {
+  it('handleReturn rejects a callback without a stored transaction', async () => {
     vnpayService.verifySecureHash.mockReturnValue(true);
 
-    const result = controller.handleReturn({
+    const result = await controller.handleReturn({
       vnp_ResponseCode: '00',
       vnp_TxnRef: 'tx-1',
       vnp_Amount: '10000000',
     });
 
-    expect(result.isValid).toBe(true);
-    expect(result.isSuccess).toBe(true);
-    expect(result.amount).toBe(100000);
+    expect(result.isValid).toBe(false);
+    expect(result.isSuccess).toBe(false);
+    expect(result.amount).toBe(0);
   });
 });

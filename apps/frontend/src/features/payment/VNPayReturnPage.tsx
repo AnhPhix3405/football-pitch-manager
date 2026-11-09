@@ -1,11 +1,10 @@
-import { Button, Card, Descriptions, Result, Spin, Typography, Space, Alert } from 'antd'
+import { Button, Card, Descriptions, Result, Spin, Typography } from 'antd'
 import {
   CheckCircleFilled,
   CloseCircleFilled,
   HomeOutlined,
   UnorderedListOutlined,
   InfoCircleOutlined,
-  ExperimentOutlined,
 } from '@ant-design/icons'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
@@ -16,64 +15,7 @@ const { Text } = Typography
 
 export function VNPayReturnPage() {
   const { t } = useTranslation()
-  const { loading, hasParams, verification, error, rawParams, setSearchParams } = useVNPayReturn()
-
-  const handleSimulate = (code: string) => {
-    const mockParams = {
-      vnp_Amount: '25000000',
-      vnp_BankCode: 'NCB',
-      vnp_BankTranNo: 'VNP' + Date.now().toString().slice(-6),
-      vnp_CardType: 'ATM',
-      vnp_OrderInfo: 'Thanh toan tien coc dat san bong',
-      vnp_PayDate: new Date().toISOString().replace(/[-:T]/g, '').slice(0, 14),
-      vnp_ResponseCode: code,
-      vnp_TmnCode: 'CGXZLS0Z',
-      vnp_TransactionNo: '14' + Date.now().toString().slice(-6),
-      vnp_TransactionStatus: code === '00' ? '00' : '02',
-      vnp_TxnRef: 'BK-' + crypto.randomUUID().slice(0, 8).toUpperCase(),
-      vnp_SecureHash: 'simulated_demo_hash',
-    }
-    setSearchParams(mockParams)
-  }
-
-  const handleClearDemo = () => {
-    setSearchParams({})
-  }
-
-  const demoBar = (
-    <Alert
-      style={{ marginTop: 24, textAlign: 'left' }}
-      type="info"
-      showIcon
-      icon={<ExperimentOutlined />}
-      message={<b>{t('payment.return.demoTitle', { defaultValue: 'Công cụ thử nghiệm (Demo Sandbox)' })}</b>}
-      description={
-        <div style={{ marginTop: 8 }}>
-          <p style={{ margin: '0 0 8px 0', fontSize: 13, color: '#a3a3a3' }}>
-            {t('payment.return.demoDesc', {
-              defaultValue: 'Bạn có thể chọn một trong các kịch bản bên dưới để kiểm tra giao diện phản hồi từ VNPay:',
-            })}
-          </p>
-          <Space wrap>
-            <Button size="small" type="primary" onClick={() => handleSimulate('00')}>
-              {t('payment.return.mockSuccess', { defaultValue: 'Test: Thanh toán thành công (Mã 00)' })}
-            </Button>
-            <Button size="small" danger onClick={() => handleSimulate('24')}>
-              {t('payment.return.mockCancelled', { defaultValue: 'Test: Khách hủy giao dịch (Mã 24)' })}
-            </Button>
-            <Button size="small" onClick={() => handleSimulate('51')}>
-              {t('payment.return.mockInsufficient', { defaultValue: 'Test: Số dư không đủ (Mã 51)' })}
-            </Button>
-            {hasParams && (
-              <Button size="small" onClick={handleClearDemo}>
-                {t('payment.return.clearMock', { defaultValue: 'Đặt lại mặc định' })}
-              </Button>
-            )}
-          </Space>
-        </div>
-      }
-    />
-  )
+  const { loading, hasParams, verification, error, rawParams } = useVNPayReturn()
 
   if (loading) {
     return (
@@ -112,7 +54,6 @@ export function VNPayReturnPage() {
               </Link>,
             ]}
           />
-          {demoBar}
         </Card>
       </div>
     )
@@ -140,10 +81,14 @@ export function VNPayReturnPage() {
               </Link>,
             ]}
           />
-          {demoBar}
         </Card>
       </div>
     )
+  }
+
+  if (verification.isValid && verification.status === 'pending') {
+    return <Result status="info" title={t('payment.settings.pending')}
+      extra={<Link to="/bookings">{t('payment.return.goToBookings')}</Link>} />
   }
 
   const isSuccess = verification.isValid && verification.isSuccess
@@ -233,7 +178,6 @@ export function VNPayReturnPage() {
           )}
         </Descriptions>
 
-        {demoBar}
       </Card>
     </div>
   )

@@ -45,6 +45,10 @@ describe('OwnerBookingService', () => {
     } as unknown as jest.Mocked<NotificationService>;
 
     em = {
+      findOne: jest
+        .fn()
+        .mockImplementation(() => bookingRepository.findDetailById('b-1')),
+      findOneOrFail: jest.fn().mockResolvedValue({}),
       createQueryBuilder: jest.fn(),
       save: jest
         .fn()

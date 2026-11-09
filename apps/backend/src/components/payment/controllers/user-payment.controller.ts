@@ -11,7 +11,6 @@ import {
 import { CurrentUser } from '~/components/auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '~/components/auth/guards/jwt-auth.guard';
 import { ApiUserPayment } from '../docs/payment.doc';
-import { PaymentTransactionResponseDto } from '../dto/payment-transaction-response.dto';
 import { SelectPaymentMethodDto } from '../dto/select-payment-method.dto';
 import { PaymentService } from '../services/payment.service';
 
@@ -28,7 +27,7 @@ export class UserPaymentController {
     @CurrentUser('id') userId: string,
     @Param('bookingId', ParseUUIDPipe) bookingId: string,
     @Body() dto: SelectPaymentMethodDto,
-  ): Promise<PaymentTransactionResponseDto> {
+  ) {
     return this.paymentService.selectPaymentMethod(bookingId, userId, dto);
   }
 }

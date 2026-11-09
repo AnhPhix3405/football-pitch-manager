@@ -50,7 +50,7 @@ describe('VnpayService', () => {
 
     // Calculate valid hash with same secret
     const signData =
-      'vnp_Amount=10000000&vnp_Command=pay&vnp_OrderInfo=Thanh%20toan&vnp_ResponseCode=00&vnp_TmnCode=TEST_TMN&vnp_TxnRef=TXN_123';
+      'vnp_Amount=10000000&vnp_Command=pay&vnp_OrderInfo=Thanh+toan&vnp_ResponseCode=00&vnp_TmnCode=TEST_TMN&vnp_TxnRef=TXN_123';
     const validHash = vnpayService.signHmacSha512('TEST_SECRET', signData);
 
     const isValid = vnpayService.verifySecureHash({

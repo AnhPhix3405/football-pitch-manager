@@ -7,8 +7,8 @@ export const DEFAULT_BOOKING_IMAGE =
  * Maps backend booking DTO to UI model
  */
 export function mapBackendBookingToUi(b: BackendBooking): UiBooking {
-  const deposit = b.depositAmount || Math.round(b.totalPrice * 0.3)
-  const remaining = Math.max(0, b.totalPrice - deposit)
+  const deposit = b.depositAmount
+  const remaining = Math.max(0, b.totalPrice - (b.paidAmount ?? (b.paymentStatus === 'paid' ? deposit || b.totalPrice : 0)))
 
   // Format date display (e.g., YYYY-MM-DD -> DD/MM/YYYY)
   let formattedDate = b.bookingDate
@@ -31,6 +31,8 @@ export function mapBackendBookingToUi(b: BackendBooking): UiBooking {
     time: timeSlot,
     price: b.totalPrice,
     depositAmount: deposit,
+    paidAmount: b.paidAmount,
+    paymentOptions: b.paymentOptions,
     remainingAmount: remaining,
     status: b.status,
     courtName: b.courtName,

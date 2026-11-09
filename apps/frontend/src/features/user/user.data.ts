@@ -1,8 +1,12 @@
+import type { BookingPaymentOption } from '../payment/interface/payment.interface'
 import type { Conversation, ChatMessage } from '../chat/interface/chat.types'
 import type { BookingStatus, FieldFormat, PostStatus } from '../../constants'
 
 export type { BookingStatus }
 export interface UserBooking {
+  depositAmount?: number
+  paidAmount?: number | null
+  paymentOptions?: BookingPaymentOption[] | null
   id: string;
   field: string;
   location: string;

@@ -110,7 +110,6 @@ function Navigation({
         { to: '/owner/services', label: t('nav.services', { defaultValue: 'Dịch vụ & giá' }), icon: <DollarOutlined /> },
         { to: '/owner/bookings', label: t('nav.bookings', { defaultValue: 'Booking' }), icon: <CalendarOutlined /> },
         { to: '/owner/timeline', label: t('nav.timeline', { defaultValue: 'Lịch vận hành' }), icon: <ClockCircleOutlined /> },
-        { to: '/owner/subscription', label: t('nav.subscription', { defaultValue: 'Gói & giao dịch' }), icon: <CreditCardOutlined /> },
         { to: '/messages', label: t('nav.messages', { defaultValue: 'Tin nhắn' }), icon: <MessageOutlined /> },
       ],
     },

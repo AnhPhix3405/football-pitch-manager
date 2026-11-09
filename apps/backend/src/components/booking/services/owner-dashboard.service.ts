@@ -76,7 +76,7 @@ export class OwnerDashboardService {
             FROM transactions tx
             JOIN bookings booking ON booking.id = tx.ref_id
             JOIN owned_fields field ON field.id = booking.field_id
-            WHERE tx.type IN ('booking_deposit', 'refund') AND tx.status = 'success'
+            WHERE tx.type IN ('booking_deposit', 'booking_full', 'booking_balance', 'refund') AND tx.status = 'success'
               AND tx.updated_at >= period.month_start AND tx.updated_at <= period.as_of
           ), 0)::float8 AS "monthlyRevenue",
           (

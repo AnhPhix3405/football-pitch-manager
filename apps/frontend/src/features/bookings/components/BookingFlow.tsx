@@ -3,7 +3,6 @@ import {
   CalendarOutlined,
   CheckCircleFilled,
   ClockCircleOutlined,
-  CreditCardOutlined,
   InfoCircleOutlined,
 } from '@ant-design/icons'
 import {
@@ -15,6 +14,7 @@ import {
   Radio,
   Result,
   Segmented,
+  Select,
   Spin,
   Steps,
   message,
@@ -27,11 +27,9 @@ import {
   COURT_TYPE_OPTIONS,
 } from '~/constants/booking.constant'
 import { formatPrice } from '../../fields/field.data'
-import { PaymentMethodSelector } from '../../payment/components/PaymentMethodSelector'
-import {
-  PAYMENT_METHOD,
-  type PaymentMethod,
-} from '../../payment/constants/payment.constant'
+import { useFieldPaymentOptions } from '../../../hooks/useFieldPaymentOptions'
+import type { BookingPaymentOption } from '../../payment/interface/payment.interface'
+import { PAYMENT_METHOD } from '../../payment/constants/payment.constant'
 import { usePayment } from '../../payment/hooks/usePayment'
 import type {
   BookingFlowProps,
@@ -70,7 +68,11 @@ export function BookingFlow({
   const [fieldServices, setFieldServices] = useState<PublicFieldServiceItem[]>([])
   const [loadingServices, setLoadingServices] = useState(false)
   const [selectedServices, setSelectedServices] = useState<Record<string, number>>({}) // serviceId -> quantity
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(PAYMENT_METHOD.VNPAY)
+  const [selectedPaymentOption, setSelectedPaymentOption] = useState<BookingPaymentOption>()
+  const { settings: paymentSettings, error: paymentSettingsError } = useFieldPaymentOptions(field.id)
+  const paymentOption = selectedPaymentOption && paymentSettings?.options.includes(selectedPaymentOption)
+    ? selectedPaymentOption
+    : paymentSettings?.options[0]
   const [submitting, setSubmitting] = useState(false)
   const [bookingCode, setBookingCode] = useState('')
   const [createdBookingId, setCreatedBookingId] = useState('')
@@ -179,9 +181,12 @@ export function BookingFlow({
 
   const pitchRate = quote ? quote.pitchPrice : field.pricePerHour
   const total = pitchRate + servicesTotal
-  const depositAmount = quote
-    ? quote.depositAmount + Math.round(servicesTotal * 0.3)
-    : Math.round(total * 0.3)
+  const depositValue = paymentSettings?.depositValue ?? 0
+  const depositAmount = paymentOption === 'deposit'
+    ? Math.min(total, paymentSettings?.depositType === 'percentage'
+      ? Math.round(total * depositValue / 100)
+      : depositValue)
+    : 0
   const remainingPayable = Math.max(0, total - depositAmount)
 
   const reset = () => {
@@ -231,60 +236,34 @@ export function BookingFlow({
         }),
       )
 
-      const res = await createBookingApi({
-        fieldId: field.id,
-        courtType,
-        bookingDate: date.format('YYYY-MM-DD'),
-        startTime: selectedSlot.startTime,
-        endTime: selectedSlot.endTime,
-        services: bookingServicesPayload,
-      })
+      if (!paymentOption) return
+      let id = createdBookingId
+      if (!id) {
+        const booking = await createBookingApi({
+          fieldId: field.id,
+          courtType,
+          bookingDate: date.format('YYYY-MM-DD'),
+          startTime: selectedSlot.startTime,
+          endTime: selectedSlot.endTime,
+          services: bookingServicesPayload,
+        })
+        id = booking.id
+        setCreatedBookingId(id)
+        setBookingCode(id.slice(0, 8).toUpperCase())
+        onSuccess?.(id)
+      }
 
-      if (res && res.id) {
-        setCreatedBookingId(res.id)
-        setBookingCode(res.id.slice(0, 8).toUpperCase())
-        onSuccess?.(res.id)
-
-        if (paymentMethod === PAYMENT_METHOD.VNPAY) {
-          const payRes = await processPayment(
-            res.id,
-            PAYMENT_METHOD.VNPAY,
-            `Thanh toan don dat san ${field.name}`,
-          )
-          if (payRes && 'redirectUrl' in payRes) {
-            return
-          }
-        }
-
+      if (paymentOption !== 'cash') {
+        await processPayment(id, PAYMENT_METHOD.VNPAY, undefined, paymentOption)
+        return
+      }
+      const payment = await processPayment(id, PAYMENT_METHOD.CASH)
+      if (payment) {
         setStep(2)
-        messageApi.success(
-          t('booking.flow.createSuccess', {
-            defaultValue: 'Đặt sân thành công!',
-          }),
-        )
+        messageApi.success(t('booking.flow.createSuccess'))
       }
     } catch (err: unknown) {
-      // Fallback dev/mock nếu field ID không tồn tại trong DB Backend
-      const fallbackId = `PM-${crypto.randomUUID().slice(0, 6).toUpperCase()}`
-      setCreatedBookingId(fallbackId)
-      setBookingCode(fallbackId)
-      onSuccess?.(fallbackId)
-
-      if (paymentMethod === PAYMENT_METHOD.VNPAY) {
-        const payRes = await processPayment(
-          fallbackId,
-          PAYMENT_METHOD.VNPAY,
-          `Thanh toan don dat san ${field.name}`,
-        )
-        if (payRes && 'redirectUrl' in payRes) {
-          return
-        }
-      }
-
-      setStep(2)
-      const messageText =
-        err instanceof Error ? err.message : 'Tạo đơn đặt sân thành công (mô phỏng).'
-      messageApi.info(messageText)
+      messageApi.error(err instanceof Error ? err.message : t('payment.settings.error'))
     } finally {
       setSubmitting(false)
     }
@@ -545,22 +524,19 @@ export function BookingFlow({
             <strong>{formatPrice(total)}</strong>
           </div>
 
-          <PaymentMethodSelector
-            value={paymentMethod}
-            onChange={setPaymentMethod}
+          <Select
+            aria-label={t('payment.selector.title')}
+            value={paymentOption}
+            onChange={setSelectedPaymentOption}
+            loading={!paymentSettings && !paymentSettingsError}
             disabled={submitting}
+            options={paymentSettings?.options.map((value) => ({ value, label: t(`payment.options.${value}`) }))}
+            style={{ width: '100%' }}
           />
-
-          <p className="charge-note">
-            <CreditCardOutlined />{' '}
-            {paymentMethod === PAYMENT_METHOD.VNPAY
-              ? t('payment.selector.vnpayDesc', {
-                  defaultValue: 'Quét mã QR, Thẻ ATM nội địa, Internet Banking hoặc Thẻ Quốc tế.',
-                })
-              : t('payment.selector.cashDesc', {
-                  defaultValue: 'Thanh toán trực tiếp cho ban quản lý sân trước giờ bắt đầu thi đấu.',
-                })}
-          </p>
+          {paymentSettingsError && <p role="alert">{t('payment.settings.error')}</p>}
+          {paymentOption && paymentOption !== 'cash' && (
+            <p>{t('payment.settings.payNow', { amount: formatPrice(paymentOption === 'deposit' ? depositAmount : total) })}</p>
+          )}
 
           <div
             style={{
@@ -584,11 +560,11 @@ export function BookingFlow({
           </div>
 
           <div className="booking-buttons">
-            <Button onClick={() => setStep(0)} disabled={submitting}>
+            <Button onClick={() => setStep(0)} disabled={submitting || Boolean(createdBookingId)}>
               {t('booking.flow.back')}
             </Button>
-            <Button type="primary" loading={submitting} onClick={confirmBooking}>
-              {paymentMethod === PAYMENT_METHOD.VNPAY
+            <Button type="primary" loading={submitting} disabled={!paymentOption} onClick={confirmBooking}>
+              {paymentOption !== 'cash'
                 ? t('payment.modal.payVnpayBtn', { defaultValue: 'Thanh toán qua VNPay' })
                 : t('booking.flow.confirmBtn', { defaultValue: 'Xác nhận đặt sân' })}
             </Button>

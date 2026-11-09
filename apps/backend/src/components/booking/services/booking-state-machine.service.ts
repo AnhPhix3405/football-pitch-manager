@@ -1,3 +1,4 @@
+import { ConflictException } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { EntityManager } from 'typeorm';
@@ -74,6 +75,26 @@ export class BookingStateMachineService {
     actorRole: string,
     reason?: string | null,
   ): Promise<BookingEntity> {
+    if (booking.paymentOptions && nextStatus !== 'confirmed') {
+      const current = await em.findOneOrFail(BookingEntity, {
+        where: { id: booking.id },
+        lock: { mode: 'pessimistic_write' },
+      });
+      if (
+        current.paymentMethod === 'vnpay' &&
+        current.paymentStatus === 'pending'
+      ) {
+        throw new ConflictException({
+          messageKey: 'error.paymentAwaitingReconciliation',
+        });
+      }
+      booking.status = current.status;
+      booking.paymentMethod = current.paymentMethod;
+      booking.paymentStatus = current.paymentStatus;
+      booking.paidAmount = current.paidAmount;
+      booking.paymentHoldUntil = current.paymentHoldUntil;
+      booking.fieldCourtId = current.fieldCourtId;
+    }
     this.validateTransition(booking.status, nextStatus, actorRole);
 
     const history = em.create(BookingStatusHistoryEntity, {

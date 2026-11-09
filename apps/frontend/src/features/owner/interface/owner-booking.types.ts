@@ -13,6 +13,8 @@ export interface OwnerBooking {
   status: OwnerBookingStatus
   totalPrice: number
   depositAmount: number
+  paidAmount?: number | null
+  paymentOptions?: string[] | null
   paymentStatus: string
   paymentMethod: string | null
   ownerNote: string | null

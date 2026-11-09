@@ -18,6 +18,7 @@ import { FieldServiceEntity } from './field-service.entity';
 import { FieldEntity } from './field.entity';
 import { MessageEntity } from './message.entity';
 import { NotificationEntity } from './notification.entity';
+import { OwnerPaymentMerchantEntity } from './owner-payment-merchant.entity';
 import { OwnerProfileEntity } from './owner-profile.entity';
 import { PostCommentEntity } from './post-comment.entity';
 import { PostMatchEntity } from './post-match.entity';
@@ -35,6 +36,7 @@ export const DATABASE_ENTITIES: Array<new () => object> = [
   UserProfileEntity,
   AuthSessionEntity,
   OwnerProfileEntity,
+  OwnerPaymentMerchantEntity,
   FieldEntity,
   FieldCourtEntity,
   FieldImageEntity,

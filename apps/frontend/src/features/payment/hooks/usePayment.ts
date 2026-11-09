@@ -10,6 +10,8 @@ import {
 } from '../service/payment.service'
 import type {
   ConfirmCashPaymentPayload,
+  CashPaymentSelection,
+  BookingPaymentOption,
   PaymentTransaction,
   RefundPaymentPayload,
 } from '../interface/payment.interface'
@@ -24,12 +26,13 @@ export function usePayment() {
       bookingId: string,
       method: PaymentMethod,
       orderInfo?: string,
-    ): Promise<PaymentTransaction | { redirectUrl: string } | null> => {
+      option?: Exclude<BookingPaymentOption, 'cash'>,
+    ): Promise<PaymentTransaction | CashPaymentSelection | { redirectUrl: string } | null> => {
       setLoading(true)
       setError(null)
       try {
         if (method === PAYMENT_METHOD.VNPAY) {
-          const vnpayRes = await createVnpayUrl({ bookingId, orderInfo })
+          const vnpayRes = await createVnpayUrl({ bookingId, orderInfo, option })
           if (vnpayRes?.paymentUrl) {
             window.location.href = vnpayRes.paymentUrl
             return { redirectUrl: vnpayRes.paymentUrl }

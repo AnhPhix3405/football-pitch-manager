@@ -17,14 +17,14 @@ import {
   TransactionType,
 } from '../constants/payment.constant';
 import { PaymentService } from './payment.service';
-import { VnpayService } from './vnpay.service';
+import { ManagedBookingPaymentService } from './managed-booking-payment.service';
 
 describe('PaymentService - Cash & Method Selection', () => {
   let paymentService: PaymentService;
   let bookingRepo: jest.Mocked<BookingRepository>;
   let transactionRepo: jest.Mocked<TransactionRepository>;
   let ownerProfileRepo: jest.Mocked<OwnerProfileRepository>;
-  let vnpayService: jest.Mocked<VnpayService>;
+  let managed: jest.Mocked<ManagedBookingPaymentService>;
 
   beforeEach(() => {
     bookingRepo = {
@@ -45,15 +45,15 @@ describe('PaymentService - Cash & Method Selection', () => {
       findByUserId: jest.fn(),
     } as unknown as jest.Mocked<OwnerProfileRepository>;
 
-    vnpayService = {
-      createPaymentUrl: jest.fn(),
-    } as unknown as jest.Mocked<VnpayService>;
+    managed = {
+      createVnpayUrl: jest.fn(),
+    } as unknown as jest.Mocked<ManagedBookingPaymentService>;
 
     paymentService = new PaymentService(
       bookingRepo,
       transactionRepo,
       ownerProfileRepo,
-      vnpayService,
+      managed,
     );
   });
 
@@ -89,8 +89,7 @@ describe('PaymentService - Cash & Method Selection', () => {
         { method: PaymentMethod.CASH },
       );
 
-      expect(result.id).toBe('tx-1');
-      expect(result.gateway).toBe(PaymentMethod.CASH);
+      expect(result).toMatchObject({ id: 'tx-1', gateway: PaymentMethod.CASH });
       expect(bookingRepo.save).toHaveBeenCalled();
     });
 
@@ -127,47 +126,23 @@ describe('PaymentService - Cash & Method Selection', () => {
   });
 
   describe('createVnpayUrl', () => {
-    it('initializes vnpay payment and generates payment url', async () => {
-      const mockBooking = {
-        id: 'booking-1',
-        userId: 'user-1',
-        status: 'pending',
-        paymentStatus: 'unpaid',
-        totalPrice: '200000.00',
-        depositAmount: '50000.00',
-      } as BookingEntity;
-
-      const mockTx = {
-        id: 'tx-1',
-        userId: 'user-1',
-        refId: 'booking-1',
-        type: TransactionType.BOOKING_DEPOSIT,
-        amount: '50000.00',
-        status: TransactionStatus.PENDING,
-        gateway: PaymentMethod.VNPAY,
-      } as TransactionEntity;
-
-      bookingRepo.findById.mockResolvedValue(mockBooking);
-      transactionRepo.findByRefIdAndType.mockResolvedValue(null);
-      transactionRepo.createTransaction.mockResolvedValue(mockTx);
-      bookingRepo.save.mockResolvedValue(mockBooking);
-      vnpayService.createPaymentUrl.mockReturnValue(
-        'https://sandbox.vnpayment.vn/test',
-      );
-
-      const result = await paymentService.createVnpayUrl(
+    it('delegates to the merchant payment flow', async () => {
+      const result = {
+        paymentUrl: 'https://sandbox.vnpayment.vn/test',
+        txnRef: 'tx-1',
+      };
+      managed.createVnpayUrl.mockResolvedValue(result);
+      await expect(
+        paymentService.createVnpayUrl(
+          'user-1',
+          { bookingId: 'booking-1', option: 'full' },
+          '127.0.0.1',
+        ),
+      ).resolves.toEqual(result);
+      expect(managed.createVnpayUrl).toHaveBeenCalledWith(
         'user-1',
-        { bookingId: 'booking-1' },
+        { bookingId: 'booking-1', option: 'full' },
         '127.0.0.1',
-      );
-
-      expect(result.paymentUrl).toBe('https://sandbox.vnpayment.vn/test');
-      expect(result.txnRef).toBe('tx-1');
-      expect(vnpayService.createPaymentUrl).toHaveBeenCalledWith(
-        expect.objectContaining({
-          amount: 50000,
-          txnRef: 'tx-1',
-        }),
       );
     });
   });

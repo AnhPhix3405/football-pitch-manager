@@ -1,3 +1,4 @@
+import { FieldCourtEntity } from '~/entities/field-court.entity';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { ApplicationException } from '~/common/exceptions/application.exception';
@@ -107,6 +108,28 @@ export class OwnerBookingService {
     }
 
     await this.dataSource.transaction(async (em) => {
+      const current = await em.findOne(BookingEntity, {
+        where: { id: booking.id },
+        lock: { mode: 'pessimistic_write' },
+      });
+      if (
+        !current ||
+        current.status !== 'pending' ||
+        (current.paymentOptions &&
+          (!current.paymentMethod ||
+            (current.paymentMethod === 'vnpay' &&
+              !['paid', 'partially_paid'].includes(current.paymentStatus))))
+      ) {
+        throw new ApplicationException({
+          code: 'BOOKING_NOT_ELIGIBLE_FOR_PAYMENT',
+          messageKey: 'error.bookingNotEligibleForPayment',
+          status: HttpStatus.CONFLICT,
+        });
+      }
+      await em.findOneOrFail(FieldCourtEntity, {
+        where: { id: court.id, status: 'active' },
+        lock: { mode: 'pessimistic_write' },
+      });
       // 1. Pessimistic lock check on confirmed bookings for this court and overlapping time
       const conflictingBooking = await em
         .createQueryBuilder(BookingEntity, 'b')
@@ -115,9 +138,9 @@ export class OwnerBookingService {
         .andWhere('b.bookingDate = :bookingDate', {
           bookingDate: booking.bookingDate,
         })
-        .andWhere('b.status = :confirmedStatus', {
-          confirmedStatus: 'confirmed',
-        })
+        .andWhere(
+          "(b.status IN ('confirmed', 'completed') OR (b.status = 'pending' AND (b.paymentHoldUntil > now() OR b.paidAmount > 0)))",
+        )
         .andWhere('b.id != :bookingId', { bookingId: booking.id })
         .andWhere('b.startTime < :endTime', { endTime: booking.endTime })
         .andWhere('b.endTime > :startTime', { startTime: booking.startTime })
@@ -150,14 +173,14 @@ export class OwnerBookingService {
         });
       }
 
-      booking.fieldCourtId = dto.fieldCourtId;
+      current.fieldCourtId = dto.fieldCourtId;
       if (dto.note) {
-        booking.ownerNote = dto.note;
+        current.ownerNote = dto.note;
       }
 
       await this.stateMachineService.transitionStatus(
         em,
-        booking,
+        current,
         'confirmed',
         ownerUserId,
         'owner',

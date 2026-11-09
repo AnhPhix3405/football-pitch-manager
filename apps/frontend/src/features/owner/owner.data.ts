@@ -17,8 +17,3 @@ export const ownerServices: OwnerService[] = [
   { id: 'water', name: 'Nước uống cho đội', price: 50000, unit: 'thùng', active: true },
   { id: 'referee', name: 'Trọng tài', price: 250000, unit: 'trận', active: false },
 ]
-export const transactions = [
-  { id: 'TX-20261024-01', date: '24/10/2026', description: 'Booking BK-8402', amount: 420000, status: 'Thành công' },
-  { id: 'TX-20261022-07', date: '22/10/2026', description: 'Gói Pro Facility', amount: -499000, status: 'Thành công' },
-  { id: 'TX-20261020-04', date: '20/10/2026', description: 'Booking BK-8290', amount: 320000, status: 'Thành công' },
-]

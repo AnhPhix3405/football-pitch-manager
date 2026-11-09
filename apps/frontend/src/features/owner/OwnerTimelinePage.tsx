@@ -1,5 +1,5 @@
 import { ReloadOutlined } from '@ant-design/icons'
-import { Alert, Button, DatePicker, Empty, Select, Spin, Tag } from 'antd'
+import { Alert, Button, DatePicker, Descriptions, Empty, Modal, Select, Spin, Tag } from 'antd'
 import dayjs from 'dayjs'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
@@ -18,14 +18,33 @@ function slotStyle(slot: OwnerTimelineSlot, openMinute: number, span: number) {
   return { left: `${left}%`, width: `${width}%` }
 }
 
-function CourtRow({ court, fieldId, openMinute, span }: { court: OwnerCourtTimelineItem; fieldId: string; openMinute: number; span: number }) {
+function CourtRow({
+  court, fieldId, openMinute, span, onBlockedSlotClick,
+}: {
+  court: OwnerCourtTimelineItem
+  fieldId: string
+  openMinute: number
+  span: number
+  onBlockedSlotClick: (slot: OwnerTimelineSlot, courtName: string) => void
+}) {
   const { t } = useTranslation()
   return (
     <div className="owner-timeline__row">
       <div className="owner-timeline__court"><strong>{court.courtName}</strong><small>{court.courtType}v{court.courtType}</small></div>
       <div className="owner-timeline__track">
         {court.bookings.map((booking) => <Link key={`booking-${booking.id}`} className={`owner-timeline__slot owner-timeline__slot--${booking.status || 'confirmed'}`} style={slotStyle(booking, openMinute, span)} to={`/owner/bookings/${booking.id}?fieldId=${fieldId}`} title={`${booking.startTime}–${booking.endTime}`}><b>{booking.startTime}–{booking.endTime}</b><span>{t(`ownerOps.status.${booking.status || 'confirmed'}`, { defaultValue: booking.status || 'confirmed' })}</span></Link>)}
-        {court.blockedSlots.map((slot) => <div key={`blocked-${slot.id}`} className="owner-timeline__slot owner-timeline__slot--blocked" style={slotStyle(slot, openMinute, span)} title={slot.reason || ''}><b>{slot.startTime}–{slot.endTime}</b><span>{slot.reason || t('ownerOps.blockedSlot')}</span></div>)}
+        {court.blockedSlots.map((slot) => (
+          <button
+            key={`blocked-${slot.id}`}
+            type="button"
+            className="owner-timeline__slot owner-timeline__slot--blocked"
+            style={slotStyle(slot, openMinute, span)}
+            onClick={() => onBlockedSlotClick(slot, court.courtName)}
+          >
+            <b>{slot.startTime}–{slot.endTime}</b>
+            <span>{slot.reason || t('ownerOps.blockedSlot')}</span>
+          </button>
+        ))}
       </div>
     </div>
   )
@@ -33,14 +52,29 @@ function CourtRow({ court, fieldId, openMinute, span }: { court: OwnerCourtTimel
 
 export function OwnerTimelinePage() {
   const { t } = useTranslation()
+  const [modal, contextHolder] = Modal.useModal()
   const { fields, fieldId, setFieldId, date, setDate, timeline, loading, error, reload } = useOwnerTimeline()
   const openMinute = timeToMinutes(timeline?.openTime || '06:00')
   const closeMinute = timeToMinutes(timeline?.closeTime || '22:00')
   const span = Math.max(1, closeMinute - openMinute)
   const hours = Array.from({ length: Math.floor(span / 60) + 1 }, (_, index) => openMinute + index * 60)
+  const showBlockedSlot = (slot: OwnerTimelineSlot, courtName: string) => {
+    modal.info({
+      title: t('ownerOps.blockedSlotDetail'),
+      okText: t('common.close'),
+      content: (
+        <Descriptions column={1} size="small" items={[
+          { key: 'court', label: t('ownerOps.courtType'), children: courtName },
+          { key: 'time', label: t('ownerOps.blockedSlotTime'), children: `${dayjs(date).format('DD/MM/YYYY')} · ${slot.startTime}–${slot.endTime}` },
+          { key: 'reason', label: t('ownerOps.blockedSlotReason'), children: slot.reason || '—' },
+        ]} />
+      ),
+    })
+  }
 
   return (
     <section className="owner-page">
+      {contextHolder}
       <header className="user-page__head"><div><span className="eyebrow">DAILY FIELD OPERATIONS</span><h1>{t('ownerOps.timelineTitle')}</h1><p>{t('ownerOps.timelineSubtitle')}</p></div><Button icon={<ReloadOutlined />} onClick={() => void reload()} loading={loading}>{t('common.refresh')}</Button></header>
       <div className="owner-toolbar">
         <Select value={fieldId || undefined} placeholder={t('ownerOps.chooseField')} onChange={setFieldId} options={fields.map((field) => ({ value: field.id, label: field.name }))} style={{ minWidth: 240 }} />
@@ -51,7 +85,7 @@ export function OwnerTimelinePage() {
         timeline.isClosed ? <Empty description={t('ownerOps.closedDay')} /> : timeline.courts.length ? (
           <div className="owner-timeline">
             <div className="owner-timeline__ruler"><div /><div className="owner-timeline__hours">{hours.map((minute) => <span key={minute}>{`${String(Math.floor(minute / 60)).padStart(2, '0')}:00`}</span>)}</div></div>
-            {timeline.courts.map((court) => <CourtRow key={court.courtId} court={court} fieldId={timeline.fieldId} openMinute={openMinute} span={span} />)}
+            {timeline.courts.map((court) => <CourtRow key={court.courtId} court={court} fieldId={timeline.fieldId} openMinute={openMinute} span={span} onBlockedSlotClick={showBlockedSlot} />)}
             <div className="owner-timeline__legend"><Tag color="blue">{t('ownerOps.bookingSlot')}</Tag><Tag color="orange">{t('ownerOps.blockedSlot')}</Tag></div>
           </div>
         ) : <Empty description={t('ownerOps.noCourts')} />

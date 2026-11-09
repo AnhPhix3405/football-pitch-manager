@@ -5,6 +5,7 @@ jest.mock('@nestjs/typeorm', () => ({
   InjectRepository: () => () => undefined,
 }));
 
+import { DataSource, EntityManager } from 'typeorm';
 import { HttpStatus } from '@nestjs/common';
 import { ApplicationException } from '~/common/exceptions/application.exception';
 import { FieldBlockedSlotEntity } from '~/entities/field-blocked-slot.entity';
@@ -17,6 +18,8 @@ describe('OwnerBlockedSlotService', () => {
   let service: OwnerBlockedSlotService;
   let slotRepository: jest.Mocked<FieldBlockedSlotRepository>;
   let courtRepository: jest.Mocked<FieldCourtRepository>;
+
+  let overlap: jest.Mock;
 
   beforeEach(() => {
     slotRepository = {
@@ -32,7 +35,22 @@ describe('OwnerBlockedSlotService', () => {
       findByIdAndFieldId: jest.fn(),
     } as unknown as jest.Mocked<FieldCourtRepository>;
 
-    service = new OwnerBlockedSlotService(slotRepository, courtRepository);
+    overlap = jest.fn().mockResolvedValue(false);
+    const builder = {
+      where: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+      getExists: overlap,
+    };
+    const manager = {
+      findOneOrFail: jest.fn().mockResolvedValue({}),
+      getRepository: () => ({ createQueryBuilder: () => builder }),
+      create: slotRepository.create,
+      save: slotRepository.save,
+    } as unknown as EntityManager;
+    const db = {
+      transaction: (fn: (em: EntityManager) => unknown) => fn(manager),
+    } as unknown as DataSource;
+    service = new OwnerBlockedSlotService(slotRepository, courtRepository, db);
   });
 
   describe('createBlockedSlot', () => {
@@ -73,9 +91,7 @@ describe('OwnerBlockedSlotService', () => {
         id: 'court-1',
         fieldId: 'field-1',
       } as FieldCourtEntity);
-      slotRepository.findOverlappingSlots.mockResolvedValue([
-        { id: 'existing-slot' } as FieldBlockedSlotEntity,
-      ]);
+      overlap.mockResolvedValueOnce(true);
 
       try {
         await service.createBlockedSlot('field-1', 'court-1', {

@@ -1,3 +1,7 @@
+import { isUUID } from 'class-validator';
+import type { FastifyReply } from 'fastify';
+import { TransactionRepository } from '~/repositories/transaction.repository';
+import { ManagedBookingPaymentService } from '../services/managed-booking-payment.service';
 import {
   Body,
   Controller,
@@ -7,6 +11,7 @@ import {
   Ip,
   Post,
   Query,
+  Res,
   UseGuards,
 } from '@nestjs/common';
 import { CurrentUser } from '~/components/auth/decorators/current-user.decorator';
@@ -15,7 +20,6 @@ import { ApiUserPayment } from '../docs/payment.doc';
 import { CreateVnpayUrlDto } from '../dto/create-vnpay-url.dto';
 import { VnpayCallbackQueryDto } from '../dto/vnpay-callback-query.dto';
 import { VnpayUrlResponseDto } from '../dto/vnpay-url-response.dto';
-import { VnpayIpnResponse } from '../interfaces/payment.interface';
 import { PaymentService } from '../services/payment.service';
 import { VnpayIpnService } from '../services/vnpay-ipn.service';
 import { VnpayService } from '../services/vnpay.service';
@@ -26,6 +30,8 @@ export class VnpayCallbackController {
     private readonly paymentService: PaymentService,
     private readonly vnpayService: VnpayService,
     private readonly vnpayIpnService: VnpayIpnService,
+    private readonly transactions: TransactionRepository,
+    private readonly managed: ManagedBookingPaymentService,
   ) {}
 
   @Post('create-url')
@@ -48,26 +54,34 @@ export class VnpayCallbackController {
   @HttpCode(HttpStatus.OK)
   async handleIpn(
     @Query() query: VnpayCallbackQueryDto,
-  ): Promise<VnpayIpnResponse> {
-    return this.vnpayIpnService.processIpn(query);
+    @Res() reply: FastifyReply,
+  ): Promise<void> {
+    const result = await this.vnpayIpnService.processIpn(query);
+    void reply.send(result);
   }
 
   @Get('return')
   @HttpCode(HttpStatus.OK)
-  handleReturn(@Query() query: VnpayCallbackQueryDto) {
-    const isValid = this.vnpayService.verifySecureHash(query);
-    const isSuccess = isValid && query.vnp_ResponseCode === '00';
-
+  async handleReturn(@Query() query: VnpayCallbackQueryDto) {
+    const reference = query.vnp_TxnRef;
+    const transaction =
+      reference && isUUID(reference)
+        ? await this.transactions.findById(reference)
+        : null;
+    if (transaction?.merchantId)
+      return this.managed.returnStatus(transaction, query);
+    const isValid = Boolean(
+      transaction?.gateway === 'vnpay' &&
+      this.vnpayService.verifySecureHash(query),
+    );
     return {
       isValid,
-      isSuccess,
-      txnRef: query.vnp_TxnRef,
-      transactionNo: query.vnp_TransactionNo,
-      amount: query.vnp_Amount ? Number(query.vnp_Amount) / 100 : 0,
+      isSuccess: isValid && transaction?.status === 'success',
+      status: isValid ? transaction?.status : 'failed',
+      txnRef: reference,
+      transactionNo: transaction?.gatewayRef,
+      amount: Number(transaction?.amount ?? 0),
       bankCode: query.vnp_BankCode,
-      message: isSuccess
-        ? 'Giao dịch thành công'
-        : 'Giao dịch không thành công hoặc chữ ký không hợp lệ',
     };
   }
 }

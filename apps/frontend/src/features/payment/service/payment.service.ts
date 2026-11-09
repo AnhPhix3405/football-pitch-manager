@@ -2,6 +2,10 @@ import { apiClient, type ApiResponse } from '../../../config/axios.config'
 import type { PaymentMethod } from '../constants/payment.constant'
 import type {
   ConfirmCashPaymentPayload,
+  CashPaymentSelection,
+  FieldPaymentOptions,
+  OwnerPaymentSettings,
+  SaveOwnerPaymentSettings,
   CreateVnpayUrlPayload,
   PaymentTransaction,
   RefundPaymentPayload,
@@ -12,8 +16,8 @@ import type {
 export async function selectPaymentMethod(
   bookingId: string,
   method: PaymentMethod,
-): Promise<PaymentTransaction> {
-  const response = await apiClient.post<ApiResponse<PaymentTransaction>>(
+): Promise<PaymentTransaction | CashPaymentSelection> {
+  const response = await apiClient.post<ApiResponse<PaymentTransaction | CashPaymentSelection>>(
     `/bookings/${bookingId}/payment-method`,
     { method },
   )
@@ -32,10 +36,11 @@ export async function createVnpayUrl(
 
 export async function verifyVnpayReturn(
   params: Record<string, string>,
+  signal?: AbortSignal,
 ): Promise<VnpayReturnVerification> {
   const response = await apiClient.get<ApiResponse<VnpayReturnVerification>>(
     '/payments/vnpay/return',
-    { params },
+    { params, signal },
   )
   return response.data.data
 }
@@ -62,3 +67,21 @@ export async function refundPayment(
   return response.data.data
 }
 
+
+export async function getFieldPaymentOptions(fieldId: string, signal?: AbortSignal) {
+  const response = await apiClient.get<ApiResponse<FieldPaymentOptions>>(`/payments/fields/${fieldId}/options`, { signal })
+  return response.data.data
+}
+
+export async function getOwnerPaymentSettings(fieldId: string, signal?: AbortSignal) {
+  const response = await apiClient.get<ApiResponse<OwnerPaymentSettings>>(`/owner/fields/${fieldId}/payment-settings`, { signal })
+  return response.data.data
+}
+
+export async function saveOwnerPaymentSettings(fieldId: string, settings: SaveOwnerPaymentSettings) {
+  const { depositType, depositValue, ...rest } = settings
+  const response = await apiClient.put<ApiResponse<OwnerPaymentSettings>>(`/owner/fields/${fieldId}/payment-settings`, {
+    ...rest, depositType: depositType ?? undefined, depositValue: depositValue ?? undefined,
+  })
+  return response.data.data
+}

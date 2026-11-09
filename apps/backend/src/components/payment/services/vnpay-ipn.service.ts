@@ -1,3 +1,5 @@
+import { isUUID } from 'class-validator';
+import { ManagedBookingPaymentService } from './managed-booking-payment.service';
 import { Injectable } from '@nestjs/common';
 import { NotificationService } from '~/components/notification/services/notification.service';
 import { BookingRepository } from '~/repositories/booking.repository';
@@ -19,11 +21,22 @@ export class VnpayIpnService {
     private readonly bookingRepository: BookingRepository,
     private readonly fieldRepository: FieldRepository,
     private readonly notificationService: NotificationService,
+    private readonly managed: ManagedBookingPaymentService,
   ) {}
 
   async processIpn(
     query: Record<string, string | number | undefined | null>,
   ): Promise<VnpayIpnResponse> {
+    const reference = query.vnp_TxnRef;
+    if (typeof reference === 'string' && isUUID(reference)) {
+      const transaction = await this.transactionRepository.findById(reference);
+      if (
+        transaction?.merchantId &&
+        transaction.gateway === PaymentMethod.VNPAY
+      ) {
+        return this.managed.processIpn(transaction, query);
+      }
+    }
     // 1. Verify Checksum
     const isSignatureValid = this.vnpayService.verifySecureHash(query);
     if (!isSignatureValid) {
@@ -34,7 +47,7 @@ export class VnpayIpnService {
     }
 
     const txnRef = typeof query.vnp_TxnRef === 'string' ? query.vnp_TxnRef : '';
-    if (!txnRef) {
+    if (!txnRef || !isUUID(txnRef)) {
       return {
         RspCode: VnpayResponseCode.ORDER_NOT_FOUND,
         Message: 'Order not found',
@@ -46,7 +59,11 @@ export class VnpayIpnService {
       (await this.transactionRepository.findById(txnRef)) ||
       (await this.transactionRepository.findByGatewayRef(txnRef));
 
-    if (!transaction) {
+    if (
+      !transaction ||
+      transaction.merchantId ||
+      transaction.gateway !== PaymentMethod.VNPAY
+    ) {
       return {
         RspCode: VnpayResponseCode.ORDER_NOT_FOUND,
         Message: 'Order not found',
@@ -56,7 +73,7 @@ export class VnpayIpnService {
     // 3. Verify Amount (VNPay amount is multiplied by 100)
     const vnpAmount = Number(query.vnp_Amount || 0) / 100;
     const txAmount = Number(transaction.amount);
-    if (Math.abs(vnpAmount - txAmount) > 0.01) {
+    if (!Number.isFinite(vnpAmount) || vnpAmount !== txAmount) {
       return {
         RspCode: VnpayResponseCode.INVALID_AMOUNT,
         Message: 'Invalid Amount',
@@ -79,7 +96,7 @@ export class VnpayIpnService {
         ? query.vnp_TransactionNo
         : null;
 
-    if (responseCode === '00') {
+    if (responseCode === '00' && query.vnp_TransactionStatus === '00') {
       transaction.status = TransactionStatus.SUCCESS;
       transaction.gateway = PaymentMethod.VNPAY;
       transaction.gatewayRef = transactionNo;
