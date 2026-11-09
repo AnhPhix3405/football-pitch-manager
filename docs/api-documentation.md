@@ -128,7 +128,10 @@ Tài liệu chi tiết toàn bộ các API HTTP REST và WebSocket Gateway của
 | | `GET` | `/rankings/players` | Public | Lấy BXH Top người chơi theo điểm tinh thần thể thao |
 | | `GET` | `/fields/rankings/top` | Public | Lấy top sân bóng có điểm Bayesian cao nhất |
 | **Gói dịch vụ (Subscription)** | `POST` | `/subscription-plans` | Admin | Tạo gói hội viên dịch vụ mới |
-| | `GET` | `/subscription-plans` | Public | Xem danh sách gói hội viên đang mở |
+| | `GET` | `/subscription-plans` | Public / Admin | Xem danh sách gói hội viên (hỗ trợ ?all=true cho Admin) |
+| | `GET` | `/subscription-plans/:id` | Public | Xem thông tin chi tiết một gói thành viên |
+| | `PATCH` | `/subscription-plans/:id` | Admin | Cập nhật thông tin hoặc tái kích hoạt gói dịch vụ |
+| | `PATCH` | `/subscription-plans/:id/deactivate` | Admin | Vô hiệu hóa (tắt kích hoạt) gói thành viên |
 | | `POST` | `/subscriptions` | User / Active | Đăng ký gói hội viên dịch vụ |
 | | `GET` | `/subscriptions/me` | User / Active | Xem thông tin gói hội viên của bản thân |
 | | `DELETE` | `/subscriptions/:id` | User / Active | Hủy gói hội viên dịch vụ |
@@ -1935,8 +1938,12 @@ Tài liệu chi tiết toàn bộ các API HTTP REST và WebSocket Gateway của
   }
   ```
 
-#### 3.16.2. Lấy danh sách gói thành viên đang mở đăng ký (`GET /subscription-plans`)
-- **Quyền truy cập:** Public
+#### 3.16.2. Lấy danh sách gói thành viên (`GET /subscription-plans`)
+- **Quyền truy cập:** Public (mặc định chỉ lấy gói active) / Admin (khi truyền `all=true` lấy toàn bộ gói)
+- **Query Parameters:**
+  - `search` (string, tùy chọn): Tìm kiếm gói dịch vụ theo tên (không phân biệt hoa thường ILIKE).
+  - `status` (string, tùy chọn: `ALL`, `ACTIVE`, `INACTIVE`): Lọc theo trạng thái hoạt động. Mặc định `ACTIVE`.
+  - `all` (boolean string, tùy chọn): `true` tương đương `status=ALL` (lấy toàn bộ cả gói đang mở và tạm ngưng). Mặc định `false`.
 - **Response (`200 OK`):**
   ```json
   {
@@ -1947,13 +1954,40 @@ Tài liệu chi tiết toàn bộ các API HTTP REST và WebSocket Gateway của
         "name": "Gói Hội Viên Vàng",
         "price": "299000.00",
         "durationDays": 30,
-        "benefit": { "aiQuotaDaily": 50 }
+        "benefit": {
+          "features": ["Quản lý cụm sân", "Báo cáo doanh thu"]
+        },
+        "isActive": true,
+        "createdAt": "2026-10-31T10:00:00.000Z",
+        "updatedAt": "2026-10-31T10:00:00.000Z"
       }
     ]
   }
   ```
 
-#### 3.16.3. Đăng ký gói thành viên (`POST /subscriptions`)
+#### 3.16.3. Admin cập nhật gói thành viên (`PATCH /subscription-plans/:id`)
+- **Quyền truy cập:** Admin
+- **Path Parameters:** `id` (UUID gói thành viên).
+- **Request Body (`UpdateSubscriptionPlanDto` - tùy chọn các trường):**
+  ```json
+  {
+    "name": "Gói Hội Viên Vàng Nâng Cấp",
+    "price": 349000,
+    "durationDays": 30,
+    "benefit": {
+      "features": ["Quản lý không giới hạn", "Hỗ trợ 24/7"]
+    },
+    "isActive": true
+  }
+  ```
+- **Response (`200 OK`):** Trả về đối tượng `SubscriptionPlanEntity` đã được cập nhật.
+
+#### 3.16.4. Admin vô hiệu hóa gói thành viên (`PATCH /subscription-plans/:id/deactivate`)
+- **Quyền truy cập:** Admin
+- **Path Parameters:** `id` (UUID gói thành viên).
+- **Response (`200 OK`):** Trả về đối tượng `SubscriptionPlanEntity` với `isActive = false`.
+
+#### 3.16.5. Đăng ký gói thành viên (`POST /subscriptions`)
 - **Quyền truy cập:** Đã đăng nhập
 - **Mô tả:** Đăng ký gói dịch vụ. Hệ thống kiểm tra tài khoản chưa có gói đang active, tự động tính `startDate` và `endDate = startDate + durationDays`.
 - **Request Body (`SubscribePlanDto`):**

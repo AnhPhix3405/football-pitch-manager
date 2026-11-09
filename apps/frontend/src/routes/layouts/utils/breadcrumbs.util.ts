@@ -37,6 +37,8 @@ export function buildDashboardBreadcrumbs(
     items.push({ title: t('nav.management', { defaultValue: 'Quản lý & Kiểm duyệt' }) })
   } else if (normalized.startsWith('/admin/reports')) {
     items.push({ title: t('nav.reports', { defaultValue: 'Báo cáo & Giám sát' }) })
+  } else if (normalized.startsWith('/admin/subscriptions')) {
+    items.push({ title: t('nav.subscriptions', { defaultValue: 'Gói dịch vụ' }) })
   }
   // Owner routes
   else if (normalized.startsWith('/owner/fields')) {

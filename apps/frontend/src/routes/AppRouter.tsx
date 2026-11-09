@@ -2,6 +2,7 @@ import { BrowserRouter, Navigate, Route, Routes, useParams } from 'react-router-
 import { AdminDashboardPage } from '../features/admin/AdminDashboardPage'
 import { AdminManagementPage } from '../features/admin/AdminManagementPage'
 import { AdminReportsPage } from '../features/admin/AdminReportsPage'
+import { AdminSubscriptionsPage } from '../features/admin/AdminSubscriptionsPage'
 
 function RedirectFieldDetail() {
   const { fieldId } = useParams()
@@ -119,6 +120,7 @@ export function AppRouter() {
             <Route path="approvals/fields" element={<AdminApprovalsPage forcedType="field" />} />
             <Route path="management" element={<AdminManagementPage />} />
             <Route path="reports" element={<AdminReportsPage />} />
+            <Route path="subscriptions" element={<AdminSubscriptionsPage />} />
           </Route>
         </Route>
         <Route path="owner/register" element={<OwnerRegistrationPage />} />

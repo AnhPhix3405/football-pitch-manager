@@ -31,7 +31,8 @@ export const ApiSubscriptionPlanDocs = {
   getActivePlans: () =>
     applyDecorators(
       ApiOperation({
-        summary: 'Lấy danh sách các gói thành viên đang mở đăng ký',
+        summary:
+          'Lấy danh sách các gói thành viên (hỗ trợ tìm kiếm & lọc trạng thái)',
       }),
       ApiResponse({
         status: HttpStatus.OK,
@@ -62,6 +63,21 @@ export const ApiSubscriptionPlanDocs = {
         status: HttpStatus.OK,
         description: 'Vô hiệu hóa gói thành công',
         type: SubscriptionPlanResponseDto,
+      }),
+    ),
+
+  updatePlan: () =>
+    applyDecorators(
+      ApiBearerAuth(),
+      ApiOperation({ summary: 'Admin cập nhật thông tin gói thành viên' }),
+      ApiResponse({
+        status: HttpStatus.OK,
+        description: 'Cập nhật gói thành viên thành công',
+        type: SubscriptionPlanResponseDto,
+      }),
+      ApiResponse({
+        status: HttpStatus.NOT_FOUND,
+        description: 'Không tìm thấy gói thành viên',
       }),
     ),
 };
