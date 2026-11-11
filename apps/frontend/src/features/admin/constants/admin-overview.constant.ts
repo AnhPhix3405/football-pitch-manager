@@ -12,6 +12,7 @@ export const ADMIN_OVERVIEW_DAY_OPTIONS: ReadonlyArray<{
   { value: 7, labelKey: 'admin.days7', defaultLabel: '7 ngày' },
   { value: 14, labelKey: 'admin.days14', defaultLabel: '14 ngày' },
   { value: 30, labelKey: 'admin.days30', defaultLabel: '30 ngày' },
+  { value: 90, labelKey: 'admin.days90', defaultLabel: '90 ngày' },
 ]
 
 export const ADMIN_ACTIVITY_METRIC_OPTIONS: ReadonlyArray<{

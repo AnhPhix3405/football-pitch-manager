@@ -2,6 +2,8 @@ import type {
   AdminActivityBarItem,
   AdminActivityMetricMode,
   AdminActivityPoint,
+  AdminKpiItem,
+  AdminOverviewMetrics,
 } from '../interface/admin-overview.interface'
 
 export function formatCompactVnd(amount: number): string {
@@ -93,4 +95,79 @@ export function computeTimelineBarHeights(
       shortDateLabel,
     }
   })
+}
+
+export function getServiceHealthColor(status: 'up' | 'degraded' | 'down'): string {
+  if (status === 'up') return '#8cfc70'
+  if (status === 'degraded') return '#faad14'
+  return '#ff4d4f'
+}
+
+export function getServiceHealthTagColor(status: 'up' | 'degraded' | 'down'): 'green' | 'orange' | 'red' {
+  if (status === 'up') return 'green'
+  if (status === 'degraded') return 'orange'
+  return 'red'
+}
+
+export type ServiceIconKind = 'database' | 'realtime' | 'cache' | 'api'
+
+export function getServiceIconKind(serviceName: string): ServiceIconKind {
+  const lower = (serviceName || '').toLowerCase()
+  if (lower.includes('database') || lower.includes('db') || lower.includes('postgres')) {
+    return 'database'
+  }
+  if (lower.includes('realtime') || lower.includes('socket')) {
+    return 'realtime'
+  }
+  if (lower.includes('cache') || lower.includes('redis')) {
+    return 'cache'
+  }
+  return 'api'
+}
+
+export function buildAdminKpiItems(
+  metrics: AdminOverviewMetrics | undefined,
+  t: (key: string, options?: { defaultValue?: string; [k: string]: unknown }) => string,
+): AdminKpiItem[] {
+  const usersGrowth = metrics?.users.growthPercent ?? 0
+  const gmvGrowth = metrics?.gmv.growthPercent ?? 0
+
+  return [
+    {
+      key: 'users',
+      label: t('admin.metricUsers', { defaultValue: 'NGƯỜI DÙNG' }),
+      value: (metrics?.users.total ?? 0).toLocaleString('vi-VN'),
+      delta: formatGrowthDelta(usersGrowth),
+      isPositive: usersGrowth >= 0,
+      sub: `User: ${metrics?.users.byRole.user ?? 0} · Owner: ${metrics?.users.byRole.owner ?? 0} (+${metrics?.users.newThisMonth ?? 0} tháng này)`,
+      iconType: 'users',
+    },
+    {
+      key: 'fields',
+      label: t('admin.metricActiveFields', { defaultValue: 'SÂN HOẠT ĐỘNG' }),
+      value: `${metrics?.fields.active ?? 0}/${metrics?.fields.total ?? 0}`,
+      delta: `+${metrics?.fields.newThisMonth ?? 0} tháng này`,
+      isPositive: true,
+      sub: `Đang chờ duyệt: ${metrics?.fields.pending ?? 0} cụm sân`,
+      iconType: 'fields',
+    },
+    {
+      key: 'gmv',
+      label: t('admin.metricGmv', { defaultValue: 'GMV THÁNG' }),
+      value: formatCompactVnd(metrics?.gmv.currentMonthGmv ?? 0),
+      delta: formatGrowthDelta(gmvGrowth),
+      isPositive: gmvGrowth >= 0,
+      sub: `Thực thu: ${formatCompactVnd(metrics?.gmv.totalPaidRevenue ?? 0)}`,
+      iconType: 'gmv',
+    },
+    {
+      key: 'queue',
+      label: t('admin.metricQueue', { defaultValue: 'CẦN XỬ LÝ' }),
+      value: String(metrics?.queue.totalPending ?? 0),
+      delta: `${(metrics?.queue.pendingOwnerApprovals ?? 0) + (metrics?.queue.pendingFieldApprovals ?? 0)} hồ sơ duyệt`,
+      isPositive: (metrics?.queue.totalPending ?? 0) === 0,
+      sub: `Chủ sân: ${metrics?.queue.pendingOwnerApprovals ?? 0} · Sân: ${metrics?.queue.pendingFieldApprovals ?? 0} · Báo cáo: ${metrics?.queue.flaggedReviews ?? 0}`,
+      iconType: 'queue',
+    },
+  ]
 }

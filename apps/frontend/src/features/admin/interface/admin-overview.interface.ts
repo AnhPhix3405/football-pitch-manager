@@ -1,4 +1,4 @@
-export type AdminOverviewDayRange = 7 | 14 | 30
+export type AdminOverviewDayRange = 7 | 14 | 30 | 90
 
 export type AdminActivityMetricMode = 'bookings' | 'gmv' | 'users'
 
@@ -105,4 +105,53 @@ export interface AdminOverviewData {
   systemHealth: AdminSystemHealth
   priorityQueue: AdminPriorityQueueItem[]
   recentAudits: AdminAuditItem[]
+}
+
+export type AdminKpiIconType = 'users' | 'fields' | 'gmv' | 'queue'
+
+export interface AdminKpiItem {
+  key: string
+  label: string
+  value: string
+  delta: string
+  isPositive: boolean
+  sub: string
+  iconType: AdminKpiIconType
+}
+
+export interface AdminCommandHeaderProps {
+  systemHealth?: AdminSystemHealth
+  isLoading: boolean
+  isRefreshing: boolean
+  onRefresh: () => void
+}
+
+export interface AdminKpiGridProps {
+  items: AdminKpiItem[]
+  isLoading: boolean
+}
+
+export interface AdminActivityChartPanelProps {
+  timelineBars: AdminActivityBarItem[]
+  days: AdminOverviewDayRange
+  setDays: (days: AdminOverviewDayRange) => void
+  metricMode: AdminActivityMetricMode
+  setMetricMode: (mode: AdminActivityMetricMode) => void
+}
+
+export interface AdminSystemHealthPanelProps {
+  services: AdminServiceHealthItem[]
+}
+
+export interface AdminPriorityQueuePanelProps {
+  items: AdminPriorityQueueItem[]
+}
+
+export interface AdminRecentAuditPanelProps {
+  items: AdminAuditItem[]
+}
+
+export interface AdminErrorBannerProps {
+  error: string
+  onRetry: () => void
 }
