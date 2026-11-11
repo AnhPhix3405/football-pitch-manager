@@ -93,11 +93,6 @@ function Navigation({
           label: t('nav.reports', { defaultValue: 'Báo cáo & Giám sát' }),
           icon: <BarChartOutlined />,
         },
-        {
-          to: '/admin/subscriptions',
-          label: t('nav.subscriptions', { defaultValue: 'Gói dịch vụ' }),
-          icon: <CreditCardOutlined />,
-        },
       ],
     },
   ]
