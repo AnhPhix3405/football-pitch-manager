@@ -1,9 +1,10 @@
-import { ArrowLeftOutlined, EnvironmentOutlined } from '@ant-design/icons'
-import { Breadcrumb, Button } from 'antd'
+import { ArrowLeftOutlined, EnvironmentOutlined, PictureOutlined } from '@ant-design/icons'
+import { Button } from 'antd'
 import { useEffect, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { getOwnerFieldDetail } from './service/owner.service'
 import { OwnerImagesManager } from './components/OwnerImagesManager'
+import { OwnerPageHeader } from './components/OwnerPageHeader'
 import type { BackendFieldItem } from '../fields/service/field.service'
 
 export function OwnerImagesPage() {
@@ -38,45 +39,33 @@ export function OwnerImagesPage() {
   }
 
   return (
-    <section className="owner-page" style={{ padding: '24px 0' }}>
-      <header className="user-page__head" style={{ marginBottom: 20 }}>
-        <div>
-          <Breadcrumb
-            items={[
-              { title: <Link to="/owner/fields">Sân của tôi</Link> },
-              { title: field?.name || 'Chi tiết cụm sân' },
-              { title: 'Thư viện hình ảnh' },
-            ]}
-            style={{ marginBottom: 8 }}
-          />
-          <h1 style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ color: 'var(--lime)' }}>📸</span>
-            Thư viện hình ảnh {field ? `· ${field.name}` : ''}
-          </h1>
-          <p>
-            {field?.address ? (
-              <span>
-                <EnvironmentOutlined /> {field.address}
-                {field.district ? `, ${field.district}` : ''}
-              </span>
-            ) : (
-              'Quản lý danh sách hình ảnh, đặt ảnh đại diện (thumbnail) và thứ tự hiển thị của cụm sân.'
-            )}
-          </p>
-        </div>
-
-        <div style={{ display: 'flex', gap: 10 }}>
+    <section className="owner-page" style={{ padding: '16px 0' }}>
+      <OwnerPageHeader
+        breadcrumbs={[
+          { title: 'Sân của tôi', href: '/owner/fields' },
+          { title: field?.name || 'Chi tiết cụm sân' },
+          { title: 'Thư viện hình ảnh' },
+        ]}
+        icon={<PictureOutlined />}
+        title={`Thư viện hình ảnh ${field ? `· ${field.name}` : ''}`}
+        subtitle={
+          field?.address ? (
+            <span>
+              <EnvironmentOutlined /> {field.address}
+              {field.district ? `, ${field.district}` : ''}
+            </span>
+          ) : (
+            'Quản lý danh sách hình ảnh, đặt ảnh đại diện (thumbnail) và thứ tự hiển thị của cụm sân.'
+          )
+        }
+        fieldId={fieldId}
+        activeTabKey="images"
+        actions={
           <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/owner/fields')}>
             Quay lại
           </Button>
-          <Link to={`/owner/fields/${fieldId}/courts`}>
-            <Button>Quản lý sân con</Button>
-          </Link>
-          <Link to={`/owner/fields/${fieldId}/edit`}>
-            <Button type="primary">Cấu hình cụm sân</Button>
-          </Link>
-        </div>
-      </header>
+        }
+      />
 
       <OwnerImagesManager fieldId={fieldId} fieldName={field?.name} />
     </section>

@@ -1,14 +1,11 @@
 import { memo, useEffect, useState } from 'react'
 import {
-  EnvironmentOutlined,
-  FilterOutlined,
-  GlobalOutlined,
+  SearchOutlined,
   SlidersOutlined,
 } from '@ant-design/icons'
 import { Checkbox, Input, Popover, Select, Slider } from 'antd'
 import { useTranslation } from 'react-i18next'
 import { PillButton } from '~/components/PillButton'
-import { HANOI_DISTRICTS, HCM_DISTRICTS } from '~/constants/field.constant'
 import type { FieldFilters } from '../interface/field.types'
 
 export interface FieldFilterProps {
@@ -44,15 +41,6 @@ export const FieldFilter = memo(function FieldFilter({
     }, 300)
     return () => clearTimeout(timer)
   }, [searchTerm, filters, onChange])
-
-  const currentCity = filters.city || 'Hà Nội'
-
-  const availableDistricts =
-    currentCity === 'Hà Nội'
-      ? HANOI_DISTRICTS
-      : currentCity === 'TP. Hồ Chí Minh'
-        ? HCM_DISTRICTS
-        : [...HANOI_DISTRICTS, ...HCM_DISTRICTS]
 
   const isPriceFiltered = filters.maxPrice < 1500000 || filters.availableOnly
   const priceLabel =
@@ -90,41 +78,12 @@ export const FieldFilter = memo(function FieldFilter({
     <div className="field-filters-bar">
       {/* Tìm kiếm có Debounce */}
       <Input
-        prefix={<FilterOutlined style={{ color: 'var(--muted)' }} />}
+        prefix={<SearchOutlined style={{ color: 'var(--muted)' }} />}
         value={searchTerm}
         onChange={(event) => setSearchTerm(event.target.value)}
-        placeholder={t('fields.searchPlaceholder', { defaultValue: 'Tìm theo tên sân, vị trí...' })}
+        placeholder={t('fields.searchPlaceholder', { defaultValue: 'Tìm theo tên sân, quận huyện, địa chỉ...' })}
         allowClear
         className="field-filters__input"
-      />
-
-      {/* Thành phố */}
-      <Select
-        value={currentCity}
-        onChange={(value) => {
-          onChange({ ...filters, city: value, district: 'all' })
-        }}
-        options={[
-          { value: 'all', label: t('fields.allCities', { defaultValue: 'Tất cả TP' }) },
-          { value: 'Hà Nội', label: 'Hà Nội' },
-          { value: 'TP. Hồ Chí Minh', label: 'TP. Hồ Chí Minh' },
-        ]}
-        suffixIcon={<GlobalOutlined />}
-        className="field-filters__select field-filters__select--city"
-        popupMatchSelectWidth={false}
-      />
-
-      {/* Quận / Huyện */}
-      <Select
-        value={filters.district}
-        onChange={(value) => patch('district', value)}
-        options={[
-          { value: 'all', label: t('fields.allDistricts', { defaultValue: 'Tất cả khu vực' }) },
-          ...availableDistricts.map((d) => ({ value: d, label: d })),
-        ]}
-        suffixIcon={<EnvironmentOutlined />}
-        className="field-filters__select field-filters__select--district"
-        popupMatchSelectWidth={false}
       />
 
       {/* Loại sân */}
@@ -150,8 +109,9 @@ export const FieldFilter = memo(function FieldFilter({
       >
         <button
           type="button"
-          className={`field-filters__popover-trigger  ${isPriceFiltered ? 'field-filters__popover-trigger--active' : ''
-            }`}
+          className={`field-filters__popover-trigger ${
+            isPriceFiltered ? 'field-filters__popover-trigger--active' : ''
+          }`}
         >
           <SlidersOutlined />
           <span>{priceLabel}</span>

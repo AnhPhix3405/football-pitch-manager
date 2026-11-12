@@ -98,7 +98,7 @@ input:focus-visible {
     display: inline-flex;
     align-items: center;
     gap: 10px;
-    color: var(--lime);
+    color: white;
     font-size: 25px;
     font-weight: 800;
     letter-spacing: -.05em
@@ -106,6 +106,7 @@ input:focus-visible {
 
 .brand-mark__icon {
     display: grid;
+    color: var(--lime);
     grid-template-columns: repeat(3, 4px);
     align-items: end;
     gap: 2px;
@@ -902,7 +903,7 @@ input:focus-visible {
 }
 
 .dashboard-content {
-    padding: clamp(20px, 4vw, 48px)
+    padding: clamp(10px, 2vw, 24px)
 }
 
 .mobile-menu {
@@ -1001,7 +1002,7 @@ input:focus-visible {
     }
 
     .dashboard-content {
-        padding: 18px
+        padding: 9px
     }
 
     .account>span {
@@ -2160,7 +2161,6 @@ input:focus-visible {
 .field-filters-bar {
     display: flex;
     align-items: center;
-    flex-wrap: wrap;
     gap: 10px;
     border: 1px solid rgba(255, 255, 255, 0.08);
     background: rgba(18, 24, 20, 0.85);
@@ -2172,9 +2172,9 @@ input:focus-visible {
 }
 
 .field-filters__input {
-    flex: 1 1 200px;
-    min-width: 180px;
-    max-width: 280px;
+    flex: 1 1 260px;
+    min-width: 220px;
+    max-width: 440px;
 }
 
 .field-filters__select {

@@ -251,8 +251,8 @@
   "fields": {
     "eyebrow": "FIELD NETWORK",
     "title": "Football Pitch Network",
-    "subtitle": "Discover and book certified football pitches in HCMC.",
-    "searchPlaceholder": "Search by pitch name or location...",
+    "subtitle": "Discover and book certified football pitches nationwide.",
+    "searchPlaceholder": "Search by pitch name, district, address...",
     "district": "District",
     "allDistricts": "All Districts",
     "type": "Pitch Size",
@@ -448,6 +448,14 @@
     }
   },
   "owner": {
+    "fieldTabs": {
+      "courts": "Courts",
+      "services": "Add-on services",
+      "pricing": "Pricing",
+      "hours": "Opening hours",
+      "images": "Images",
+      "edit": "Pitch settings"
+    },
     "dashboard": {
       "unavailable": "—",
       "loadError": "Could not load dashboard statistics.",

@@ -109,11 +109,20 @@ export class PostRepository extends BaseRepository<PostEntity> {
             );
         }),
       );
-    } else {
+    } else if (options.status?.trim()) {
       qb.andWhere('post.userId = :userId', { userId });
-      if (options.status?.trim()) {
-        qb.andWhere('post.status = :status', { status: options.status.trim() });
-      }
+      qb.andWhere('post.status = :status', { status: options.status.trim() });
+    } else {
+      qb.andWhere(
+        new Brackets((sub) => {
+          sub
+            .where('post.userId = :userId', { userId })
+            .orWhere(
+              'EXISTS (SELECT 1 FROM post_matches pm_app WHERE pm_app.post_id = post.id AND pm_app.applicant_id = :userId AND pm_app.status = :acceptedStatus)',
+              { userId, acceptedStatus: 'accepted' },
+            );
+        }),
+      );
     }
 
     qb.orderBy('post.createdAt', 'DESC').skip(skip).take(limit);

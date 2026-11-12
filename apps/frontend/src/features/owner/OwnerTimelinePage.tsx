@@ -3,6 +3,7 @@ import { Alert, Button, DatePicker, Empty, Select, Spin, Tag } from 'antd'
 import dayjs from 'dayjs'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
+import { OwnerPageHeader } from './components/OwnerPageHeader'
 import { useOwnerTimeline } from './hooks/useOwnerTimeline'
 import type { OwnerCourtTimelineItem, OwnerTimelineSlot } from './interface/owner-booking.types'
 
@@ -40,8 +41,17 @@ export function OwnerTimelinePage() {
   const hours = Array.from({ length: Math.floor(span / 60) + 1 }, (_, index) => openMinute + index * 60)
 
   return (
-    <section className="owner-page">
-      <header className="user-page__head"><div><span className="eyebrow">DAILY FIELD OPERATIONS</span><h1>{t('ownerOps.timelineTitle')}</h1><p>{t('ownerOps.timelineSubtitle')}</p></div><Button icon={<ReloadOutlined />} onClick={() => void reload()} loading={loading}>{t('common.refresh')}</Button></header>
+    <section className="owner-page" style={{ padding: '16px 0' }}>
+      <OwnerPageHeader
+        eyebrow="DAILY FIELD OPERATIONS"
+        title={t('ownerOps.timelineTitle')}
+        subtitle={t('ownerOps.timelineSubtitle')}
+        actions={
+          <Button icon={<ReloadOutlined />} onClick={() => void reload()} loading={loading}>
+            {t('common.refresh')}
+          </Button>
+        }
+      />
       <div className="owner-toolbar">
         <Select value={fieldId || undefined} placeholder={t('ownerOps.chooseField')} onChange={setFieldId} options={fields.map((field) => ({ value: field.id, label: field.name }))} style={{ minWidth: 240 }} />
         <DatePicker value={dayjs(date)} onChange={(value) => value && setDate(value.format('YYYY-MM-DD'))} />
