@@ -33,6 +33,7 @@ import { OwnerFieldServiceController } from './controllers/owner-field-service.c
 import { OwnerFieldController } from './controllers/owner-field.controller';
 import { FieldOwnershipGuard } from './guards/field-ownership.guard';
 import { AdminFieldService } from './services/admin-field.service';
+import { FieldAvailableSlotsService } from './services/field-available-slots.service';
 import { FieldAvailabilityService } from './services/field-availability.service';
 import { FieldPricingCalculatorService } from './services/field-pricing-calculator.service';
 import { FieldService } from './services/field.service';
@@ -92,6 +93,7 @@ import { OwnerFieldService } from './services/owner-field.service';
     OwnerFieldPricingService,
     FieldPricingCalculatorService,
     FieldAvailabilityService,
+    FieldAvailableSlotsService,
     OwnerBlockedSlotService,
     FieldService,
     FieldOwnershipGuard,

@@ -1,8 +1,7 @@
 import type { FootballField } from './interface/field.types'
 
-// Fallback football pitch photo (Unsplash CDN with direct image fallback)
 export const DEFAULT_FIELD_FALLBACK_IMAGE =
-  'https://images.unsplash.com/photo-1575361204480-aadea25e6e68?auto=format&fit=crop&w=1200&q=80'
+  'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300"><rect width="400" height="300" fill="%23141a33"/><rect x="20" y="20" width="360" height="260" rx="8" stroke="%238cfc70" stroke-width="2" fill="none" opacity="0.3"/><circle cx="200" cy="150" r="50" stroke="%238cfc70" stroke-width="2" fill="none" opacity="0.4"/><line x1="20" y1="150" x2="380" y2="150" stroke="%238cfc70" stroke-width="2" opacity="0.3"/></svg>'
 
 const photos = [
   'https://images.unsplash.com/photo-1575361204480-aadea25e6e68?auto=format&fit=crop&w=1400&q=80',

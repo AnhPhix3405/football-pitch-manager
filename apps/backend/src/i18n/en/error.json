@@ -59,6 +59,7 @@
   "paymentMethodNotSupported": "Payment method is not supported",
   "bookingAlreadyPaid": "This booking is already paid",
   "bookingNotEligibleForPayment": "Booking is not eligible for payment in its current status",
+  "bookingNotConfirmed": "Confirm the booking before recording a cash payment",
   "transactionNotFound": "Transaction not found",
   "invalidPaymentAmount": "Payment amount does not match order details",
   "invalidPaymentChecksum": "Invalid transaction checksum signature",

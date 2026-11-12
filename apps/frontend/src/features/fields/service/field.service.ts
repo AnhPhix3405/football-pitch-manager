@@ -2,6 +2,8 @@ import { apiClient, type ApiResponse } from '../../../config/axios.config'
 
 export interface BackendFieldItem {
   id: string
+  imageUrl?: string | null
+  images?: string[]
   ownerId: string
   name: string
   address: string

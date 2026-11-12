@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from 'react'
-import { footballFields } from '../field.data'
 import type { FieldFilters, FootballField } from '../interface/field.types'
 import type { BackendFieldItem } from '../service/field.service'
 import { getPublicFields } from '../service/field.service'
@@ -56,12 +55,8 @@ export function mapBackendFieldToFootballField(item: BackendFieldItem): Football
     rating: 5.0,
     reviewCount: 12,
     distanceKm: 2.1,
-    imageUrl:
-      'https://images.unsplash.com/photo-1575361204480-aadea25e6e68?auto=format&fit=crop&w=800&q=80',
-    gallery: [
-      'https://images.unsplash.com/photo-1575361204480-aadea25e6e68?auto=format&fit=crop&w=1200&q=80',
-      'https://images.unsplash.com/photo-1553778263-73a83bab9b0c?auto=format&fit=crop&w=1200&q=80',
-    ],
+    imageUrl: item.imageUrl || '',
+    gallery: item.images ?? [],
     amenities: ['Đèn chiếu sáng LED', 'Bãi giữ xe rộng', 'Nước uống', 'Phòng thay đồ'],
     description: item.description || 'Cụm sân bóng đá cỏ nhân tạo tiêu chuẩn thi đấu phong trào.',
     coordinates: {
@@ -114,7 +109,7 @@ export function filterAndSortFields(
 
 export function useFields(query?: string, district?: string, page = 1) {
   const [apiFields, setApiFields] = useState<FootballField[]>([])
-  const [combinedFields, setCombinedFields] = useState<FootballField[]>(footballFields)
+  const [combinedFields, setCombinedFields] = useState<FootballField[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -133,19 +128,14 @@ export function useFields(query?: string, district?: string, page = 1) {
         const mapped = res.items.map(mapBackendFieldToFootballField)
         setApiFields(mapped)
 
-        // Ghép sân API lên đầu, loại bỏ trùng tên và thêm sân mẫu Hà Nội & TP.HCM
-        const apiNames = new Set(mapped.map((f) => f.name.toLowerCase()))
-        const nonDuplicateMocks = footballFields.filter(
-          (mock) => !apiNames.has(mock.name.toLowerCase()),
-        )
-        setCombinedFields([...mapped, ...nonDuplicateMocks])
+        setCombinedFields(mapped)
       } else {
         setApiFields([])
-        setCombinedFields(footballFields)
+        setCombinedFields([])
       }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Lỗi tải danh sách sân')
-      setCombinedFields(footballFields)
+      setCombinedFields([])
     } finally {
       setLoading(false)
     }

@@ -59,6 +59,7 @@
   "paymentMethodNotSupported": "Phương thức thanh toán không được hỗ trợ",
   "bookingAlreadyPaid": "Đơn đặt sân này đã được thanh toán trước đó",
   "bookingNotEligibleForPayment": "Đơn đặt sân không ở trạng thái hợp lệ để thanh toán",
+  "bookingNotConfirmed": "Vui lòng xác nhận booking trước khi ghi nhận tiền mặt",
   "transactionNotFound": "Không tìm thấy thông tin giao dịch",
   "invalidPaymentAmount": "Số tiền thanh toán không khớp với thông tin đơn hàng",
   "invalidPaymentChecksum": "Chữ ký số xác thực giao dịch không hợp lệ",

@@ -3263,6 +3263,14 @@ input:focus-visible {
     transition: transform 0.3s ease;
 }
 
+.field-gallery-card__empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+}
+
 .field-gallery-card__badges {
     position: absolute;
     top: 16px;
@@ -3752,6 +3760,19 @@ input:focus-visible {
     height: auto;
     padding: 10px;
     text-align: center
+}
+
+.time-grid__price {
+    display: block;
+    font-size: 0.78rem;
+    margin-top: 4px;
+}
+
+.time-grid .ant-radio-button-wrapper-disabled {
+    background: #292929;
+    border-color: #484848;
+    color: #777;
+    cursor: not-allowed;
 }
 
 .booking-summary {
@@ -6675,6 +6696,82 @@ input:focus-visible {
 
 .payment-panel>.ant-btn {
     margin-top: 10px
+}
+
+.owner-booking-actions {
+    display: grid;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.owner-booking-actions__decision {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.owner-booking-actions .ant-btn {
+    width: 100%;
+    min-width: 0;
+    height: 52px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: .01em;
+    box-shadow: none;
+    transition: background .2s ease, border-color .2s ease, transform .2s ease;
+}
+
+.owner-booking-actions .ant-btn:not(:disabled):hover {
+    transform: translateY(-2px);
+}
+
+.owner-booking-actions .ant-btn.owner-booking-actions__accept {
+    border-color: var(--lime);
+    background: var(--lime);
+    color: #10200d;
+}
+
+.owner-booking-actions .ant-btn.owner-booking-actions__accept:not(:disabled):hover {
+    border-color: #baffab;
+    background: #baffab;
+    color: #10200d;
+}
+
+.owner-booking-actions .ant-btn.owner-booking-actions__reject,
+.owner-booking-actions .ant-btn.owner-booking-actions__refund {
+    border-color: rgba(255, 99, 99, .65);
+    background: rgba(255, 99, 99, .06);
+    color: #ff7979;
+}
+
+.owner-booking-actions .ant-btn.owner-booking-actions__reject:not(:disabled):hover,
+.owner-booking-actions .ant-btn.owner-booking-actions__refund:not(:disabled):hover {
+    border-color: #ff7979;
+    background: rgba(255, 99, 99, .13);
+    color: #ff9c9c;
+}
+
+.owner-booking-actions .ant-btn.owner-booking-actions__cash {
+    border-color: var(--border);
+    background: #202b1d;
+    color: var(--white);
+}
+
+.owner-booking-actions .ant-btn.owner-booking-actions__cash:not(:disabled):hover {
+    border-color: var(--lime);
+    background: #2a3b25;
+    color: var(--white);
+}
+
+@media (max-width: 420px) {
+    .owner-booking-actions__decision {
+        gap: 8px;
+    }
+
+    .owner-booking-actions .ant-btn {
+        font-size: 13px;
+    }
 }
 
 .current-plan {

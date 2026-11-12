@@ -26,7 +26,7 @@ export class VnpayService {
     this.returnUrl =
       this.configService.get<string>('payment.vnpay.returnUrl') ||
       process.env.VNPAY_RETURN_URL ||
-      'http://localhost:3000/api/v1/payments/vnpay/return';
+      'http://localhost:3001/payment/vnpay-return';
   }
 
   createPaymentUrl(params: CreateVnpayUrlParams): string {
@@ -102,7 +102,8 @@ export class VnpayService {
   private buildQueryString(obj: Record<string, string>): string {
     return Object.keys(obj)
       .map(
-        (key) => `${encodeURIComponent(key)}=${encodeURIComponent(obj[key])}`,
+        (key) =>
+          `${encodeURIComponent(key)}=${encodeURIComponent(obj[key]).replace(/%20/g, '+')}`,
       )
       .join('&');
   }

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   CalendarOutlined,
   CheckCircleFilled,
@@ -22,10 +22,8 @@ import {
 import dayjs, { type Dayjs } from 'dayjs'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
-import {
-  BOOKING_TIME_SLOTS,
-  COURT_TYPE_OPTIONS,
-} from '~/constants/booking.constant'
+import { COURT_TYPE_OPTIONS } from '~/constants/booking.constant'
+import { useFieldAvailableSlots } from '~/hooks/useFieldAvailableSlots'
 import { formatPrice } from '../../fields/field.data'
 import { PaymentMethodSelector } from '../../payment/components/PaymentMethodSelector'
 import {
@@ -66,7 +64,7 @@ export function BookingFlow({
   const [step, setStep] = useState(0)
   const [courtType, setCourtType] = useState<string>(defaultCourtType)
   const [date, setDate] = useState<Dayjs>(dayjs().add(1, 'day'))
-  const [slotIndex, setSlotIndex] = useState<number | undefined>(undefined)
+  const [slotStartTime, setSlotStartTime] = useState<string | undefined>(undefined)
   const [fieldServices, setFieldServices] = useState<PublicFieldServiceItem[]>([])
   const [loadingServices, setLoadingServices] = useState(false)
   const [selectedServices, setSelectedServices] = useState<Record<string, number>>({}) // serviceId -> quantity
@@ -86,74 +84,66 @@ export function BookingFlow({
   const [quoting, setQuoting] = useState(false)
   const [quote, setQuote] = useState<PriceQuoteResponse | null>(null)
 
-  const selectedSlot =
-    slotIndex !== undefined ? BOOKING_TIME_SLOTS[slotIndex] : undefined
-
   const fieldId = field.id
-
-  // Kiểm tra lịch trống khả dụng khi chọn ngày, loại sân và khung giờ
-  const checkAvailability = useCallback(async () => {
-    if (!selectedSlot || !fieldId) {
-      setAvailabilityInfo(null)
-      return
-    }
-
-    setCheckingAvailability(true)
-    try {
-      const res = await getFieldAvailabilityApi(fieldId, {
-        date: date.format('YYYY-MM-DD'),
-        courtType,
-        startTime: selectedSlot.startTime,
-        endTime: selectedSlot.endTime,
-      })
-
-      if (res && res.isFieldOpen === false) {
-        setAvailabilityInfo({
-          isAvailable: false,
-          message: t('booking.flow.fieldClosedAlert', {
-            defaultValue: 'Sân không mở cửa trong khung giờ này.',
-          }),
-        })
-        return
-      }
-
-      const ct = res?.courtTypes?.find((c) => c.courtType === courtType)
-      if (ct && ct.isAvailable === false) {
-        setAvailabilityInfo({
-          isAvailable: false,
-          message: t('booking.flow.courtFullAlert', {
-            defaultValue: 'Khung giờ này đã hết sân con trống cho loại sân này.',
-          }),
-        })
-        return
-      }
-
-      setAvailabilityInfo({
-        isAvailable: true,
-        message: t('booking.flow.courtAvailableAlert', {
-          defaultValue: 'Khung giờ khả dụng. Sân còn trống để bạn đặt lịch.',
-        }),
-      })
-    } catch {
-      // Fallback khi chạy thử nghiệm hoặc id sân mock
-      setAvailabilityInfo({
-        isAvailable: true,
-        message: t('booking.flow.courtAvailableAlert', {
-          defaultValue: 'Khung giờ khả dụng.',
-        }),
-      })
-    } finally {
-      setCheckingAvailability(false)
-    }
-  }, [selectedSlot, fieldId, date, courtType, t])
+  const dateKey = date.format('YYYY-MM-DD')
+  const {
+    slots,
+    isClosed,
+    loading: loadingSlots,
+    error: slotsError,
+  } = useFieldAvailableSlots(fieldId, dateKey, courtType, open)
+  const selectedSlot = slots.find((slot) => slot.startTime === slotStartTime)
 
   useEffect(() => {
-    if (open && slotIndex !== undefined) {
-      checkAvailability()
+    if (!open || !selectedSlot || !fieldId) {
+      setAvailabilityInfo(null)
+      setCheckingAvailability(false)
+      return undefined
     }
-  }, [open, date, courtType, slotIndex, checkAvailability])
 
-  // Tải danh sách dịch vụ thực tế của sân
+    let active = true
+    setCheckingAvailability(true)
+    setAvailabilityInfo(null)
+    getFieldAvailabilityApi(fieldId, {
+      date: dateKey,
+      courtType,
+      startTime: selectedSlot.startTime,
+      endTime: selectedSlot.endTime,
+    })
+      .then((res) => {
+        if (!active) return
+        if (!res.isOpen) {
+          setAvailabilityInfo({
+            isAvailable: false,
+            message: t('booking.flow.fieldClosedAlert'),
+          })
+          return
+        }
+        const court = res.courtTypes.find((item) => item.courtType === courtType)
+        setAvailabilityInfo({
+          isAvailable: court?.isAvailable === true,
+          message: t(
+            court?.isAvailable === true
+              ? 'booking.flow.courtAvailableAlert'
+              : 'booking.flow.courtFullAlert',
+          ),
+        })
+      })
+      .catch(() => {
+        if (!active) return
+        setAvailabilityInfo({
+          isAvailable: false,
+          message: t('booking.flow.availabilityError'),
+        })
+      })
+      .finally(() => {
+        if (active) setCheckingAvailability(false)
+      })
+
+    return () => {
+      active = false
+    }
+  }, [open, fieldId, dateKey, courtType, selectedSlot, t])
   useEffect(() => {
     if (open && field.id) {
       setLoadingServices(true)
@@ -177,16 +167,14 @@ export function BookingFlow({
     }, 0)
   }, [selectedServices, fieldServices])
 
-  const pitchRate = quote ? quote.pitchPrice : field.pricePerHour
+  const pitchRate = quote?.totalPrice ?? selectedSlot?.price ?? 0
   const total = pitchRate + servicesTotal
-  const depositAmount = quote
-    ? quote.depositAmount + Math.round(servicesTotal * 0.3)
-    : Math.round(total * 0.3)
+  const depositAmount = Math.round(total * 0.3)
   const remainingPayable = Math.max(0, total - depositAmount)
 
   const reset = () => {
     setStep(0)
-    setSlotIndex(undefined)
+    setSlotStartTime(undefined)
     setSelectedServices({})
     setBookingCode('')
     setCreatedBookingId('')
@@ -197,7 +185,7 @@ export function BookingFlow({
 
   // Chuyển sang bước 2 và lấy báo giá chính thức
   const handleProceedToConfirm = async () => {
-    if (!selectedSlot) return
+    if (!selectedSlot || !selectedSlot.isAvailable || availabilityInfo?.isAvailable !== true) return
     setQuoting(true)
     try {
       const quoteRes = await getFieldPriceQuoteApi(field.id, {
@@ -206,16 +194,14 @@ export function BookingFlow({
         startTime: selectedSlot.startTime,
         endTime: selectedSlot.endTime,
       })
-      if (quoteRes) {
-        setQuote(quoteRes)
-      }
+      setQuote(quoteRes)
     } catch {
-      // Dùng fallback giá giờ của sân nếu báo giá API thất bại
-      setQuote(null)
+      messageApi.error(t('booking.flow.quoteError'))
+      return
     } finally {
       setQuoting(false)
-      setStep(1)
     }
+    setStep(1)
   }
 
   // Xác nhận tạo đơn đặt sân thực tế qua POST /bookings và xử lý thanh toán
@@ -322,7 +308,11 @@ export function BookingFlow({
             <Segmented
               block
               value={courtType}
-              onChange={(val) => setCourtType(val as string)}
+              onChange={(val) => {
+                setCourtType(val as string)
+                setSlotStartTime(undefined)
+                setAvailabilityInfo(null)
+              }}
               options={COURT_TYPE_OPTIONS.map((opt) => ({
                 value: opt.value,
                 label: opt.label,
@@ -337,7 +327,13 @@ export function BookingFlow({
             </span>
             <DatePicker
               value={date}
-              onChange={(value) => value && setDate(value)}
+              onChange={(value) => {
+                if (value) {
+                  setDate(value)
+                  setSlotStartTime(undefined)
+                  setAvailabilityInfo(null)
+                }
+              }}
               format="DD/MM/YYYY"
               disabledDate={(current) => current.isBefore(dayjs(), 'day')}
               style={{ width: '100%' }}
@@ -350,17 +346,38 @@ export function BookingFlow({
               {t('booking.flow.availableSlots')}
             </span>
             <Radio.Group
-              value={slotIndex}
-              onChange={(event) => setSlotIndex(event.target.value)}
+              value={slotStartTime}
+              onChange={(event) => {
+                setSlotStartTime(event.target.value as string)
+                setAvailabilityInfo(null)
+              }}
               className="time-grid"
             >
-              {BOOKING_TIME_SLOTS.map((slotItem, index) => (
-                <Radio.Button value={index} key={slotItem.label}>
-                  <ClockCircleOutlined /> {slotItem.label}
+              {slots.map((slotItem) => (
+                <Radio.Button value={slotItem.startTime} key={slotItem.startTime} disabled={!slotItem.isAvailable}>
+                  <ClockCircleOutlined /> {slotItem.startTime} – {slotItem.endTime}
+                  <span className="time-grid__price">{formatPrice(slotItem.price)}</span>
                 </Radio.Button>
               ))}
             </Radio.Group>
           </label>
+
+          {loadingSlots && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '12px 0' }}>
+              <Spin size="small" /> {t('booking.flow.loadingSlots')}
+            </div>
+          )}
+          {!loadingSlots && slotsError && (
+            <Alert type="error" showIcon message={t('booking.flow.slotsError')} style={{ marginBottom: 16 }} />
+          )}
+          {!loadingSlots && !slotsError && slots.length === 0 && (
+            <Alert
+              type="info"
+              showIcon
+              message={t(isClosed ? 'booking.flow.fieldClosedAlert' : 'booking.flow.noSlots')}
+              style={{ marginBottom: 16 }}
+            />
+          )}
 
           {/* Trạng thái kiểm tra availability */}
           {checkingAvailability && (
@@ -384,9 +401,11 @@ export function BookingFlow({
             block
             size="large"
             disabled={
-              slotIndex === undefined ||
+              !selectedSlot ||
+              !selectedSlot.isAvailable ||
+              loadingSlots ||
               checkingAvailability ||
-              availabilityInfo?.isAvailable === false
+              availabilityInfo?.isAvailable !== true
             }
             loading={quoting}
             onClick={handleProceedToConfirm}
@@ -404,11 +423,11 @@ export function BookingFlow({
             <h3>{field.name}</h3>
             <p>
               <CalendarOutlined style={{ marginRight: 6 }} />
-              {date.format('dddd, DD/MM/YYYY')} · {selectedSlot?.label} (Sân {courtType}v{courtType})
+              {date.format('dddd, DD/MM/YYYY')} · {selectedSlot?.startTime} – {selectedSlot?.endTime} (Sân {courtType}v{courtType})
             </p>
             <dl>
               <div>
-                <dt>{t('booking.flow.pitchPrice')}</dt>
+                <dt>{t('booking.flow.slotPrice')}</dt>
                 <dd>{formatPrice(pitchRate)}</dd>
               </div>
               {servicesTotal > 0 && (
@@ -601,7 +620,7 @@ export function BookingFlow({
           icon={<CheckCircleFilled style={{ color: '#8cfc70' }} />}
           status="success"
           title={t('booking.flow.successTitle')}
-          subTitle={`${t('booking.flow.bookingCode')} #${bookingCode} · ${date.format('DD/MM/YYYY')} · ${selectedSlot?.label}`}
+          subTitle={`${t('booking.flow.bookingCode')} #${bookingCode} · ${date.format('DD/MM/YYYY')} · ${selectedSlot?.startTime} – ${selectedSlot?.endTime}`}
           extra={[
             <Button
               key="detail"

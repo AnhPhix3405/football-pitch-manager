@@ -118,8 +118,7 @@ export function OwnerBookingDetailPage() {
       okText: 'Xác nhận thu tiền',
       onOk: async () => {
         const tx = await handleConfirmCash(booking.id, {
-          amount: remaining,
-          notes: 'Thu tiền mặt tại sân',
+          note: 'Thu tiền mặt tại sân',
         })
         if (tx) {
           messageApi.success('Đã xác nhận thanh toán tiền mặt thành công!')
@@ -181,6 +180,10 @@ export function OwnerBookingDetailPage() {
         : 'gold'
 
   const remainingAmount = Math.max(0, booking.totalPrice - booking.depositAmount)
+  const canConfirmCash =
+    remainingAmount > 0 &&
+    booking.paymentStatus !== 'paid' &&
+    (booking.status === 'confirmed' || booking.status === 'completed')
 
   return (
     <section className="owner-page" style={{ padding: '16px 0' }}>
@@ -288,52 +291,54 @@ export function OwnerBookingDetailPage() {
             </div>
           </dl>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 16 }}>
-            {remainingAmount > 0 &&
-              booking.status !== 'rejected' &&
-              booking.status !== 'cancelled' && (
+          <div className="owner-booking-actions">
+            {booking.status === 'pending' && (
+              <div className="owner-booking-actions__decision">
                 <Button
-                  type="default"
-                  icon={<DollarCircleOutlined style={{ color: '#8cfc70' }} />}
-                  loading={paymentLoading}
-                  block
-                  onClick={onConfirmCash}
+                  type="primary"
+                  icon={<CheckOutlined />}
+                  className="owner-booking-actions__accept"
+                  disabled={!courts.length}
+                  onClick={confirmBooking}
                 >
-                  Xác nhận thu tiền mặt
+                  {t('ownerOps.acceptAction')}
                 </Button>
-              )}
+                <Button
+                  danger
+                  icon={<CloseOutlined />}
+                  className="owner-booking-actions__reject"
+                  onClick={rejectBooking}
+                >
+                  {t('ownerOps.rejectShortAction')}
+                </Button>
+              </div>
+            )}
+
+            {canConfirmCash && (
+              <Button
+                icon={<DollarCircleOutlined />}
+                className="owner-booking-actions__cash"
+                loading={paymentLoading}
+                onClick={onConfirmCash}
+              >
+                {t('ownerOps.confirmCashAction')}
+              </Button>
+            )}
 
             {booking.depositAmount > 0 &&
               (booking.status === 'cancelled' || booking.status === 'rejected') && (
                 <Button
                   danger
                   icon={<RollbackOutlined />}
+                  className="owner-booking-actions__refund"
                   loading={paymentLoading}
-                  block
                   onClick={() => setRefundModalOpen(true)}
                 >
-                  Hoàn tiền cọc
+                  {t('ownerOps.refundDepositAction')}
                 </Button>
               )}
-
-            {booking.status === 'pending' && (
-              <>
-                <Button
-                  type="primary"
-                  icon={<CheckOutlined />}
-                  block
-                  disabled={!courts.length}
-                  onClick={confirmBooking}
-                >
-                  Xác nhận booking
-                </Button>
-                <Button danger icon={<CloseOutlined />} block onClick={rejectBooking}>
-                  Từ chối
-                </Button>
-              </>
-            )}
             {booking.status === 'confirmed' && (
-              <Button type="primary" block onClick={completeBooking}>
+              <Button type="primary" className="owner-booking-actions__accept" onClick={completeBooking}>
                 {t('ownerOps.completeAction')}
               </Button>
             )}

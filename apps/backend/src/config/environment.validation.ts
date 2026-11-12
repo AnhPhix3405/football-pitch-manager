@@ -35,7 +35,7 @@ export const environmentValidationSchema = Joi.object({
   VNPAY_HASH_SECRET: Joi.string().default('XNBCJFAKAZQSGTARRLGCHVZWCIOIGSHN'),
   VNPAY_RETURN_URL: Joi.string()
     .uri()
-    .default('http://localhost:3000/api/v1/payments/vnpay/return'),
+    .default('http://localhost:3001/payment/vnpay-return'),
 }).unknown(true);
 
 export const validateEnvironment = (config: Record<string, unknown>) => {

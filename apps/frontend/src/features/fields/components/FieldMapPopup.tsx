@@ -26,6 +26,11 @@ export const FieldMapPopup = memo(function FieldMapPopup({
             <img
               src={field.imageUrl || DEFAULT_FIELD_FALLBACK_IMAGE}
               alt={field.name}
+              onError={(event) => {
+                if (event.currentTarget.src !== DEFAULT_FIELD_FALLBACK_IMAGE) {
+                  event.currentTarget.src = DEFAULT_FIELD_FALLBACK_IMAGE
+                }
+              }}
             />
           </div>
           <div className="pitch-glass-popup__titles">
@@ -50,6 +55,11 @@ export const FieldMapPopup = memo(function FieldMapPopup({
           alt={field.name}
           className="pitch-glass-popup__banner"
           loading="lazy"
+          onError={(event) => {
+            if (event.currentTarget.src !== DEFAULT_FIELD_FALLBACK_IMAGE) {
+              event.currentTarget.src = DEFAULT_FIELD_FALLBACK_IMAGE
+            }
+          }}
         />
         <div className="pitch-glass-popup__media-tags">
           <span className="pitch-glass-popup__format-tag">{field.format}</span>

@@ -1,5 +1,6 @@
 import { apiClient, type ApiResponse } from '~/config/axios.config'
 import type {
+  AvailableSlotsResponse,
   AvailabilityQueryParams,
   BackendBooking,
   BackendBookingListResponse,
@@ -85,6 +86,18 @@ export async function getFieldAvailabilityApi(
     { params },
   )
   return response.data?.data
+}
+
+export async function getFieldAvailableSlotsApi(
+  fieldId: string,
+  params: { date: string; courtType: string },
+  signal?: AbortSignal,
+): Promise<AvailableSlotsResponse> {
+  const response = await apiClient.get<ApiResponse<AvailableSlotsResponse>>(
+    `/fields/${fieldId}/availability/slots`,
+    { params, signal },
+  )
+  return response.data.data
 }
 
 /**

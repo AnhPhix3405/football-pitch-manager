@@ -57,6 +57,7 @@ Tài liệu chi tiết toàn bộ các API HTTP REST và WebSocket Gateway của
 | | `DELETE` | `/owner/fields/:fieldId/pricing/:pricingId` | Owner / Admin | Xóa khung giá cấu hình |
 | | `GET` | `/fields/:fieldId/pricing/quote` | Public | Tính toán báo giá tức thời theo loại sân, ngày giờ |
 | | `GET` | `/fields/:fieldId/availability` | Public | Kiểm tra tình trạng trống của các sân con theo khung giờ |
+| | `GET` | `/fields/:fieldId/availability/slots` | Public | Lấy khung giờ đặt sân theo cấu hình giá và trạng thái sân |
 | | `GET` | `/owner/fields/:fieldId/courts/timeline` | Owner / Admin | Xem timeline trực quan tình trạng đặt/khóa theo ngày |
 | | `GET` | `/owner/fields/:fieldId/courts/:courtId/check-assignment` | Owner / Admin | Kiểm tra tính hợp lệ khi gán sân con cho đơn đặt |
 | **Quản lý Đặt Sân & Vòng Đời** | `POST` | `/bookings` | User / Active | Tạo yêu cầu đặt sân (kèm dịch vụ & snapshot giá) |
@@ -286,6 +287,8 @@ Tài liệu chi tiết toàn bộ các API HTTP REST và WebSocket Gateway của
         "id": "d3b07384-d113-40e1-95b6-75399589d6e4",
         "ownerId": "b7c12345-d113-40e1-95b6-75399589d6e4",
         "name": "Sân bóng Tân Bình Sport Complex",
+        "imageUrl": "https://storage.example.com/fields/cover.jpg",
+        "images": ["https://storage.example.com/fields/cover.jpg"],
         "address": "120 Hoàng Hoa Thám, Phường 12",
         "district": "Tân Bình",
         "lat": 10.798123,
@@ -310,7 +313,7 @@ Tài liệu chi tiết toàn bộ các API HTTP REST và WebSocket Gateway của
 - **Quyền truy cập:** Public
 - **Path Parameters:**
   - `id` *(UUID)*: ID của cụm sân.
-- **Response (`200 OK` - `FieldResponseDto`):** Chi tiết đối tượng cụm sân như trong mảng `items`.
+- **Response (`200 OK` - `FieldResponseDto`):** Chi tiết đối tượng cụm sân như trong mảng `items`, gồm `imageUrl` (ảnh đại diện hoặc `null`) và `images` (URL ảnh chủ sân đã thêm, ảnh đại diện đứng đầu; mảng rỗng nếu chưa có ảnh). Danh sách sân công khai cũng trả hai trường này.
 
 #### 3.2.2.1. Lấy danh sách dịch vụ đi kèm của sân (`GET /fields/:id/services`)
 - **Quyền truy cập:** Public
@@ -519,61 +522,40 @@ Tài liệu chi tiết toàn bộ các API HTTP REST và WebSocket Gateway của
 - **Xóa quy tắc giá (`DELETE /owner/fields/:fieldId/pricing/:pricingId`):**
   - **Response (`200 OK`):** `{ "success": true }`.
 
-- **Tính toán báo giá đặt sân (`GET /fields/:fieldId/pricing/quote`):**
-  - **Quyền truy cập:** Public
-  - **Query Parameters:** `courtType` (bắt buộc), `date` (YYYY-MM-DD), `startTime` (HH:mm), `endTime` (HH:mm).
-  - **Response (`200 OK` - `PriceQuoteResponseDto`):**
-    ```json
-    {
-      "fieldId": "uuid",
-      "courtType": "5",
-      "date": "2026-10-26",
-      "dayType": "weekday",
-      "startTime": "16:00",
-      "endTime": "18:00",
-      "totalDurationHours": 2,
-      "totalPrice": 500000,
-      "breakdowns": [
-        {
-          "startTime": "16:00",
-          "endTime": "17:00",
-          "durationHours": 1,
-          "hourlyPrice": 200000,
-          "subtotal": 200000
-        },
-        {
-          "startTime": "17:00",
-          "endTime": "18:00",
-          "durationHours": 1,
-          "hourlyPrice": 300000,
-          "subtotal": 300000
-        }
-      ]
-    }
-    ```
-  - **Quy tắc tính toán:**
-    - Tự động xác định `dayType` theo ngày trong tuần (Thứ 2 - Thứ 6 là `weekday`, Thứ 7 - CN là `weekend`).
-    - Kiểm tra nằm trọn trong giờ mở cửa của sân (`OUTSIDE_OPENING_HOURS` nếu vi phạm).
-    - Chia nhỏ khung giờ qua các mốc giá khác nhau và tính tổng tiền chính xác. Báo lỗi `PRICE_CONFIGURATION_MISSING` nếu thiếu khung giá.
+- **Báo giá khung đặt sân (`GET /fields/:fieldId/pricing/quote`):**
+  - **Phân loại:** Public. Query bắt buộc: `courtType` (`5` | `7` | `11`), `date` (YYYY-MM-DD), `startTime`, `endTime` (HH:mm). Không có request body.
+  - **Response (`200 OK`):** `fieldId`, `courtType`, `date`, `dayType`, `startTime`, `endTime`, `totalDurationMinutes`, `totalPrice`, `breakdown`. Mỗi phần tử `breakdown` có `startTime`, `endTime`, `durationMinutes`, `slotPrice`, `subtotal`.
+  - **Quy tắc:** Chọn `weekday` cho T2–T6, `weekend` cho T7–CN theo ngày yêu cầu. Khoảng giờ phải trùng đúng một khung giá đã cấu hình và nằm trong giờ mở cửa. `totalPrice` bằng nguyên `price` của khung, không nhân theo thời lượng. Trả `PRICE_CONFIGURATION_MISSING` (400) nếu không có khung trùng; `OUTSIDE_OPENING_HOURS` (400) nếu ngoài giờ mở cửa.
 
 - **Kiểm tra tình trạng trống của sân (`GET /fields/:fieldId/availability`):**
   - **Quyền truy cập:** Public
-  - **Query Parameters:** `courtType` (bắt buộc), `date` (YYYY-MM-DD), `startTime` (HH:mm), `endTime` (HH:mm).
+  - **Query Parameters:** `date` (bắt buộc, YYYY-MM-DD), `startTime` và `endTime` (bắt buộc, HH:mm), `courtType` (tùy chọn, `5` | `7` | `11`).
   - **Response (`200 OK` - `FieldAvailabilityResponseDto`):**
     ```json
     {
       "fieldId": "uuid",
-      "courtType": "5",
       "date": "2026-10-26",
       "startTime": "08:00",
       "endTime": "10:00",
-      "isAvailable": true,
-      "availableCourtsCount": 1,
-      "totalCourtsCount": 2,
-      "availableCourtIds": ["court-uuid-2"]
+      "isOpen": true,
+      "courtTypes": [
+        {
+          "courtType": "5",
+          "totalCourts": 2,
+          "availableCourts": 1,
+          "isAvailable": true,
+          "availableCourtIds": ["court-uuid-2"]
+        }
+      ]
     }
     ```
   - **Thuật toán khả dụng:** Sân con khả dụng khi và chỉ khi: sân đang `active` AND không có `blocked_slot` giao nhau AND không có `booking` (khác trạng thái `cancelled`, `rejected`) giao nhau.
+
+- **Khung giờ đặt sân (`GET /fields/:fieldId/availability/slots`):**
+  - **Phân loại:** Public. Path: `fieldId`. Query bắt buộc: `date` (YYYY-MM-DD), `courtType` (`5` | `7` | `11`). Không có request body.
+  - **Response (`200 OK`):** `data` có `date`, `courtType`, `isClosed`, `openTime`, `closeTime`, `slots`. Mỗi slot có `startTime`, `endTime` (HH:mm), `price` (giá cố định cho cả khung), `availableCourts` và `isAvailable`.
+  - **Quy tắc:** Mỗi cấu hình giá đúng loại sân và nhóm ngày là một slot nếu nằm trọn trong giờ mở cửa. Slot hết sân vẫn được trả về với `isAvailable: false`, `availableCourts: 0` để giao diện vô hiệu hóa. `slots` rỗng nếu sân đóng hoặc không có khung giá phù hợp.
+  - **Lỗi:** `400 Bad Request` nếu query không hợp lệ.
 
 - **Xem trực quan timeline sân con của chủ sân (`GET /owner/fields/:fieldId/courts/timeline`):**
   - **Quyền truy cập:** `owner`, `admin`
@@ -1628,6 +1610,7 @@ Tài liệu chi tiết toàn bộ các API HTTP REST và WebSocket Gateway của
 #### 3.12.2. Chủ sân xác nhận thu tiền mặt (`POST /owner/bookings/:bookingId/confirm-cash`)
 - **Quyền truy cập:** Owner (Chủ cụm sân có đơn) / Admin
 - **Mô tả:** Chủ sân xác nhận khách hàng đã thanh toán tiền mặt thành công. Hệ thống cập nhật `transactions.status = 'success'` và `bookings.payment_status = 'paid'`.
+- **Điều kiện:** Booking phải ở trạng thái `confirmed` hoặc `completed`; booking `pending`, `rejected`, `cancelled` trả `400 BOOKING_NOT_CONFIRMED`. Booking đã thanh toán trả `400 BOOKING_ALREADY_PAID`.
 - **Request Body (`ConfirmCashPaymentDto`):**
   ```json
   {
@@ -1651,7 +1634,7 @@ Tài liệu chi tiết toàn bộ các API HTTP REST và WebSocket Gateway của
   {
     "success": true,
     "data": {
-      "paymentUrl": "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html?vnp_Amount=13200000&vnp_Command=pay&vnp_CreateDate=20261030100000&vnp_CurrCode=VND&vnp_IpAddr=127.0.0.1&vnp_Locale=vn&vnp_OrderInfo=Thanh+toan+tien+coc+dat+san&vnp_OrderType=other&vnp_ReturnUrl=http%3A%2F%2Flocalhost%3A3000%2Fapi%2Fv1%2Fpayments%2Fvnpay%2Freturn&vnp_TmnCode=CGXZLS0Z&vnp_TxnRef=8f0a0d92-23c2-466d-92a0-4592a407e3d1&vnp_Version=2.1.0&vnp_SecureHash=abcdef123456...",
+      "paymentUrl": "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html?vnp_Amount=13200000&vnp_Command=pay&vnp_CreateDate=20261030100000&vnp_CurrCode=VND&vnp_IpAddr=127.0.0.1&vnp_Locale=vn&vnp_OrderInfo=Thanh+toan+tien+coc+dat+san&vnp_OrderType=other&vnp_ReturnUrl=http%3A%2F%2Flocalhost%3A3001%2Fpayment%2Fvnpay-return&vnp_TmnCode=CGXZLS0Z&vnp_TxnRef=8f0a0d92-23c2-466d-92a0-4592a407e3d1&vnp_Version=2.1.0&vnp_SecureHash=abcdef123456...",
       "txnRef": "8f0a0d92-23c2-466d-92a0-4592a407e3d1"
     }
   }
