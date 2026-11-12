@@ -76,11 +76,16 @@ export class FieldReviewController {
   @Patch(':id/moderate')
   @HttpCode(HttpStatus.OK)
   @ApiFieldReviewDocs.moderate()
-  async moderate(@Param('id') id: string, @Body() dto: ModerateReviewDto) {
+  async moderate(
+    @Param('id') id: string,
+    @Body() dto: ModerateReviewDto,
+    @CurrentUser('id') adminId: string,
+  ) {
     return this.reviewModerationService.moderateFieldReview(
       id,
       dto.action,
       dto.reason,
+      adminId,
     );
   }
 }

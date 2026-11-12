@@ -297,8 +297,12 @@ export class AdminManagementService {
       }
 
       await manager.query(
-        `UPDATE users SET status = $1, updated_at = NOW() WHERE id = $2`,
-        [dto.status, userId],
+        `UPDATE users SET status = $1, updated_at = NOW(), suspended_by = $3 WHERE id = $2`,
+        [
+          dto.status,
+          userId,
+          dto.status === 'suspended' ? currentAdminId : null,
+        ],
       );
 
       if (dto.status === 'suspended') {
@@ -432,15 +436,18 @@ export class AdminManagementService {
     };
   }
 
-  async deletePost(postId: string): Promise<AdminDeletePostResponseDto> {
+  async deletePost(
+    postId: string,
+    currentAdminId?: string,
+  ): Promise<AdminDeletePostResponseDto> {
     const rows: DeletedPostRow[] = await this.dataSource.query(
       `
       UPDATE posts
-      SET status = 'closed', deleted_at = NOW(), updated_at = NOW()
+      SET status = 'closed', deleted_at = NOW(), updated_at = NOW(), moderated_by = $2
       WHERE id = $1 AND deleted_at IS NULL
       RETURNING id, status, deleted_at
       `,
-      [postId],
+      [postId, currentAdminId ?? null],
     );
 
     const row = rows[0];

@@ -90,8 +90,9 @@ export class AdminManagementController {
   @ApiOperation({ summary: 'Gỡ / đóng bài đăng vi phạm (Admin)' })
   async deletePost(
     @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser('id') currentAdminId: string,
   ): Promise<AdminDeletePostResponseDto> {
-    return this.adminManagementService.deletePost(id);
+    return this.adminManagementService.deletePost(id, currentAdminId);
   }
 
   @Get('reviews')

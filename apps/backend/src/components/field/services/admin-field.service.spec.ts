@@ -44,9 +44,27 @@ describe('AdminFieldService', () => {
   };
 
   const mockCourts: Partial<FieldCourtEntity>[] = [
-    { id: 'c1', fieldId: mockField.id!, name: 'Sân 1', type: '5', status: 'active' },
-    { id: 'c2', fieldId: mockField.id!, name: 'Sân 2', type: '5', status: 'active' },
-    { id: 'c3', fieldId: mockField.id!, name: 'Sân 3', type: '7', status: 'inactive' },
+    {
+      id: 'c1',
+      fieldId: mockField.id!,
+      name: 'Sân 1',
+      type: '5',
+      status: 'active',
+    },
+    {
+      id: 'c2',
+      fieldId: mockField.id!,
+      name: 'Sân 2',
+      type: '5',
+      status: 'active',
+    },
+    {
+      id: 'c3',
+      fieldId: mockField.id!,
+      name: 'Sân 3',
+      type: '7',
+      status: 'inactive',
+    },
   ];
 
   beforeEach(async () => {
@@ -99,7 +117,9 @@ describe('AdminFieldService', () => {
     };
 
     const mockDataSource = {
-      transaction: jest.fn().mockImplementation(async (cb) => cb(mockEntityManager)),
+      transaction: jest
+        .fn()
+        .mockImplementation(async (cb) => cb(mockEntityManager)),
       getRepository: jest.fn(),
     };
 
@@ -128,9 +148,15 @@ describe('AdminFieldService', () => {
         items: [mockField as FieldEntity],
         total: 1,
       });
-      fieldCourtRepository.findByFieldId.mockResolvedValue(mockCourts as FieldCourtEntity[]);
+      fieldCourtRepository.findByFieldId.mockResolvedValue(
+        mockCourts as FieldCourtEntity[],
+      );
 
-      const result = await service.getFields({ page: 1, limit: 10, status: 'ALL' });
+      const result = await service.getFields({
+        page: 1,
+        limit: 10,
+        status: 'ALL',
+      });
 
       expect(result.total).toBe(1);
       expect(result.items.length).toBe(1);
@@ -166,13 +192,15 @@ describe('AdminFieldService', () => {
 
   describe('updateStatus', () => {
     it('should throw NotFoundException if field does not exist', async () => {
-      (dataSource.transaction as jest.Mock).mockImplementationOnce(async (cb) => {
-        return cb({
-          getRepository: () => ({
-            findOne: jest.fn().mockResolvedValue(null),
-          }),
-        });
-      });
+      (dataSource.transaction as jest.Mock).mockImplementationOnce(
+        async (cb) => {
+          return cb({
+            getRepository: () => ({
+              findOne: jest.fn().mockResolvedValue(null),
+            }),
+          });
+        },
+      );
 
       await expect(
         service.updateStatus('non-existent-id', { status: 'inactive' }),
@@ -181,26 +209,32 @@ describe('AdminFieldService', () => {
 
     it('should cascade deactivate all courts when field status is changed to inactive', async () => {
       const updateCourtMock = jest.fn().mockResolvedValue({ affected: 3 });
-      const saveFieldMock = jest.fn().mockImplementation((f) => Promise.resolve({ ...f, status: 'inactive' }));
+      const saveFieldMock = jest
+        .fn()
+        .mockImplementation((f) =>
+          Promise.resolve({ ...f, status: 'inactive' }),
+        );
 
-      (dataSource.transaction as jest.Mock).mockImplementationOnce(async (cb) => {
-        return cb({
-          getRepository: (entity: any) => {
-            if (entity === FieldEntity) {
-              return {
-                findOne: jest.fn().mockResolvedValue({ ...mockField }),
-                save: saveFieldMock,
-              };
-            }
-            if (entity === FieldCourtEntity) {
-              return {
-                update: updateCourtMock,
-              };
-            }
-            return {};
-          },
-        });
-      });
+      (dataSource.transaction as jest.Mock).mockImplementationOnce(
+        async (cb) => {
+          return cb({
+            getRepository: (entity: any) => {
+              if (entity === FieldEntity) {
+                return {
+                  findOne: jest.fn().mockResolvedValue({ ...mockField }),
+                  save: saveFieldMock,
+                };
+              }
+              if (entity === FieldCourtEntity) {
+                return {
+                  update: updateCourtMock,
+                };
+              }
+              return {};
+            },
+          });
+        },
+      );
 
       fieldCourtRepository.findByFieldId.mockResolvedValue([]);
 

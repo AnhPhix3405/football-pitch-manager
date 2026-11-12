@@ -52,4 +52,11 @@ export class UserReviewEntity extends UuidEntity {
     nullable: true,
   })
   flagReason!: string | null;
+
+  @Column({ name: 'moderated_by', type: 'uuid', nullable: true })
+  moderatedBy!: string | null;
+
+  @ManyToOne(() => UserEntity, { onDelete: 'SET NULL', nullable: true })
+  @JoinColumn({ name: 'moderated_by' })
+  moderator?: UserEntity | null;
 }

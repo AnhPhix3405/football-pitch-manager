@@ -51,7 +51,8 @@ export class AdminFieldController {
   @Get('')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary: 'Lấy danh sách sân bóng toàn hệ thống có tìm kiếm, lọc và phân trang cho Admin',
+    summary:
+      'Lấy danh sách sân bóng toàn hệ thống có tìm kiếm, lọc và phân trang cho Admin',
   })
   @ApiResponse({ status: 200, type: AdminFieldListResponseDto })
   async getFields(
@@ -73,7 +74,8 @@ export class AdminFieldController {
   @Patch(':id/status')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary: 'Cập nhật trạng thái sân bóng (Khóa hoặc Kích hoạt lại sân; tự động cascade vô hiệu hóa sân con nếu khóa)',
+    summary:
+      'Cập nhật trạng thái sân bóng (Khóa hoặc Kích hoạt lại sân; tự động cascade vô hiệu hóa sân con nếu khóa)',
   })
   @ApiResponse({ status: 200, type: AdminFieldItemDto })
   async updateStatus(

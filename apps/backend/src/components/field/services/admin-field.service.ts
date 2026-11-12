@@ -8,9 +8,7 @@ import { FieldOpeningHourRepository } from '~/repositories/field-opening-hour.re
 import { FieldPricingRepository } from '~/repositories/field-pricing.repository';
 import { FieldRepository } from '~/repositories/field.repository';
 import { FieldServiceRepository } from '~/repositories/field-service.repository';
-import {
-  AdminFieldDetailResponseDto,
-} from '../dto/admin-field-detail-response.dto';
+import { AdminFieldDetailResponseDto } from '../dto/admin-field-detail-response.dto';
 import { AdminFieldKpiResponseDto } from '../dto/admin-field-kpi-response.dto';
 import {
   AdminFieldCourtsSummaryDto,
@@ -34,7 +32,9 @@ export class AdminFieldService {
     private readonly dataSource: DataSource,
   ) {}
 
-  async getFields(query: AdminFieldQueryDto): Promise<AdminFieldListResponseDto> {
+  async getFields(
+    query: AdminFieldQueryDto,
+  ): Promise<AdminFieldListResponseDto> {
     const page = Math.max(1, query.page ?? 1);
     const limit = Math.min(100, Math.max(1, query.limit ?? 10));
 
@@ -68,7 +68,8 @@ export class AdminFieldService {
   async getKpi(): Promise<AdminFieldKpiResponseDto> {
     const kpiCounts = await this.fieldRepository.countAdminKpi();
     const totalCourts = await this.fieldCourtRepository.countTotal();
-    const depositRequiredCount = await this.fieldRepository.countDepositRequired();
+    const depositRequiredCount =
+      await this.fieldRepository.countDepositRequired();
 
     return {
       totalFields: kpiCounts.totalFields,
@@ -203,7 +204,9 @@ export class AdminFieldService {
     };
   }
 
-  private summarizeCourts(courts: FieldCourtEntity[]): AdminFieldCourtsSummaryDto {
+  private summarizeCourts(
+    courts: FieldCourtEntity[],
+  ): AdminFieldCourtsSummaryDto {
     let type5 = 0;
     let type7 = 0;
     let type11 = 0;
@@ -242,7 +245,9 @@ export class AdminFieldService {
     const owner = field.owner;
     return {
       id: owner?.id ?? field.ownerId,
-      fullName: (owner as any)?.fullName ?? (owner?.email ? owner.email.split('@')[0] : 'Chủ sân'),
+      fullName:
+        (owner as any)?.fullName ??
+        (owner?.email ? owner.email.split('@')[0] : 'Chủ sân'),
       email: owner?.email ?? 'N/A',
       phoneNumber: owner?.phone ?? null,
     };

@@ -460,9 +460,10 @@ export class AdminReportsService {
             ELSE NULL
           END AS action_taken,
           fr.updated_at AS resolved_at,
-          'admin@pitchmaster.vn' AS moderator
+          COALESCE(mod_u.email, 'admin@pitchmaster.vn') AS moderator
         FROM field_reviews fr
         LEFT JOIN users u ON u.id = fr.reviewer_id
+        LEFT JOIN users mod_u ON mod_u.id = fr.moderated_by
         WHERE fr.is_flagged = true
 
         UNION ALL
@@ -486,9 +487,10 @@ export class AdminReportsService {
             ELSE NULL
           END AS action_taken,
           ur.updated_at AS resolved_at,
-          'admin@pitchmaster.vn' AS moderator
+          COALESCE(mod_u.email, 'admin@pitchmaster.vn') AS moderator
         FROM user_reviews ur
         LEFT JOIN users u ON u.id = ur.reviewer_id
+        LEFT JOIN users mod_u ON mod_u.id = ur.moderated_by
         WHERE ur.is_flagged = true
 
         UNION ALL
@@ -506,9 +508,10 @@ export class AdminReportsService {
           'resolved' AS status,
           'Đã đóng bài đăng' AS action_taken,
           p.updated_at AS resolved_at,
-          'admin@pitchmaster.vn' AS moderator
+          COALESCE(mod_u.email, 'admin@pitchmaster.vn') AS moderator
         FROM posts p
         LEFT JOIN users u ON u.id = p.user_id
+        LEFT JOIN users mod_u ON mod_u.id = p.moderated_by
         WHERE p.status = 'closed'
 
         UNION ALL
@@ -526,8 +529,9 @@ export class AdminReportsService {
           'resolved' AS status,
           'Đã khóa tài khoản' AS action_taken,
           su.updated_at AS resolved_at,
-          'admin@pitchmaster.vn' AS moderator
+          COALESCE(mod_u.email, 'admin@pitchmaster.vn') AS moderator
         FROM users su
+        LEFT JOIN users mod_u ON mod_u.id = su.suspended_by
         WHERE su.status = 'suspended'
       )
     `;

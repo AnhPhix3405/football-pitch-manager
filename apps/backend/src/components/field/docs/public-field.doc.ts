@@ -52,7 +52,8 @@ export function ApiGetPublicFieldDetailDoc() {
 export function ApiGetPublicFieldServicesDoc() {
   return applyDecorators(
     ApiOperation({
-      summary: 'Lấy danh sách các dịch vụ đi kèm đang hoạt động của cụm sân theo ID',
+      summary:
+        'Lấy danh sách các dịch vụ đi kèm đang hoạt động của cụm sân theo ID',
     }),
     ApiParam({
       name: 'id',

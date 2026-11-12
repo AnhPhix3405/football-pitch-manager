@@ -20,7 +20,8 @@ export class GetSubscriptionPlansQueryDto {
   status?: 'ALL' | 'ACTIVE' | 'INACTIVE';
 
   @ApiPropertyOptional({
-    description: 'Lấy toàn bộ gói (tương thích ngược: true tương đương status=ALL)',
+    description:
+      'Lấy toàn bộ gói (tương thích ngược: true tương đương status=ALL)',
     example: 'true',
   })
   @IsOptional()

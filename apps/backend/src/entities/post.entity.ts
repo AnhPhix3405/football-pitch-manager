@@ -82,4 +82,11 @@ export class PostEntity extends UuidEntity {
 
   @Column({ name: 'deleted_at', type: 'timestamptz', nullable: true })
   deletedAt!: Date | null;
+
+  @Column({ name: 'moderated_by', type: 'uuid', nullable: true })
+  moderatedBy!: string | null;
+
+  @ManyToOne(() => UserEntity, { onDelete: 'SET NULL', nullable: true })
+  @JoinColumn({ name: 'moderated_by' })
+  moderator?: UserEntity | null;
 }

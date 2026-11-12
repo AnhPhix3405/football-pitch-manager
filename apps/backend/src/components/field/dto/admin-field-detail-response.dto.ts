@@ -15,7 +15,10 @@ export class AdminFieldCourtItemDto {
   @ApiProperty({ enum: ['5', '7', '11'], example: '5' })
   type: string;
 
-  @ApiProperty({ enum: ['active', 'inactive', 'maintenance'], example: 'active' })
+  @ApiProperty({
+    enum: ['active', 'inactive', 'maintenance'],
+    example: 'active',
+  })
   status: string;
 
   @ApiPropertyOptional({ example: '2026-10-04T12:00:00.000Z' })
@@ -72,10 +75,16 @@ export class AdminFieldDetailResponseDto {
   @ApiPropertyOptional({ example: 106.654321, nullable: true })
   lng: number | null;
 
-  @ApiPropertyOptional({ example: 'Cụm sân cỏ nhân tạo đạt chuẩn FIFA 2 sao...', nullable: true })
+  @ApiPropertyOptional({
+    example: 'Cụm sân cỏ nhân tạo đạt chuẩn FIFA 2 sao...',
+    nullable: true,
+  })
   description: string | null;
 
-  @ApiProperty({ enum: ['active', 'inactive', 'pending', 'rejected'], example: 'active' })
+  @ApiProperty({
+    enum: ['active', 'inactive', 'pending', 'rejected'],
+    example: 'active',
+  })
   status: 'active' | 'inactive' | 'pending' | 'rejected';
 
   @ApiProperty({ example: true })

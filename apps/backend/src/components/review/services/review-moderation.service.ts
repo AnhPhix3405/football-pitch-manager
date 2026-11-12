@@ -51,6 +51,7 @@ export class ReviewModerationService {
     id: string,
     action: ModerationAction,
     reason?: string,
+    moderatorId?: string,
   ): Promise<FieldReviewEntity> {
     const review = await this.fieldReviewRepository.findById(id);
     if (!review) {
@@ -60,9 +61,11 @@ export class ReviewModerationService {
     if (action === MODERATION_ACTION.DISMISS) {
       review.isFlagged = false;
       review.flagReason = null;
+      review.moderatedBy = null;
     } else if (action === MODERATION_ACTION.HIDE) {
       review.isFlagged = true;
       review.flagReason = reason ? `HIDDEN: ${reason}` : 'HIDDEN';
+      review.moderatedBy = moderatorId ?? null;
     }
 
     const saved = await this.fieldReviewRepository.save(review);
@@ -78,6 +81,7 @@ export class ReviewModerationService {
     id: string,
     action: ModerationAction,
     reason?: string,
+    moderatorId?: string,
   ): Promise<UserReviewEntity> {
     const review = await this.userReviewRepository.findById(id);
     if (!review) {
@@ -87,9 +91,11 @@ export class ReviewModerationService {
     if (action === MODERATION_ACTION.DISMISS) {
       review.isFlagged = false;
       review.flagReason = null;
+      review.moderatedBy = null;
     } else if (action === MODERATION_ACTION.HIDE) {
       review.isFlagged = true;
       review.flagReason = reason ? `HIDDEN: ${reason}` : 'HIDDEN';
+      review.moderatedBy = moderatorId ?? null;
     }
 
     const saved = await this.userReviewRepository.save(review);

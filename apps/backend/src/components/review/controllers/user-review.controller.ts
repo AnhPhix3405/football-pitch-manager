@@ -86,11 +86,16 @@ export class UserReviewController {
   @Patch(':id/moderate')
   @HttpCode(HttpStatus.OK)
   @ApiUserReviewDocs.moderate()
-  async moderate(@Param('id') id: string, @Body() dto: ModerateReviewDto) {
+  async moderate(
+    @Param('id') id: string,
+    @Body() dto: ModerateReviewDto,
+    @CurrentUser('id') adminId: string,
+  ) {
     return this.reviewModerationService.moderateUserReview(
       id,
       dto.action,
       dto.reason,
+      adminId,
     );
   }
 }

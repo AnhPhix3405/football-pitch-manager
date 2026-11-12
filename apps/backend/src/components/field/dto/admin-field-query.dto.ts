@@ -1,17 +1,11 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import {
-  IsIn,
-  IsInt,
-  IsOptional,
-  IsString,
-  Max,
-  Min,
-} from 'class-validator';
+import { IsIn, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
 
 export class AdminFieldQueryDto {
   @ApiPropertyOptional({
-    description: 'Từ khóa tìm kiếm theo tên cụm sân, địa chỉ hoặc tên/email chủ sân',
+    description:
+      'Từ khóa tìm kiếm theo tên cụm sân, địa chỉ hoặc tên/email chủ sân',
     example: 'Tân Bình',
   })
   @IsOptional()

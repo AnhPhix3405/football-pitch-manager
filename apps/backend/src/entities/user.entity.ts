@@ -1,4 +1,4 @@
-import { Column, Entity, Index } from 'typeorm';
+import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 import { UuidEntity } from '../core/entities/uuid.entity';
 
 @Entity({ name: 'users' })
@@ -32,4 +32,11 @@ export class UserEntity extends UuidEntity {
 
   @Column({ type: 'decimal', precision: 10, scale: 7, nullable: true })
   lng!: string | null;
+
+  @Column({ name: 'suspended_by', type: 'uuid', nullable: true })
+  suspendedBy!: string | null;
+
+  @ManyToOne(() => UserEntity, { onDelete: 'SET NULL', nullable: true })
+  @JoinColumn({ name: 'suspended_by' })
+  suspendedByUser?: UserEntity | null;
 }
