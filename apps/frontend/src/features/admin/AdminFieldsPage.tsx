@@ -12,7 +12,6 @@ import {
   Input,
   Rate,
   Segmented,
-  Select,
   Space,
   Table,
   Tag,
@@ -26,7 +25,6 @@ import { FieldStatusModal } from './components/FieldStatusModal';
 import {
   ADMIN_FIELD_STATUS_BADGE_CONFIG,
   ADMIN_FIELD_STATUS_OPTIONS,
-  COMMON_DISTRICTS,
 } from './constants/admin-field.constant';
 import { useAdminFields } from './hooks/useAdminFields';
 import type {
@@ -47,8 +45,6 @@ export function AdminFieldsPage() {
     setSearchQuery,
     statusFilter,
     setStatusFilter,
-    districtFilter,
-    setDistrictFilter,
     page,
     setPage,
     pageSize,
@@ -256,18 +252,6 @@ export function AdminFieldsPage() {
               label: t(opt.labelKey, { defaultValue: opt.defaultLabel }),
               value: opt.value,
             }))}
-          />
-
-          <Select
-            allowClear
-            placeholder={t('adminFields.districtPlaceholder', { defaultValue: 'Lọc theo Quận/Huyện' })}
-            value={districtFilter}
-            onChange={(val) => {
-              setDistrictFilter(val);
-              setPage(1);
-            }}
-            style={{ width: 170 }}
-            options={COMMON_DISTRICTS.map((d) => ({ label: d, value: d }))}
           />
         </div>
 
