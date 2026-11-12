@@ -10,8 +10,11 @@ export class PriceQuoteSegmentDto {
   @ApiProperty({ example: 60, description: 'Duration in minutes' })
   durationMinutes!: number;
 
-  @ApiProperty({ example: 200000, description: 'Hourly rate in VND' })
-  hourlyRate!: number;
+  @ApiProperty({
+    example: 200000,
+    description: 'Fixed price of the configured slot in VND',
+  })
+  slotPrice!: number;
 
   @ApiProperty({ example: 200000, description: 'Subtotal in VND' })
   subtotal!: number;

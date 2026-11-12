@@ -91,13 +91,33 @@ export interface CourtTypeAvailability {
   isAvailable: boolean
   totalCourts: number
   availableCourts: number
-  assignedCourts?: string[]
+  availableCourtIds: string[]
 }
 
 export interface FieldAvailabilityResponse {
+  fieldId: string
   date: string
-  isFieldOpen: boolean
+  startTime: string
+  endTime: string
+  isOpen: boolean
   courtTypes: CourtTypeAvailability[]
+}
+
+export interface AvailableSlot {
+  startTime: string
+  endTime: string
+  availableCourts: number
+  isAvailable: boolean
+  price: number
+}
+
+export interface AvailableSlotsResponse {
+  date: string
+  courtType: string
+  isClosed: boolean
+  openTime: string | null
+  closeTime: string | null
+  slots: AvailableSlot[]
 }
 
 export interface PriceQuoteQueryParams {
@@ -109,10 +129,8 @@ export interface PriceQuoteQueryParams {
 
 export interface PriceQuoteResponse {
   courtType: string
-  durationHours: number
-  pitchPrice: number
-  depositAmount: number
-  ratePerHour: number
+  totalDurationMinutes: number
+  totalPrice: number
 }
 
 /**

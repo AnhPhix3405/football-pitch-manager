@@ -2,6 +2,7 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import { ApplicationException } from '~/common/exceptions/application.exception';
 import { FieldEntity } from '~/entities/field.entity';
 import { FieldRepository } from '~/repositories/field.repository';
+import { FieldImageRepository } from '~/repositories/field-image.repository';
 import { FieldServiceRepository } from '~/repositories/field-service.repository';
 import { FieldListResponseDto } from '../dto/field-list-response.dto';
 import { FieldResponseDto } from '../dto/field-response.dto';
@@ -16,6 +17,7 @@ export class FieldService {
   constructor(
     private readonly fieldRepository: FieldRepository,
     private readonly fieldServiceRepository: FieldServiceRepository,
+    private readonly fieldImageRepository: FieldImageRepository,
   ) {}
 
   async getPublicFields(
@@ -35,8 +37,20 @@ export class FieldService {
         sortOrder: query.sortOrder,
       });
 
+    const images = await this.fieldImageRepository.findByFieldIds(
+      items.map((item) => item.id),
+    );
+    const imagesByField = new Map<string, typeof images>();
+    for (const image of images) {
+      const fieldImages = imagesByField.get(image.fieldId) ?? [];
+      fieldImages.push(image);
+      imagesByField.set(image.fieldId, fieldImages);
+    }
+
     return {
-      items: items.map((item) => this.mapToResponseDto(item)),
+      items: items.map((item) =>
+        this.mapToPublicResponseDto(item, imagesByField.get(item.id) ?? []),
+      ),
       total,
       page,
       limit,
@@ -63,7 +77,8 @@ export class FieldService {
       });
     }
 
-    return this.mapToResponseDto(field);
+    const images = await this.fieldImageRepository.findByFieldId(id);
+    return this.mapToPublicResponseDto(field, images);
   }
 
   async getPublicFieldServices(
@@ -121,6 +136,25 @@ export class FieldService {
         field.depositValue !== null ? Number(field.depositValue) : null,
       createdAt: field.createdAt,
       updatedAt: field.updatedAt,
+    };
+  }
+
+  private mapToPublicResponseDto(
+    field: FieldEntity,
+    images: { url: string; isThumbnail: boolean }[],
+  ): FieldResponseDto {
+    const thumbnail = images.find((image) => image.isThumbnail) ?? images[0];
+    return {
+      ...this.mapToResponseDto(field),
+      imageUrl: thumbnail?.url ?? null,
+      images: thumbnail
+        ? [
+            thumbnail.url,
+            ...images
+              .filter((image) => image !== thumbnail)
+              .map((image) => image.url),
+          ]
+        : [],
     };
   }
 }

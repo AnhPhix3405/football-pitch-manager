@@ -6,10 +6,6 @@ import { PillButton } from '../../../components/PillButton'
 import { DEFAULT_FIELD_FALLBACK_IMAGE, formatPrice } from '../field.data'
 import type { FootballField } from '../interface/field.types'
 
-// Inline SVG fallback icon placeholder
-const SVG_FALLBACK_DATA =
-  'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300" fill="%2311162b"><rect width="400" height="300" fill="%23141a33"/><circle cx="200" cy="150" r="50" stroke="%238cfc70" stroke-width="2" fill="none" opacity="0.4"/><line x1="20" y1="150" x2="380" y2="150" stroke="%238cfc70" stroke-width="2" opacity="0.3"/><rect x="20" y="20" width="360" height="260" rx="8" stroke="%238cfc70" stroke-width="2" fill="none" opacity="0.3"/><text x="50%" y="54%" text-anchor="middle" fill="%238cfc70" font-family="sans-serif" font-size="16" font-weight="bold">PitchMaster Arena</text></svg>'
-
 export interface FieldCardProps {
   field: FootballField
   compact?: boolean
@@ -30,11 +26,7 @@ export function FieldCard({
 
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
     const target = e.currentTarget
-    if (target.src !== DEFAULT_FIELD_FALLBACK_IMAGE) {
-      target.src = DEFAULT_FIELD_FALLBACK_IMAGE
-    } else {
-      target.src = SVG_FALLBACK_DATA
-    }
+    if (target.src !== DEFAULT_FIELD_FALLBACK_IMAGE) target.src = DEFAULT_FIELD_FALLBACK_IMAGE
   }
 
   return (

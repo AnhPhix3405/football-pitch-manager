@@ -173,6 +173,24 @@ describe('PaymentService - Cash & Method Selection', () => {
   });
 
   describe('confirmCashPayment', () => {
+    it('rejects cash confirmation while the booking is pending', async () => {
+      ownerProfileRepo.findByUserId.mockResolvedValue({
+        id: 'owner-profile-1',
+        userId: 'owner-user',
+      } as OwnerProfileEntity);
+      bookingRepo.findDetailById.mockResolvedValue({
+        id: 'booking-1',
+        status: 'pending',
+        paymentStatus: 'unpaid',
+        field: { ownerId: 'owner-profile-1' },
+      } as BookingEntity);
+
+      await expect(
+        paymentService.confirmCashPayment('booking-1', 'owner-user'),
+      ).rejects.toMatchObject({ response: { code: 'BOOKING_NOT_CONFIRMED' } });
+      expect(bookingRepo.save).not.toHaveBeenCalled();
+    });
+
     it('allows owner to confirm cash and sets booking paymentStatus to paid', async () => {
       const mockOwner = {
         id: 'owner-profile-1',

@@ -38,8 +38,7 @@ export interface VnpayReturnVerification {
 }
 
 export interface ConfirmCashPaymentPayload {
-  amount?: number
-  notes?: string
+  note?: string
 }
 
 export interface RefundPaymentPayload {

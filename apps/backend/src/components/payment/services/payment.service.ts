@@ -153,6 +153,14 @@ export class PaymentService {
       });
     }
 
+    if (booking.status !== 'confirmed' && booking.status !== 'completed') {
+      throw new ApplicationException({
+        code: 'BOOKING_NOT_CONFIRMED',
+        messageKey: 'error.bookingNotConfirmed',
+        status: HttpStatus.BAD_REQUEST,
+      });
+    }
+
     if (booking.paymentStatus === 'paid') {
       throw new ApplicationException({
         code: 'BOOKING_ALREADY_PAID',

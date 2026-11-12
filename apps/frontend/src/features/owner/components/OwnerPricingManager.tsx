@@ -27,6 +27,7 @@ import {
 } from 'antd'
 import dayjs, { type Dayjs } from 'dayjs'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { formatPrice } from '../../fields/field.data'
 import { useOwnerPricing } from '../hooks/useOwnerPricing'
 import type {
@@ -57,6 +58,7 @@ interface CalcFormData {
 }
 
 export function OwnerPricingManager({ fieldId }: OwnerPricingManagerProps) {
+  const { t } = useTranslation()
   const {
     pricingList,
     loading,
@@ -291,7 +293,7 @@ export function OwnerPricingManager({ fieldId }: OwnerPricingManagerProps) {
 
                   <div style={{ marginTop: 12 }}>
                     <span className="opm-rule-price">{formatPrice(rule.price)}</span>
-                    <small style={{ color: 'var(--sage)' }}> / giờ</small>
+                    <small style={{ color: 'var(--sage)' }}> {t('booking.flow.perSlot')}</small>
                   </div>
 
                   <div className="opm-rule-time" style={{ marginTop: 8 }}>
@@ -412,7 +414,7 @@ export function OwnerPricingManager({ fieldId }: OwnerPricingManagerProps) {
                   {formatPrice(quoteResult.totalPrice)}
                 </span>
               </div>
-              {((quoteResult.breakdown || quoteResult.breakdowns) || []).map((b, idx) => (
+              {quoteResult.breakdown.map((b, idx) => (
                 <div
                   key={idx}
                   style={{
@@ -425,7 +427,7 @@ export function OwnerPricingManager({ fieldId }: OwnerPricingManagerProps) {
                   }}
                 >
                   <span>
-                    Khung {b.startTime} – {b.endTime} ({b.durationHours || 1}h @ {formatPrice(b.hourlyPrice)}/h)
+                    Khung {b.startTime} – {b.endTime}: {formatPrice(b.slotPrice)}
                   </span>
                   <strong style={{ color: 'var(--white)' }}>{formatPrice(b.subtotal)}</strong>
                 </div>
@@ -526,7 +528,7 @@ export function OwnerPricingManager({ fieldId }: OwnerPricingManagerProps) {
             label="Đơn giá mỗi giờ (VND)"
             rules={[{ required: true, message: 'Nhập đơn giá' }]}
           >
-            <InputNumber min={0} step={20000} style={{ width: '100%' }} addonAfter="VND / giờ" />
+            <InputNumber min={0} step={20000} style={{ width: '100%' }} addonAfter={t('booking.flow.vndPerSlot')} />
           </Form.Item>
         </Form>
       </Modal>
@@ -553,7 +555,7 @@ export function OwnerPricingManager({ fieldId }: OwnerPricingManagerProps) {
             label="Đơn giá mỗi giờ (VND)"
             rules={[{ required: true, message: 'Nhập đơn giá' }]}
           >
-            <InputNumber min={0} step={20000} style={{ width: '100%' }} addonAfter="VND / giờ" />
+            <InputNumber min={0} step={20000} style={{ width: '100%' }} addonAfter={t('booking.flow.vndPerSlot')} />
           </Form.Item>
         </Form>
       </Modal>

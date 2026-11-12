@@ -1,3 +1,4 @@
+import * as crypto from 'crypto';
 import { ConfigService } from '@nestjs/config';
 import { VnpayService } from './vnpay.service';
 
@@ -35,7 +36,14 @@ describe('VnpayService', () => {
     expect(url).toContain('vnp_Amount=10000000');
     expect(url).toContain('vnp_TmnCode=TEST_TMN');
     expect(url).toContain('vnp_TxnRef=TXN_123');
-    expect(url).toContain('&vnp_SecureHash=');
+    expect(url).toContain('vnp_OrderInfo=Thanh+toan+dat+san');
+    const [unsignedUrl, hash] = url.split('&vnp_SecureHash=');
+    const signData = unsignedUrl.split('?')[1];
+    const expectedHash = crypto
+      .createHmac('sha512', 'TEST_SECRET')
+      .update(signData, 'utf-8')
+      .digest('hex');
+    expect(hash).toBe(expectedHash);
   });
 
   it('verifies valid secure hash successfully', () => {
@@ -50,7 +58,7 @@ describe('VnpayService', () => {
 
     // Calculate valid hash with same secret
     const signData =
-      'vnp_Amount=10000000&vnp_Command=pay&vnp_OrderInfo=Thanh%20toan&vnp_ResponseCode=00&vnp_TmnCode=TEST_TMN&vnp_TxnRef=TXN_123';
+      'vnp_Amount=10000000&vnp_Command=pay&vnp_OrderInfo=Thanh+toan&vnp_ResponseCode=00&vnp_TmnCode=TEST_TMN&vnp_TxnRef=TXN_123';
     const validHash = vnpayService.signHmacSha512('TEST_SECRET', signData);
 
     const isValid = vnpayService.verifySecureHash({

@@ -10,6 +10,6 @@ export const paymentConfig = registerAs('payment', () => ({
       process.env.VNPAY_HASH_SECRET || 'XNBCJFAKAZQSGTARRLGCHVZWCIOIGSHN',
     returnUrl:
       process.env.VNPAY_RETURN_URL ||
-      'http://localhost:3000/api/v1/payments/vnpay/return',
+      'http://localhost:3001/payment/vnpay-return',
   },
 }));

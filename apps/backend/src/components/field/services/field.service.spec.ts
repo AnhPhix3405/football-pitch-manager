@@ -9,6 +9,7 @@ import { HttpStatus } from '@nestjs/common';
 import { ApplicationException } from '~/common/exceptions/application.exception';
 import { FieldEntity } from '~/entities/field.entity';
 import { FieldRepository } from '~/repositories/field.repository';
+import { FieldImageRepository } from '~/repositories/field-image.repository';
 import { FieldServiceRepository } from '~/repositories/field-service.repository';
 import { FieldService } from './field.service';
 
@@ -16,6 +17,7 @@ describe('FieldService', () => {
   let service: FieldService;
   let fieldRepository: jest.Mocked<FieldRepository>;
   let fieldServiceRepository: jest.Mocked<FieldServiceRepository>;
+  let fieldImageRepository: jest.Mocked<FieldImageRepository>;
 
   const validFieldId = 'd3b07384-d113-40e1-95b6-75399589d6e4';
   const mockActiveField: FieldEntity = {
@@ -46,10 +48,41 @@ describe('FieldService', () => {
       findByFieldId: jest.fn(),
     } as unknown as jest.Mocked<FieldServiceRepository>;
 
-    service = new FieldService(fieldRepository, fieldServiceRepository);
+    fieldImageRepository = {
+      findByFieldId: jest.fn().mockResolvedValue([]),
+      findByFieldIds: jest.fn().mockResolvedValue([]),
+    } as unknown as jest.Mocked<FieldImageRepository>;
+
+    service = new FieldService(
+      fieldRepository,
+      fieldServiceRepository,
+      fieldImageRepository,
+    );
   });
 
   describe('getPublicFields', () => {
+    it('includes the owner thumbnail in the public field list', async () => {
+      fieldRepository.findActiveFieldsWithPagination.mockResolvedValue({
+        items: [mockActiveField],
+        total: 1,
+      });
+      fieldImageRepository.findByFieldIds.mockResolvedValue([
+        {
+          fieldId: validFieldId,
+          url: 'https://example.com/cover.jpg',
+          isThumbnail: true,
+        },
+      ] as Awaited<ReturnType<FieldImageRepository['findByFieldIds']>>);
+
+      const result = await service.getPublicFields({});
+
+      expect(fieldImageRepository.findByFieldIds).toHaveBeenCalledWith([
+        validFieldId,
+      ]);
+      expect(result.items[0].imageUrl).toBe('https://example.com/cover.jpg');
+      expect(result.items[0].images).toEqual(['https://example.com/cover.jpg']);
+    });
+
     it('returns paginated active fields and forwards all query options', async () => {
       fieldRepository.findActiveFieldsWithPagination.mockResolvedValue({
         items: [mockActiveField],
@@ -86,6 +119,8 @@ describe('FieldService', () => {
       expect(result.items[0].status).toBe('active');
       expect(result.items[0].requireDeposit).toBe(true);
       expect(result.items[0].depositValue).toBe(100000);
+      expect(result.items[0].imageUrl).toBeNull();
+      expect(result.items[0].images).toEqual([]);
     });
 
     it('handles total 0 returning totalPages 0', async () => {
@@ -103,6 +138,30 @@ describe('FieldService', () => {
   });
 
   describe('getPublicFieldDetail', () => {
+    it('returns owner images in display order with the chosen thumbnail', async () => {
+      fieldRepository.findActiveById.mockResolvedValue(mockActiveField);
+      fieldImageRepository.findByFieldId.mockResolvedValue([
+        {
+          fieldId: validFieldId,
+          url: 'https://example.com/first.jpg',
+          isThumbnail: false,
+        },
+        {
+          fieldId: validFieldId,
+          url: 'https://example.com/second.jpg',
+          isThumbnail: true,
+        },
+      ] as Awaited<ReturnType<FieldImageRepository['findByFieldId']>>);
+
+      const result = await service.getPublicFieldDetail(validFieldId);
+
+      expect(result.imageUrl).toBe('https://example.com/second.jpg');
+      expect(result.images).toEqual([
+        'https://example.com/second.jpg',
+        'https://example.com/first.jpg',
+      ]);
+    });
+
     it('returns active field detail by valid UUID', async () => {
       fieldRepository.findActiveById.mockResolvedValue(mockActiveField);
 

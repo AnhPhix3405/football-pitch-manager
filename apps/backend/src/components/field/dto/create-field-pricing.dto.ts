@@ -24,7 +24,10 @@ export class CreateFieldPricingDto {
   })
   endTime!: string;
 
-  @ApiProperty({ example: 200000, description: 'Price in VND per hour' })
+  @ApiProperty({
+    example: 200000,
+    description: 'Fixed price in VND for the entire configured slot',
+  })
   @IsNumber()
   @Min(0)
   price!: number;

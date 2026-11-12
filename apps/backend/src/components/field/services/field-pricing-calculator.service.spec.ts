@@ -113,31 +113,31 @@ describe('FieldPricingCalculatorService', () => {
       pricingRepository.findByField.mockResolvedValue([
         {
           startTime: '06:00',
-          endTime: '17:00',
-          price: '200000',
+          endTime: '07:30',
+          price: '500000',
         } as FieldPricingEntity,
       ]);
 
       const quote = await service.calculateQuote('f-1', {
         courtType: '5',
         date: '2026-10-26',
-        startTime: '14:00',
-        endTime: '16:00',
+        startTime: '06:00',
+        endTime: '07:30',
       });
 
-      expect(quote.totalPrice).toBe(400000);
-      expect(quote.totalDurationMinutes).toBe(120);
+      expect(quote.totalPrice).toBe(500000);
+      expect(quote.totalDurationMinutes).toBe(90);
       expect(quote.breakdown).toHaveLength(1);
       expect(quote.breakdown[0]).toEqual({
-        startTime: '14:00',
-        endTime: '16:00',
-        durationMinutes: 120,
-        hourlyRate: 200000,
-        subtotal: 400000,
+        startTime: '06:00',
+        endTime: '07:30',
+        durationMinutes: 90,
+        slotPrice: 500000,
+        subtotal: 500000,
       });
     });
 
-    it('calculates multi-tier spanning pricing accurately', async () => {
+    it('rejects a range spanning multiple configured slots', async () => {
       openingHourRepository.findByFieldAndDay.mockResolvedValue({
         isClosed: false,
         openTime: '06:00',
@@ -157,29 +157,15 @@ describe('FieldPricingCalculatorService', () => {
         } as FieldPricingEntity,
       ]);
 
-      const quote = await service.calculateQuote('f-1', {
-        courtType: '5',
-        date: '2026-10-26',
-        startTime: '16:00',
-        endTime: '18:00',
-      });
-
-      expect(quote.totalPrice).toBe(500000); // 1h @ 200k + 1h @ 300k
-      expect(quote.totalDurationMinutes).toBe(120);
-      expect(quote.breakdown).toHaveLength(2);
-      expect(quote.breakdown[0]).toEqual({
-        startTime: '16:00',
-        endTime: '17:00',
-        durationMinutes: 60,
-        hourlyRate: 200000,
-        subtotal: 200000,
-      });
-      expect(quote.breakdown[1]).toEqual({
-        startTime: '17:00',
-        endTime: '18:00',
-        durationMinutes: 60,
-        hourlyRate: 300000,
-        subtotal: 300000,
+      await expect(
+        service.calculateQuote('f-1', {
+          courtType: '5',
+          date: '2026-10-26',
+          startTime: '16:00',
+          endTime: '18:00',
+        }),
+      ).rejects.toMatchObject({
+        response: { code: 'PRICE_CONFIGURATION_MISSING' },
       });
     });
   });

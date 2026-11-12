@@ -15,7 +15,7 @@ import { BlurCircle } from '~/components/BlurCircle'
 import { useFieldReviews } from '../../hooks/useFieldReviews'
 import { BookingFlow } from '../bookings/components/BookingFlow'
 import { FieldReviewList } from '../reviews/components/FieldReviewList'
-import { DEFAULT_FIELD_FALLBACK_IMAGE, formatPrice } from './field.data'
+import { DEFAULT_FIELD_FALLBACK_IMAGE } from './field.data'
 import { useFieldDetail } from './hooks/useFieldDetail'
 
 export function FieldDetailPage() {
@@ -56,10 +56,9 @@ export function FieldDetailPage() {
     )
   }
 
-  const galleryImages =
-    field.gallery && field.gallery.length > 0
-      ? field.gallery
-      : [field.imageUrl || DEFAULT_FIELD_FALLBACK_IMAGE]
+  const galleryImages = field.gallery.length > 0
+    ? field.gallery
+    : field.imageUrl ? [field.imageUrl] : []
 
   const ratingVal =
     summary && Number(summary.avgRating) > 0
@@ -112,14 +111,22 @@ export function FieldDetailPage() {
           {/* Gallery hình ảnh hiện đại */}
           <div className="field-gallery-card">
             <div className="field-gallery-card__main-wrap">
-              <img
-                className="field-gallery-card__main-img"
-                src={galleryImages[activeImage] || DEFAULT_FIELD_FALLBACK_IMAGE}
-                alt={`${field.name}, ảnh ${activeImage + 1}`}
-                onError={(e) => {
-                  e.currentTarget.src = DEFAULT_FIELD_FALLBACK_IMAGE
-                }}
-              />
+              {galleryImages.length > 0 ? (
+                <img
+                  className="field-gallery-card__main-img"
+                  src={galleryImages[activeImage] || galleryImages[0]}
+                  alt={`${field.name}, ảnh ${activeImage + 1}`}
+                  onError={(e) => {
+                    if (e.currentTarget.src !== DEFAULT_FIELD_FALLBACK_IMAGE) {
+                      e.currentTarget.src = DEFAULT_FIELD_FALLBACK_IMAGE
+                    }
+                  }}
+                />
+              ) : (
+                <div className="field-gallery-card__empty">
+                  <Empty description={t('fields.noImages')} />
+                </div>
+              )}
               <div className="field-gallery-card__badges">
                 <span className="field-gallery-card__badge-format">{field.format}</span>
               </div>
@@ -139,7 +146,9 @@ export function FieldDetailPage() {
                       src={image || DEFAULT_FIELD_FALLBACK_IMAGE}
                       alt={`Thumbnail ${index + 1}`}
                       onError={(e) => {
-                        e.currentTarget.src = DEFAULT_FIELD_FALLBACK_IMAGE
+                        if (e.currentTarget.src !== DEFAULT_FIELD_FALLBACK_IMAGE) {
+                          e.currentTarget.src = DEFAULT_FIELD_FALLBACK_IMAGE
+                        }
                       }}
                     />
                   </button>
@@ -218,8 +227,7 @@ export function FieldDetailPage() {
           </div>
 
           <div className="quick-book-card__price-row">
-            <strong className="quick-book-card__price-val">{formatPrice(field.pricePerHour)}</strong>
-            <span className="quick-book-card__price-unit">{t('fields.perHour', { defaultValue: '/ giờ' })}</span>
+            <strong className="quick-book-card__price-val">{t('booking.flow.priceBySlot')}</strong>
           </div>
 
           <div className="quick-book-card__status-list">
@@ -260,8 +268,7 @@ export function FieldDetailPage() {
 
           {/* Dự tính chi phí */}
           <div className="quick-book-card__estimate">
-            <span className="quick-book-card__estimate-label">Ước tính (1 lượt / 1h)</span>
-            <strong className="quick-book-card__estimate-val">{formatPrice(field.pricePerHour)}</strong>
+            <span className="quick-book-card__estimate-label">{t('booking.flow.priceAfterSlot')}</span>
           </div>
 
           {/* Nút Đặt sân chính */}

@@ -1,6 +1,18 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class FieldResponseDto {
+  @ApiPropertyOptional({
+    description: 'URL ảnh đại diện của sân',
+    nullable: true,
+  })
+  imageUrl?: string | null;
+
+  @ApiPropertyOptional({
+    description: 'Danh sách URL ảnh sân theo thứ tự hiển thị',
+    type: [String],
+  })
+  images?: string[];
+
   @ApiProperty({
     description: 'UUID của cụm sân',
     example: 'd3b07384-d113-40e1-95b6-75399589d6e4',

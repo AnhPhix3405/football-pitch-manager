@@ -96,49 +96,31 @@ export class FieldPricingCalculatorService {
       dayType,
     });
 
-    // 3. Segment calculation across intervals
-    const breakdown: PriceQuoteSegmentDto[] = [];
-    let current = reqStart;
-
-    while (current < reqEnd) {
-      const matchingRule = rules.find((rule) => {
-        const rStart = parseMinutes(rule.startTime);
-        const rEnd = parseMinutes(rule.endTime);
-        return current >= rStart && current < rEnd;
+    const matchingRule = rules.find(
+      (rule) =>
+        parseMinutes(rule.startTime) === reqStart &&
+        parseMinutes(rule.endTime) === reqEnd,
+    );
+    if (!matchingRule) {
+      throw new ApplicationException({
+        code: 'PRICE_CONFIGURATION_MISSING',
+        messageKey: 'error.priceConfigurationMissing',
+        status: HttpStatus.BAD_REQUEST,
+        details: { date: query.date, courtType: query.courtType },
       });
-
-      if (!matchingRule) {
-        throw new ApplicationException({
-          code: 'PRICE_CONFIGURATION_MISSING',
-          messageKey: 'error.priceConfigurationMissing',
-          status: HttpStatus.BAD_REQUEST,
-          details: {
-            missingFrom: toTimeString(current),
-            date: query.date,
-            courtType: query.courtType,
-          },
-        });
-      }
-
-      const rEnd = parseMinutes(matchingRule.endTime);
-      const segmentEnd = Math.min(reqEnd, rEnd);
-      const durationMinutes = segmentEnd - current;
-      const hourlyRate = Number(matchingRule.price);
-      const subtotal = Math.round((durationMinutes / 60) * hourlyRate);
-
-      breakdown.push({
-        startTime: toTimeString(current),
-        endTime: toTimeString(segmentEnd),
-        durationMinutes,
-        hourlyRate,
-        subtotal,
-      });
-
-      current = segmentEnd;
     }
 
-    const totalPrice = breakdown.reduce((acc, seg) => acc + seg.subtotal, 0);
+    const totalPrice = Number(matchingRule.price);
     const totalDurationMinutes = reqEnd - reqStart;
+    const breakdown: PriceQuoteSegmentDto[] = [
+      {
+        startTime: toTimeString(reqStart),
+        endTime: toTimeString(reqEnd),
+        durationMinutes: totalDurationMinutes,
+        slotPrice: totalPrice,
+        subtotal: totalPrice,
+      },
+    ];
 
     return {
       fieldId,

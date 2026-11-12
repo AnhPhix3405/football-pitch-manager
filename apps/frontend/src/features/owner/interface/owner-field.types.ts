@@ -194,8 +194,8 @@ export interface PriceQuoteQuery {
 export interface PriceBreakdownItem {
   startTime: string
   endTime: string
-  durationHours?: number
-  hourlyPrice: number
+  durationMinutes: number
+  slotPrice: number
   subtotal: number
 }
 
@@ -206,11 +206,9 @@ export interface PriceQuoteResult {
   dayType: string
   startTime: string
   endTime: string
-  totalDurationMinutes?: number
-  totalDurationHours?: number
+  totalDurationMinutes: number
   totalPrice: number
-  breakdown?: PriceBreakdownItem[]
-  breakdowns?: PriceBreakdownItem[]
+  breakdown: PriceBreakdownItem[]
 }
 
 export interface CheckAvailabilityQuery {

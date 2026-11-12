@@ -11,7 +11,7 @@ export function ApiGetPriceQuoteDoc() {
     ApiOperation({
       summary: 'Tra cứu báo giá dự kiến trước khi đặt sân',
       description:
-        'Tính toán giá tự động dựa theo loại sân, ngày trong tuần/cuối tuần và khoảng giờ yêu cầu (hỗ trợ tính theo tỷ lệ khi vắt qua nhiều khung giá).',
+        'Trả giá cố định của khung giờ đã cấu hình đúng loại sân và nhóm ngày; không nhận khoảng giờ nằm một phần hoặc vắt qua nhiều khung.',
     }),
     ApiResponse({ status: HttpStatus.OK, type: PriceQuoteResponseDto }),
     ApiResponse({

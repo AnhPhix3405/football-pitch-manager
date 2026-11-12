@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, In, Repository } from 'typeorm';
 import { BaseRepository } from '~/core/base/base-repositories';
 import { FieldImageEntity } from '~/entities/field-image.entity';
 
@@ -17,6 +17,14 @@ export class FieldImageRepository extends BaseRepository<FieldImageEntity> {
   async findByFieldId(fieldId: string): Promise<FieldImageEntity[]> {
     return this.repository.find({
       where: { fieldId },
+      order: { displayOrder: 'ASC', createdAt: 'ASC' },
+    });
+  }
+
+  async findByFieldIds(fieldIds: string[]): Promise<FieldImageEntity[]> {
+    if (fieldIds.length === 0) return [];
+    return this.repository.find({
+      where: { fieldId: In(fieldIds) },
       order: { displayOrder: 'ASC', createdAt: 'ASC' },
     });
   }
