@@ -219,7 +219,7 @@ export function AdminFieldsPage() {
       {/* Page Header */}
       <div className="admin-fields-header">
         <h1 className="admin-fields-title">
-          <ShopOutlined style={{ color: '#28c96f' }} />
+          <ShopOutlined style={{ color: 'var(--hud-accent-lime, #8cfc70)' }} />
           {t('adminFields.title', { defaultValue: 'Quản lý Sân bóng Hệ thống' })}
         </h1>
         <p className="admin-fields-subtitle">

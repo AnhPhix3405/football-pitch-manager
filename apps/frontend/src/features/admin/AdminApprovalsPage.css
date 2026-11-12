@@ -2,7 +2,7 @@
   display: flex;
   flex-direction: column;
   gap: 22px;
-  color: #eaf4ed;
+  color: var(--hud-text-primary, #f0fdf4);
   padding-bottom: 32px;
 }
 
@@ -22,7 +22,7 @@
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #28c96f;
+  color: var(--hud-accent-lime, #8cfc70);
   margin-bottom: 6px;
 }
 
@@ -30,8 +30,8 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background-color: #28c96f;
-  box-shadow: 0 0 6px #28c96f;
+  background-color: var(--hud-accent-lime, #8cfc70);
+  box-shadow: 0 0 6px var(--hud-accent-lime, #8cfc70);
 }
 
 .admin-approvals-title {
@@ -45,7 +45,7 @@
 .admin-approvals-subtitle {
   margin: 6px 0 0;
   font-size: 14px;
-  color: #92ab9d;
+  color: var(--hud-text-secondary, #94a3b8);
 }
 
 /* KPI Summary Grid */
@@ -56,8 +56,8 @@
 }
 
 .admin-approvals-kpi-card {
-  background: linear-gradient(180deg, rgba(23, 35, 29, 0.95), rgba(16, 26, 21, 0.98));
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--hud-bg-card, rgba(18, 24, 29, 0.85));
+  border: 1px solid var(--hud-border-subtle, rgba(255, 255, 255, 0.08));
   border-radius: 14px;
   padding: 16px 18px;
   display: flex;
@@ -68,6 +68,7 @@
 
 .admin-approvals-kpi-card:hover {
   transform: translateY(-2px);
+  border-color: var(--hud-border-glow, rgba(140, 252, 112, 0.22));
 }
 
 .admin-approvals-kpi-card--pending {
@@ -76,8 +77,8 @@
 }
 
 .admin-approvals-kpi-card--approved {
-  border-color: rgba(40, 201, 111, 0.32);
-  box-shadow: 0 4px 20px rgba(40, 201, 111, 0.06);
+  border-color: var(--hud-border-glow, rgba(140, 252, 112, 0.25));
+  box-shadow: 0 4px 20px var(--hud-accent-glow, rgba(140, 252, 112, 0.06));
 }
 
 .admin-approvals-kpi-card--rejected {
@@ -94,7 +95,7 @@
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #8da697;
+  color: var(--hud-text-muted, #64748b);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -109,7 +110,7 @@
 
 .admin-approvals-kpi-sub {
   font-size: 12px;
-  color: #799484;
+  color: var(--hud-text-secondary, #94a3b8);
 }
 
 /* Toolbar */
@@ -120,8 +121,8 @@
   align-items: center;
   justify-content: space-between;
   padding: 14px 18px;
-  background: rgba(20, 31, 25, 0.85);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--hud-bg-card, rgba(18, 24, 29, 0.85));
+  border: 1px solid var(--hud-border-subtle, rgba(255, 255, 255, 0.08));
   border-radius: 12px;
   backdrop-filter: blur(8px);
 }
@@ -143,8 +144,8 @@
 
 /* Table Container & Antd Overrides */
 .admin-approvals-table-wrap {
-  background: rgba(17, 27, 21, 0.9);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--hud-bg-card, rgba(18, 24, 29, 0.85));
+  border: 1px solid var(--hud-border-subtle, rgba(255, 255, 255, 0.08));
   border-radius: 14px;
   overflow: hidden;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.24);
@@ -152,29 +153,29 @@
 
 .admin-approvals-table .ant-table {
   background: transparent !important;
-  color: #eaf4ed !important;
+  color: var(--hud-text-primary, #f0fdf4) !important;
 }
 
 .admin-approvals-table .ant-table-thead > tr > th {
-  background: rgba(12, 20, 16, 0.95) !important;
-  color: #8fa899 !important;
+  background: #0f1519 !important;
+  color: var(--hud-text-secondary, #94a3b8) !important;
   font-size: 11px !important;
   font-weight: 700 !important;
   letter-spacing: 0.06em !important;
   text-transform: uppercase !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-bottom: 1px solid var(--hud-border-subtle, rgba(255, 255, 255, 0.08)) !important;
   padding: 14px 16px !important;
 }
 
 .admin-approvals-table .ant-table-tbody > tr > td {
   border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
   padding: 14px 16px !important;
-  color: #eaf4ed !important;
+  color: var(--hud-text-primary, #f0fdf4) !important;
   transition: background 0.15s ease !important;
 }
 
 .admin-approvals-table .ant-table-tbody > tr:hover > td {
-  background: rgba(40, 201, 111, 0.05) !important;
+  background: var(--hud-bg-hover, rgba(26, 36, 44, 0.95)) !important;
 }
 
 .admin-approvals-table .ant-pagination {
@@ -187,16 +188,16 @@
 }
 
 .admin-approvals-table .ant-pagination-item a {
-  color: #8fa899 !important;
+  color: var(--hud-text-secondary, #94a3b8) !important;
 }
 
 .admin-approvals-table .ant-pagination-item-active {
-  border-color: #28c96f !important;
-  background: rgba(40, 201, 111, 0.12) !important;
+  border-color: var(--hud-accent-lime, #8cfc70) !important;
+  background: var(--hud-positive-bg, rgba(140, 252, 112, 0.12)) !important;
 }
 
 .admin-approvals-table .ant-pagination-item-active a {
-  color: #28c96f !important;
+  color: var(--hud-accent-lime, #8cfc70) !important;
 }
 
 /* Cell Components */
@@ -210,14 +211,14 @@
   width: 38px;
   height: 38px;
   border-radius: 10px;
-  background: linear-gradient(135deg, rgba(40, 201, 111, 0.2), rgba(20, 100, 55, 0.3));
-  border: 1px solid rgba(40, 201, 111, 0.3);
+  background: var(--hud-positive-bg, rgba(140, 252, 112, 0.12));
+  border: 1px solid var(--hud-border-glow, rgba(140, 252, 112, 0.25));
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 15px;
   font-weight: 700;
-  color: #28c96f;
+  color: var(--hud-accent-lime, #8cfc70);
   flex-shrink: 0;
 }
 
@@ -239,7 +240,7 @@
   align-items: center;
   gap: 4px;
   font-size: 11px;
-  color: #8da697;
+  color: var(--hud-text-secondary, #94a3b8);
   font-family: ui-monospace, SFMono-Regular, monospace;
 }
 
@@ -251,12 +252,12 @@
 
 .approval-contact-name {
   font-weight: 500;
-  color: #eaf4ed;
+  color: var(--hud-text-primary, #f0fdf4);
 }
 
 .approval-contact-sub {
   font-size: 12px;
-  color: #799484;
+  color: var(--hud-text-muted, #64748b);
 }
 
 .approval-bank-badge {
@@ -266,7 +267,7 @@
   background: rgba(255, 255, 255, 0.04);
   padding: 4px 8px;
   border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--hud-border-subtle, rgba(255, 255, 255, 0.08));
   font-family: ui-monospace, SFMono-Regular, monospace;
   font-size: 12px;
 }
@@ -283,29 +284,29 @@
 }
 
 .approval-status-tag--pending {
-  background: rgba(245, 158, 11, 0.12);
-  color: #fbbf24;
-  border: 1px solid rgba(245, 158, 11, 0.3);
+  background: var(--hud-warning-bg, rgba(250, 173, 20, 0.14));
+  color: var(--hud-warning, #faad14);
+  border: 1px solid rgba(250, 173, 20, 0.3);
 }
 
 .approval-status-tag--pending .dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #fbbf24;
-  box-shadow: 0 0 6px #fbbf24;
+  background: var(--hud-warning, #faad14);
+  box-shadow: 0 0 6px var(--hud-warning, #faad14);
 }
 
 .approval-status-tag--approved {
-  background: rgba(40, 201, 111, 0.12);
-  color: #4ade80;
-  border: 1px solid rgba(40, 201, 111, 0.3);
+  background: var(--hud-positive-bg, rgba(140, 252, 112, 0.12));
+  color: var(--hud-accent-lime, #8cfc70);
+  border: 1px solid var(--hud-border-glow, rgba(140, 252, 112, 0.3));
 }
 
 .approval-status-tag--rejected {
-  background: rgba(239, 68, 68, 0.12);
-  color: #f87171;
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: var(--hud-negative-bg, rgba(255, 77, 79, 0.14));
+  color: var(--hud-negative, #ff7875);
+  border: 1px solid rgba(255, 120, 117, 0.3);
 }
 
 /* Audit Drawer Styles */
@@ -313,12 +314,12 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
-  color: #eaf4ed;
+  color: var(--hud-text-primary, #f0fdf4);
 }
 
 .admin-audit-section {
   background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  border: 1px solid var(--hud-border-subtle, rgba(255, 255, 255, 0.07));
   border-radius: 12px;
   padding: 16px;
   display: flex;
@@ -331,7 +332,7 @@
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #28c96f;
+  color: var(--hud-accent-lime, #8cfc70);
   margin: 0;
   display: flex;
   align-items: center;
@@ -352,7 +353,7 @@
 
 .admin-audit-field-label {
   font-size: 11px;
-  color: #799484;
+  color: var(--hud-text-muted, #64748b);
 }
 
 .admin-audit-field-value {
@@ -369,10 +370,10 @@
   display: flex;
   gap: 12px;
   padding-top: 14px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid var(--hud-border-subtle, rgba(255, 255, 255, 0.08));
   position: sticky;
   bottom: 0;
-  background: rgba(18, 28, 22, 0.98);
+  background: var(--hud-bg-surface, #12181d);
   backdrop-filter: blur(8px);
 }
 
@@ -388,7 +389,7 @@
   font-size: 12px;
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.12);
-  color: #d1e2d7;
+  color: var(--hud-text-secondary, #94a3b8);
   padding: 4px 10px;
   border-radius: 6px;
   cursor: pointer;
@@ -396,7 +397,7 @@
 }
 
 .admin-reject-tag-btn:hover {
-  background: rgba(239, 68, 68, 0.15);
-  border-color: rgba(239, 68, 68, 0.4);
-  color: #fca5a5;
+  background: rgba(255, 77, 79, 0.15);
+  border-color: rgba(255, 77, 79, 0.4);
+  color: var(--hud-negative, #ff7875);
 }
