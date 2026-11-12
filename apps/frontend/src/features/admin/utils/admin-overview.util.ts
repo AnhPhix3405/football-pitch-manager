@@ -31,21 +31,6 @@ export function formatGrowthDelta(percent: number): string {
   return `${sign}${safe.toFixed(1)}%`
 }
 
-export function formatUptime(seconds: number): string {
-  const safe = Math.max(0, Math.floor(Number.isFinite(seconds) ? seconds : 0))
-  const days = Math.floor(safe / 86400)
-  const hours = Math.floor((safe % 86400) / 3600)
-  const minutes = Math.floor((safe % 3600) / 60)
-
-  if (days > 0) {
-    return `${days}d ${hours}h ${minutes}m`
-  }
-  if (hours > 0) {
-    return `${hours}h ${minutes}m`
-  }
-  return `${minutes}m`
-}
-
 export function formatShortDateTime(isoString: string): string {
   if (!isoString) return '--:--'
   const date = new Date(isoString)
@@ -75,13 +60,16 @@ export function computeTimelineBarHeights(
 
   return points.map((point, index) => {
     const val = rawValues[index] ?? 0
-    const heightPercent = val === 0 ? 8 : Math.max(14, Math.round((val / maxValue) * 100))
+    const heightPercent = val === 0 ? 6 : Math.max(12, Math.round((val / maxValue) * 70))
 
     let displayValue = `${point.bookingsCount} đơn`
     if (mode === 'gmv') {
       displayValue = formatCompactVnd(point.gmv)
     } else if (mode === 'users') {
-      displayValue = `${point.newUsersCount} TV`
+      displayValue =
+        point.newUsersCount > 0
+          ? `+${point.newUsersCount} người dùng`
+          : '0 người dùng'
     }
 
     const parts = point.date.split('-')
@@ -164,7 +152,12 @@ export function buildAdminKpiItems(
       key: 'queue',
       label: t('admin.metricQueue', { defaultValue: 'CẦN XỬ LÝ' }),
       value: String(metrics?.queue.totalPending ?? 0),
-      delta: `${(metrics?.queue.pendingOwnerApprovals ?? 0) + (metrics?.queue.pendingFieldApprovals ?? 0)} hồ sơ duyệt`,
+      delta: t('admin.profileDossiers', {
+        count:
+          (metrics?.queue.pendingOwnerApprovals ?? 0) +
+          (metrics?.queue.pendingFieldApprovals ?? 0),
+        defaultValue: `${(metrics?.queue.pendingOwnerApprovals ?? 0) + (metrics?.queue.pendingFieldApprovals ?? 0)} yêu cầu chờ duyệt`,
+      }),
       isPositive: (metrics?.queue.totalPending ?? 0) === 0,
       sub: `Chủ sân: ${metrics?.queue.pendingOwnerApprovals ?? 0} · Sân: ${metrics?.queue.pendingFieldApprovals ?? 0} · Báo cáo: ${metrics?.queue.flaggedReviews ?? 0}`,
       iconType: 'queue',

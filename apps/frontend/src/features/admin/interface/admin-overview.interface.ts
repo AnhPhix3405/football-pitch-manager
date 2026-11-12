@@ -77,7 +77,7 @@ export interface AdminServiceHealthItem {
 
 export interface AdminSystemHealth {
   status: 'operational' | 'degraded'
-  uptimeSeconds: number
+  uptimeSeconds?: number
   services: AdminServiceHealthItem[]
 }
 

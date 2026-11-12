@@ -98,6 +98,13 @@ export function AdminActivityChartPanel({
               index === timelineBars.length - 1 ||
               index % Math.ceil(timelineBars.length / 8) === 0
 
+            const tooltipAlignClass =
+              index < 2
+                ? 'admin-activity-bar__tooltip--left'
+                : index >= timelineBars.length - 2
+                  ? 'admin-activity-bar__tooltip--right'
+                  : ''
+
             return (
               <div
                 key={bar.date}
@@ -105,9 +112,12 @@ export function AdminActivityChartPanel({
                 tabIndex={0}
                 aria-label={`Ngày ${bar.date}: ${bar.bookingsCount} đơn, GMV ${formatFullVnd(
                   bar.gmv,
-                )}, ${bar.newUsersCount} TV mới`}
+                )}, ${bar.newUsersCount} người dùng mới`}
               >
-                <div className="admin-activity-bar__tooltip" role="tooltip">
+                <div
+                  className={`admin-activity-bar__tooltip ${tooltipAlignClass}`.trim()}
+                  role="tooltip"
+                >
                   <div className="admin-activity-bar__tooltip-header">
                     <strong>{bar.date}</strong>
                     <span className="admin-activity-bar__tooltip-highlight">

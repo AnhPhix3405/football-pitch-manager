@@ -1,13 +1,11 @@
 import {
   CheckCircleFilled,
-  ClockCircleOutlined,
   ReloadOutlined,
   WarningFilled,
 } from '@ant-design/icons'
 import { Tag } from 'antd'
 import { useTranslation } from 'react-i18next'
 import type { AdminCommandHeaderProps } from '../interface/admin-overview.interface'
-import { formatUptime } from '../utils/admin-overview.util'
 
 export function AdminCommandHeader({
   systemHealth,
@@ -41,18 +39,6 @@ export function AdminCommandHeader({
       </div>
 
       <div className="admin-command-header__actions" role="toolbar" aria-label="Command Center Actions">
-        {systemHealth && (
-          <div className="admin-telemetry-pill" title={t('admin.uptimeLabel', { defaultValue: 'Uptime' })}>
-            <ClockCircleOutlined aria-hidden="true" />
-            <span className="admin-telemetry-pill__label">
-              {t('admin.uptimeLabel', { defaultValue: 'Uptime' })}:
-            </span>
-            <strong className="admin-telemetry-pill__value">
-              {formatUptime(systemHealth.uptimeSeconds)}
-            </strong>
-          </div>
-        )}
-
         <Tag
           className={`admin-status-badge ${
             isOperational ? 'admin-status-badge--operational' : 'admin-status-badge--degraded'
