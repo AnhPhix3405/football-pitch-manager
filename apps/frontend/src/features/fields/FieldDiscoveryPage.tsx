@@ -20,7 +20,7 @@ export function FieldDiscoveryPage() {
   const filters: FieldFilters = useMemo(
     () => ({
       query: params.get('q') ?? '',
-      city: params.get('city') ?? 'Hà Nội',
+      city: params.get('city') ?? 'all',
       district: params.get('district') ?? 'all',
       format: (params.get('format') as FieldFilters['format']) ?? 'all',
       maxPrice: Number(params.get('maxPrice') ?? 1500000),
@@ -34,7 +34,7 @@ export function FieldDiscoveryPage() {
     const query = new URLSearchParams()
     if (next.query) query.set('q', next.query)
     if (next.city && next.city !== 'all') query.set('city', next.city)
-    if (next.district !== 'all') query.set('district', next.district)
+    if (next.district && next.district !== 'all') query.set('district', next.district)
     if (next.format !== 'all') query.set('format', next.format)
     if (next.maxPrice < 1500000) query.set('maxPrice', String(next.maxPrice))
     if (next.availableOnly) query.set('available', 'true')
@@ -64,7 +64,7 @@ export function FieldDiscoveryPage() {
 
   const isFiltered = Boolean(
     filters.query ||
-    (filters.city && filters.city !== 'Hà Nội') ||
+    (filters.city && filters.city !== 'all') ||
     (filters.district && filters.district !== 'all') ||
     (filters.format && filters.format !== 'all') ||
     filters.maxPrice < 1500000 ||

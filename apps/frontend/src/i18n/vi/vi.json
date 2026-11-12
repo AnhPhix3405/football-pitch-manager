@@ -251,8 +251,8 @@
   "fields": {
     "eyebrow": "FIELD NETWORK",
     "title": "Hệ thống sân bóng",
-    "subtitle": "Khám phá và đặt sân bóng đá đạt chuẩn tại TP.HCM.",
-    "searchPlaceholder": "Tìm theo tên sân hoặc vị trí...",
+    "subtitle": "Khám phá và đặt sân bóng đá đạt chuẩn chất lượng cao.",
+    "searchPlaceholder": "Tìm theo tên sân, quận huyện, địa chỉ...",
     "district": "Khu vực",
     "allDistricts": "Tất cả khu vực",
     "type": "Loại sân",
@@ -448,6 +448,14 @@
     }
   },
   "owner": {
+    "fieldTabs": {
+      "courts": "Sân con",
+      "services": "Dịch vụ đi kèm",
+      "pricing": "Bảng giá",
+      "hours": "Giờ mở cửa",
+      "images": "Hình ảnh",
+      "edit": "Cấu hình sân"
+    },
     "dashboard": {
       "unavailable": "—",
       "loadError": "Không tải được số liệu tổng quan.",
@@ -459,7 +467,7 @@
       "navFields": "Sân của tôi",
       "field": "Cụm sân",
       "section": "Dịch vụ đi kèm",
-      "title": "Quản lý dịch vụ đi kèm (Services - FIELD-05)",
+      "title": "Quản lý dịch vụ đi kèm",
       "description": "Cấu hình các tiện ích & dịch vụ bán kèm như bóng, áo bib, nước uống, trọng tài...",
       "back": "Quay lại",
       "add": "Thêm dịch vụ",

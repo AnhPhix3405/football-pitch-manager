@@ -21,6 +21,7 @@ import { PillButton } from '../../components/PillButton'
 import { formatPrice } from '../fields/field.data'
 import { useOwnerFields } from './hooks/useOwnerFields'
 import { OwnerFieldDetailModal } from './components/OwnerFieldDetailModal'
+import { OwnerPageHeader } from './components/OwnerPageHeader'
 import './OwnerFieldsPage.css'
 
 export function OwnerFieldsPage() {
@@ -77,31 +78,31 @@ export function OwnerFieldsPage() {
   }
 
   return (
-    <section className="owner-page">
+    <section className="owner-page" style={{ padding: '16px 0' }}>
       {contextHolder}
-      <header className="user-page__head">
-        <div>
-          <span className="eyebrow">FACILITY INVENTORY</span>
-          <h1>{t('owner.myFieldsTitle', { defaultValue: 'Sân của tôi' })}</h1>
-          <p>{t('owner.myFieldsSubtitle', { defaultValue: 'Quản lý trạng thái, thông tin và lịch vận hành.' })}</p>
-        </div>
-        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-          <PillButton
-            variant="secondary"
-            icon={<ReloadOutlined />}
-            onClick={() => refetch()}
-            loading={loading}
-            text={t('common.refresh', { defaultValue: 'Làm mới' })}
-          />
-          <Link to="/owner/fields/new">
+      <OwnerPageHeader
+        eyebrow="FACILITY INVENTORY"
+        title={t('owner.myFieldsTitle', { defaultValue: 'Sân của tôi' })}
+        subtitle={t('owner.myFieldsSubtitle', { defaultValue: 'Quản lý trạng thái, thông tin và lịch vận hành.' })}
+        actions={
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
             <PillButton
-              variant="primary"
-              icon={<PlusOutlined />}
-              text={t('owner.addNewPitch', { defaultValue: 'Thêm sân mới' })}
+              variant="secondary"
+              icon={<ReloadOutlined />}
+              onClick={() => refetch()}
+              loading={loading}
+              text={t('common.refresh', { defaultValue: 'Làm mới' })}
             />
-          </Link>
-        </div>
-      </header>
+            <Link to="/owner/fields/new">
+              <PillButton
+                variant="primary"
+                icon={<PlusOutlined />}
+                text={t('owner.addNewPitch', { defaultValue: 'Thêm sân mới' })}
+              />
+            </Link>
+          </div>
+        }
+      />
 
       {loading ? (
         <div style={{ textAlign: 'center', padding: '60px 0' }}>

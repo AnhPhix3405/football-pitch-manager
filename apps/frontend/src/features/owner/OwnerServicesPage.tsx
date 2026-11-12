@@ -9,7 +9,6 @@ import {
 } from '@ant-design/icons'
 import {
   Alert,
-  Breadcrumb,
   Button,
   Empty,
   Form,
@@ -25,9 +24,10 @@ import {
   message,
 } from 'antd'
 import { useEffect, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { PillButton } from '../../components/PillButton'
 import { formatPrice } from '../fields/field.data'
+import { OwnerPageHeader } from './components/OwnerPageHeader'
 import { useOwnerFields } from './hooks/useOwnerFields'
 import { useOwnerServices } from './hooks/useOwnerServices'
 import type {
@@ -142,41 +142,37 @@ export function OwnerServicesPage() {
   }
 
   return (
-    <section className="owner-page osp-container" style={{ padding: '24px 0' }}>
-      <header className="user-page__head">
-        <div>
-          <Breadcrumb
-            items={[
-              { title: <Link to="/owner/fields">{t('owner.servicePage.navFields')}</Link> },
-              { title: currentField?.name || t('owner.servicePage.field') },
-              { title: t('owner.servicePage.section') },
-            ]}
-            style={{ marginBottom: 8 }}
-          />
-          <h1 style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <ShoppingOutlined style={{ color: 'var(--lime)' }} />
-            {t('owner.servicePage.title')}
-          </h1>
-          <p>{t('owner.servicePage.description')}</p>
-        </div>
-
-        <div style={{ display: 'flex', gap: 10 }}>
-          {paramFieldId && (
-            <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/owner/fields')}>
-              {t('owner.servicePage.back')}
-            </Button>
-          )}
-          <PillButton
-            variant="primary"
-            icon={<PlusOutlined />}
-            text={t('owner.servicePage.add')}
-            onClick={() => {
-              createForm.resetFields()
-              setCreateModalOpen(true)
-            }}
-          />
-        </div>
-      </header>
+    <section className="owner-page osp-container" style={{ padding: '16px 0' }}>
+      <OwnerPageHeader
+        breadcrumbs={[
+          { title: t('owner.servicePage.navFields'), href: '/owner/fields' },
+          { title: currentField?.name || t('owner.servicePage.field') },
+          { title: t('owner.servicePage.section') },
+        ]}
+        icon={<ShoppingOutlined />}
+        title={t('owner.servicePage.title')}
+        subtitle={t('owner.servicePage.description')}
+        fieldId={selectedFieldId || undefined}
+        activeTabKey="services"
+        actions={
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+            {paramFieldId && (
+              <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/owner/fields')}>
+                {t('owner.servicePage.back')}
+              </Button>
+            )}
+            <PillButton
+              variant="primary"
+              icon={<PlusOutlined />}
+              text={t('owner.servicePage.add')}
+              onClick={() => {
+                createForm.resetFields()
+                setCreateModalOpen(true)
+              }}
+            />
+          </div>
+        }
+      />
 
       {/* Toolbar: Field selector & Status filter */}
       <div className="osp-toolbar">

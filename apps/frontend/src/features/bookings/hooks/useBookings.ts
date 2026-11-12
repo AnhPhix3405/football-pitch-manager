@@ -29,6 +29,7 @@ export function filterBookings(
 export function useBookings() {
   const [filter, setFilter] = useState<BookingFilterType>('upcoming')
   const [bookings, setBookings] = useState<UiBooking[]>([])
+  const [totalCount, setTotalCount] = useState<number>(0)
   const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -39,6 +40,7 @@ export function useBookings() {
       const response = await getMyBookingsApi({ limit: 50 })
       const list = response?.data ?? []
       setBookings(list.map(mapBackendBookingToUi))
+      setTotalCount(response?.total ?? list.length)
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : 'Không thể tải danh sách đặt sân'
@@ -74,6 +76,7 @@ export function useBookings() {
     setFilter,
     bookings,
     visible,
+    totalCount,
     loading,
     error,
     cancel,

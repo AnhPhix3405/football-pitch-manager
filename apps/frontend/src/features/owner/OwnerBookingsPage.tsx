@@ -5,6 +5,7 @@ import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { formatPrice } from '../fields/field.data'
+import { OwnerPageHeader } from './components/OwnerPageHeader'
 import { useOwnerBookings } from './hooks/useOwnerBookings'
 
 export function OwnerBookingsPage() {
@@ -23,11 +24,17 @@ export function OwnerBookingsPage() {
   const statusLabel = (value: string) => t(`ownerOps.status.${value}`, { defaultValue: value })
 
   return (
-    <section className="owner-page">
-      <header className="user-page__head">
-        <div><span className="eyebrow">RESERVATION CONTROL</span><h1>{t('ownerOps.bookingsTitle')}</h1><p>{t('ownerOps.bookingsSubtitle')}</p></div>
-        <Button icon={<ReloadOutlined />} onClick={() => void reload()} loading={loading}>{t('common.refresh')}</Button>
-      </header>
+    <section className="owner-page" style={{ padding: '16px 0' }}>
+      <OwnerPageHeader
+        eyebrow="RESERVATION CONTROL"
+        title={t('ownerOps.bookingsTitle')}
+        subtitle={t('ownerOps.bookingsSubtitle')}
+        actions={
+          <Button icon={<ReloadOutlined />} onClick={() => void reload()} loading={loading}>
+            {t('common.refresh')}
+          </Button>
+        }
+      />
       {error && <Alert type="error" showIcon message={error} />}
       <div className="owner-toolbar">
         <Select

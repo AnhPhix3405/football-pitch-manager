@@ -80,12 +80,12 @@ export function ProfileSettingsPage() {
   const { playerRankings } = useRankings(RANKING_TABS.PLAYERS)
 
   // Booking history state & hook
-  const { filter: bookingFilter, setFilter: setBookingFilter, visible: visibleBookings, cancel: cancelBooking } = useBookings()
+  const { filter: bookingFilter, setFilter: setBookingFilter, bookings, visible: visibleBookings, totalCount: totalBookings, cancel: cancelBooking } = useBookings()
 
   // Match post history state & hook
   const [postStatus, setPostStatus] = useState<MatchPost['status']>('open')
   const [isCreatePostOpen, setIsCreatePostOpen] = useState(false)
-  const { apiPosts, loading: postsLoading, refetch: refetchPosts } = useMyPosts(postStatus)
+  const { apiPosts, totalCount: totalPosts, loading: postsLoading, refetch: refetchPosts } = useMyPosts(postStatus)
 
   const visiblePosts = apiPosts
 
@@ -610,13 +610,13 @@ export function ProfileSettingsPage() {
                 <span className="profile-stat-item__label">
                   {t('profile.stats.bookings', { defaultValue: 'Đặt sân' })}
                 </span>
-                <b className="profile-stat-item__value">{visibleBookings.length}</b>
+                <b className="profile-stat-item__value">{totalBookings ?? bookings.length}</b>
               </div>
               <div className="profile-stat-item">
                 <span className="profile-stat-item__label">
                   {t('profile.stats.posts', { defaultValue: 'Bài đăng' })}
                 </span>
-                <b className="profile-stat-item__value">{visiblePosts.length}</b>
+                <b className="profile-stat-item__value">{totalPosts}</b>
               </div>
               <div className="profile-stat-item">
                 <span className="profile-stat-item__label">

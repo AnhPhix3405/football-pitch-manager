@@ -2,6 +2,7 @@ import { ArrowRightOutlined, CalendarOutlined, DollarOutlined, RiseOutlined, Sho
 import { Alert, Button, Empty, Progress, Spin, Tag } from 'antd'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
+import { OwnerPageHeader } from './components/OwnerPageHeader'
 import { useOwnerDashboard } from '../../hooks/useOwnerDashboard'
 import { formatPrice } from '../fields/field.data'
 
@@ -12,17 +13,17 @@ export function OwnerDashboardPage() {
   const unavailable = t('owner.dashboard.unavailable')
 
   return (
-    <section className="owner-page">
-      <header className="user-page__head">
-        <div>
-          <span className="eyebrow">{t('owner.eyebrow')}</span>
-          <h1>{t('owner.title')}</h1>
-          <p>{t('owner.subtitle')}</p>
-        </div>
-        <Link to="/owner/fields/new">
-          <Button type="primary">{t('owner.addField')}</Button>
-        </Link>
-      </header>
+    <section className="owner-page" style={{ padding: '16px 0' }}>
+      <OwnerPageHeader
+        eyebrow={t('owner.eyebrow')}
+        title={t('owner.title')}
+        subtitle={t('owner.subtitle')}
+        actions={
+          <Link to="/owner/fields/new">
+            <Button type="primary">{t('owner.addField')}</Button>
+          </Link>
+        }
+      />
 
       {error && (
         <Alert type="error" showIcon title={t('owner.dashboard.loadError')}

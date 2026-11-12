@@ -238,7 +238,7 @@ describe('PostMatchService', () => {
       const result = await service.acceptMatch('p-1', 'm-1', 'host-1');
       expect(result.status).toBe(POST_MATCH_STATUS.ACCEPTED);
       expect(post.currentPlayers).toBe(1);
-      expect(post.status).toBe(POST_STATUS.OPEN);
+      expect(post.status).toBe(POST_STATUS.MATCHED);
       expect(result.conversationId).toBe('conv-1');
       expect(chatGateway.emitToConversation).toHaveBeenCalled();
     });

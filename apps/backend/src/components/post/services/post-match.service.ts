@@ -200,9 +200,7 @@ export class PostMatchService {
         const savedMatch = await manager.save(PostMatchEntity, match);
 
         p.currentPlayers += 1;
-        if (p.currentPlayers >= p.maxPlayers) {
-          p.status = POST_STATUS.MATCHED;
-        }
+        p.status = POST_STATUS.MATCHED;
         const savedPost = await manager.save(PostEntity, p);
 
         return { acceptedMatch: savedMatch, post: savedPost };

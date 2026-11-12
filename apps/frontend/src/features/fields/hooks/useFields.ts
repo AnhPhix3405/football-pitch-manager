@@ -5,24 +5,54 @@ import type { BackendFieldItem } from '../service/field.service'
 import { getPublicFields } from '../service/field.service'
 
 export function mapBackendFieldToFootballField(item: BackendFieldItem): FootballField {
+  const addressAndDistrict = `${item.address || ''} ${item.district || ''}`.toLowerCase()
   const isHanoi =
-    item.address?.toLowerCase().includes('hà nội') ||
-    item.district?.toLowerCase().includes('hoàn kiếm') ||
-    item.district?.toLowerCase().includes('cầu giấy') ||
-    item.district?.toLowerCase().includes('đống đa')
+    addressAndDistrict.includes('hà nội') ||
+    addressAndDistrict.includes('hoàn kiếm') ||
+    addressAndDistrict.includes('cầu giấy') ||
+    addressAndDistrict.includes('đống đa') ||
+    addressAndDistrict.includes('ba đình') ||
+    addressAndDistrict.includes('hai bà trưng') ||
+    addressAndDistrict.includes('thanh xuân') ||
+    addressAndDistrict.includes('tây hồ') ||
+    addressAndDistrict.includes('nam từ liêm') ||
+    addressAndDistrict.includes('bắc từ liêm') ||
+    addressAndDistrict.includes('hoàng mai') ||
+    addressAndDistrict.includes('long biên') ||
+    addressAndDistrict.includes('hà đông') ||
+    (typeof item.lat === 'number' && item.lat > 16)
 
   const defaultLat = isHanoi ? 21.0285 : 10.7981
   const defaultLng = isHanoi ? 105.8542 : 106.6543
 
+  let inferredDistrict = item.district
+  if (!inferredDistrict) {
+    if (addressAndDistrict.includes('cầu giấy')) inferredDistrict = 'Cầu Giấy'
+    else if (addressAndDistrict.includes('đống đa')) inferredDistrict = 'Đống Đa'
+    else if (addressAndDistrict.includes('ba đình')) inferredDistrict = 'Ba Đình'
+    else if (addressAndDistrict.includes('hoàn kiếm')) inferredDistrict = 'Hoàn Kiếm'
+    else if (addressAndDistrict.includes('tây hồ')) inferredDistrict = 'Tây Hồ'
+    else if (addressAndDistrict.includes('thanh xuân')) inferredDistrict = 'Thanh Xuân'
+    else if (addressAndDistrict.includes('nam từ liêm')) inferredDistrict = 'Nam Từ Liêm'
+    else if (addressAndDistrict.includes('bắc từ liêm')) inferredDistrict = 'Bắc Từ Liêm'
+    else if (addressAndDistrict.includes('tân bình')) inferredDistrict = 'Tân Bình'
+    else inferredDistrict = isHanoi ? 'Cầu Giấy' : 'Tân Bình'
+  }
+
+  let calculatedPrice = 400000
+  if (item.depositType === 'fixed' && item.depositValue && item.depositValue > 1000) {
+    calculatedPrice = Math.round(item.depositValue / 0.3)
+  }
+
   return {
     id: item.id,
     name: item.name,
-    district: item.district || (isHanoi ? 'Cầu Giấy' : 'Tân Bình'),
+    district: inferredDistrict,
     city: isHanoi ? 'Hà Nội' : 'TP. Hồ Chí Minh',
     address: item.address,
     format: '7v7',
     surface: 'Cỏ nhân tạo',
-    pricePerHour: item.depositValue ? Math.round(item.depositValue / 0.3) : 400000,
+    pricePerHour: calculatedPrice,
     rating: 5.0,
     reviewCount: 12,
     distanceKm: 2.1,
@@ -51,18 +81,21 @@ export function filterAndSortFields(
   fields: FootballField[],
   filters: FieldFilters,
 ): FootballField[] {
+  const normalizedQuery = (filters.query || '').trim().toLowerCase()
+
   return fields
     .filter((field) => {
       const matchQuery =
-        !filters.query ||
+        !normalizedQuery ||
         `${field.name} ${field.district} ${field.city} ${field.address}`
           .toLowerCase()
-          .includes(filters.query.toLowerCase())
+          .includes(normalizedQuery)
 
       const matchCity =
         !filters.city || filters.city === 'all' || field.city.toLowerCase().includes(filters.city.toLowerCase())
 
       const matchDistrict =
+        !filters.district ||
         filters.district === 'all' ||
         field.district.toLowerCase() === filters.district.toLowerCase()
 
@@ -91,7 +124,7 @@ export function useFields(query?: string, district?: string, page = 1) {
       setError(null)
       const res = await getPublicFields({
         search: query || undefined,
-        district: district !== 'all' ? district : undefined,
+        district: district && district !== 'all' ? district : undefined,
         page,
         limit: 20,
       })

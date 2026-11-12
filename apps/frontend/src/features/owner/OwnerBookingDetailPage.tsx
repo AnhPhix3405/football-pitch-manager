@@ -25,6 +25,7 @@ import { useTranslation } from 'react-i18next'
 import { useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { formatPrice } from '../fields/field.data'
+import { OwnerPageHeader } from './components/OwnerPageHeader'
 import { useOwnerBookingDetail } from './hooks/useOwnerBookingDetail'
 import { usePayment } from '../payment/hooks/usePayment'
 
@@ -182,27 +183,30 @@ export function OwnerBookingDetailPage() {
   const remainingAmount = Math.max(0, booking.totalPrice - booking.depositAmount)
 
   return (
-    <section className="owner-page">
+    <section className="owner-page" style={{ padding: '16px 0' }}>
       {contextHolder}
-      <Link className="back-link" to="/owner/bookings">
-        ← {t('ownerOps.backToBookings')}
-      </Link>
-      <header className="user-page__head">
-        <div>
-          <span className="eyebrow">BOOKING {booking.id}</span>
-          <h1>
-            {booking.fieldName || `Sân ${booking.requestedCourtType}v${booking.requestedCourtType}`}
-          </h1>
-          <p>
+      <OwnerPageHeader
+        breadcrumbs={[
+          { title: t('ownerOps.bookingsTitle'), href: '/owner/bookings' },
+          { title: `Booking #${booking.id}` },
+        ]}
+        eyebrow={`BOOKING #${booking.id}`}
+        title={
+          booking.fieldName || `Sân ${booking.requestedCourtType}v${booking.requestedCourtType}`
+        }
+        subtitle={
+          <span>
             <CalendarOutlined /> {dayjs(booking.bookingDate).format('DD/MM/YYYY')} ·{' '}
             {booking.startTime} – {booking.endTime}
-          </p>
-        </div>
-        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-          <Tag color={statusColor}>{booking.status.toUpperCase()}</Tag>
-          <Button icon={<ReloadOutlined />} onClick={() => void reload()} />
-        </div>
-      </header>
+          </span>
+        }
+        actions={
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+            <Tag color={statusColor}>{booking.status.toUpperCase()}</Tag>
+            <Button icon={<ReloadOutlined />} onClick={() => void reload()} />
+          </div>
+        }
+      />
       {error && <Alert type="error" showIcon message={error} />}
       <div className="owner-detail-grid">
         <section className="owner-panel">

@@ -1,11 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import {
   AimOutlined,
-  AppstoreOutlined,
-  ClockCircleOutlined,
-  DollarOutlined,
-  ShoppingOutlined,
-  PictureOutlined,
   CheckCircleFilled,
   CompassOutlined,
   DollarCircleOutlined,
@@ -15,9 +10,10 @@ import {
   PlusOutlined,
   SaveOutlined,
 } from '@ant-design/icons'
-import { Form, Input, InputNumber, Segmented, Switch, message } from 'antd'
+import { Button, Form, Input, InputNumber, Segmented, Switch, message } from 'antd'
 import { useEffect, useRef, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
+import { OwnerPageHeader } from './components/OwnerPageHeader'
 import { ownerFields } from './owner.data'
 import './OwnerFieldFormPage.css'
 import {
@@ -181,98 +177,35 @@ export function OwnerFieldFormPage() {
   }
 
   return (
-    <section className="owner-page offp-wrapper">
+    <section className="owner-page offp-wrapper" style={{ padding: '16px 0' }}>
       {contextHolder}
 
-      {/* Top Breadcrumb */}
-      <div className="offp-top-bar">
-        <div className="offp-breadcrumb">
-          <Link to="/owner/fields">Sân của tôi</Link>
-          <span>/</span>
-          <span className="offp-breadcrumb-current">
-            {isEditing ? 'Chỉnh sửa sân' : 'Thêm sân mới'}
-          </span>
-        </div>
-      </div>
-
-      {/* Page Header */}
-      <div className="offp-header">
-        <div className="offp-header-left">
-          <div className="offp-header-icon">
-            <EnvironmentOutlined />
+      <OwnerPageHeader
+        breadcrumbs={[
+          { title: 'Sân của tôi', href: '/owner/fields' },
+          { title: isEditing ? (watchedName || 'Chỉnh sửa sân') : 'Thêm sân mới' },
+        ]}
+        icon={<EnvironmentOutlined />}
+        title={isEditing ? 'Chỉnh sửa sân thể thao' : 'Thêm sân thể thao mới'}
+        subtitle="Cấu hình thông tin chi tiết, tọa độ vị trí và chính sách đặt cọc sân bóng."
+        fieldId={isEditing && fieldId ? fieldId : undefined}
+        activeTabKey={isEditing && fieldId ? 'edit' : undefined}
+        actions={
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+            <Button onClick={() => navigate('/owner/fields')}>
+              Hủy bỏ
+            </Button>
+            <Button
+              type="primary"
+              icon={<SaveOutlined />}
+              loading={submitting}
+              onClick={() => form.submit()}
+            >
+              {isEditing ? 'Lưu thay đổi' : 'Lưu sân mới'}
+            </Button>
           </div>
-          <div>
-            <h1 className="offp-title">
-              {isEditing ? 'Chỉnh sửa sân thể thao' : 'Thêm sân thể thao mới'}
-            </h1>
-            <p className="offp-subtitle">
-              Cấu hình thông tin chi tiết, tọa độ vị trí và chính sách đặt cọc sân bóng.
-            </p>
-          </div>
-        </div>
-        <div className="offp-header-actions">
-          {isEditing && fieldId && (
-            <>
-              <button
-                type="button"
-                className="offp-btn-secondary"
-                onClick={() => navigate(`/owner/fields/${fieldId}/courts`)}
-              >
-                <AppstoreOutlined />
-                <span>Quản lý sân con</span>
-              </button>
-              <button
-                type="button"
-                className="offp-btn-secondary"
-                onClick={() => navigate(`/owner/fields/${fieldId}/images`)}
-              >
-                <PictureOutlined />
-                <span>Hình ảnh</span>
-              </button>
-              <button
-                type="button"
-                className="offp-btn-secondary"
-                onClick={() => navigate(`/owner/fields/${fieldId}/pricing`)}
-              >
-                <DollarOutlined />
-                <span>Bảng giá</span>
-              </button>
-              <button
-                type="button"
-                className="offp-btn-secondary"
-                onClick={() => navigate(`/owner/fields/${fieldId}/opening-hours`)}
-              >
-                <ClockCircleOutlined />
-                <span>Giờ mở</span>
-              </button>
-              <button
-                type="button"
-                className="offp-btn-secondary"
-                onClick={() => navigate(`/owner/fields/${fieldId}/services`)}
-              >
-                <ShoppingOutlined />
-                <span>Dịch vụ</span>
-              </button>
-            </>
-          )}
-          <button
-            type="button"
-            className="offp-btn-secondary"
-            onClick={() => navigate('/owner/fields')}
-          >
-            Hủy bỏ
-          </button>
-          <button
-            type="button"
-            className="offp-btn-primary"
-            disabled={submitting}
-            onClick={() => form.submit()}
-          >
-            <SaveOutlined />
-            <span>{isEditing ? 'Lưu thay đổi' : 'Lưu sân mới'}</span>
-          </button>
-        </div>
-      </div>
+        }
+      />
 
       {/* Two-Column Form & Visuals Grid */}
       <Form<FieldFormData>

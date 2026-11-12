@@ -186,10 +186,6 @@ export function DashboardLayout({ mode = 'user' }: { mode?: 'user' | 'owner' | '
         </div>
 
         <Navigation mode={mode} />
-
-        <div className="dashboard-sidebar__footer">
-          <AccountDropdown variant="sidebar" placement="topRight" showName />
-        </div>
       </aside>
 
       <section className="dashboard-main">
